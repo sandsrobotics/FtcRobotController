@@ -146,7 +146,7 @@ public class Vision
     void activate(){trackables.activate();}
     void deactivate(){trackables.deactivate();}
 
-    boolean findTrackable(int trackableNum)
+    boolean findTrackable(int trackableNum, boolean logPosition)
     {
         if (((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).isVisible())
         {
@@ -155,24 +155,29 @@ public class Vision
                 if(robot.debug_dashboard) robot.packet.put("trackable found, name: ", trackables.get(trackableNum).getName());
                 if(robot.debug_telemetry) robot.telemetry.addData("trackable found, name: ", trackables.get(trackableNum).getName());
             }
+            if(logPosition) {
+
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).getUpdatedRobotLocation();
+
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+                    if(robot.debug_methods)
+                    {
+                        if(robot.debug_dashboard) robot.packet.put("position: ", lastLocation);
+                        if(robot.debug_telemetry) robot.telemetry.addData("position: ", lastLocation);
+                    }
+                }
+            }
             return true;
         }
         return false;
     }
 
-    boolean findAnyTrackable()
+    boolean findAnyTrackable(boolean logPosition)
     {
-        for(VuforiaTrackable track:trackables)
+        for(int i = 0; i < trackables.size(); i++)
         {
-            if (((VuforiaTrackableDefaultListener) track.getListener()).isVisible())
-            {
-                if(robot.debug_methods)
-                {
-                    if(robot.debug_dashboard) robot.packet.put("trackable found, name: ", track.getName());
-                    if(robot.debug_telemetry) robot.telemetry.addData("trackable found, name: ", track.getName());
-                }
-                return true;
-            }
+           if(findTrackable(i,logPosition)) return true;
         }
         return false;
     }

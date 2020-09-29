@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 // test
 @Config
-@TeleOp(name = "test move functions v1.2.7")
+@TeleOp(name = "test vision v1.1")
 public class Test extends LinearOpMode
 {
     Robot robot;
@@ -29,7 +29,7 @@ public class Test extends LinearOpMode
 
         while (opModeIsActive())
         {
-            robot.telemetry.addData("",robot.vision.findAnyTrackable());
+            robot.telemetry.addData("",robot.vision.findAnyTrackable(true));
             robot.movement.moveForTeleOp(gamepad1);
             robot.sendTelemetry();
         }
