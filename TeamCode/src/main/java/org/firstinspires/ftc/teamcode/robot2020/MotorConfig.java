@@ -185,13 +185,6 @@ public class MotorConfig
     /////////
     //other//
     /////////
-    void testMotors(int maxTicks, int minTicks)
-    {
-        resetEncoders();
-        setMotorsToPosition(maxTicks,.5);
-        setMotorsToPosition(minTicks,.5);
-        setMotorsToPosition(0,.5);
-    }
     void waitForMotorsToFinish()
     {
         while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy()) && !Robot.emergencyStop && !robot.gamepad1.back && !robot.gamepad2.back){}

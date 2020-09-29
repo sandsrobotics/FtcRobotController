@@ -37,7 +37,6 @@ public class Robot
     protected boolean debug_methods = true;
     protected boolean debug_imu = true;
     protected boolean debug_motors = true;
-    protected boolean test_motors = false;
 
     //user dashboard variables
     public static boolean emergencyStop = false;
@@ -72,8 +71,6 @@ public class Robot
 
         initHardware();
         motorConfig.initMotors();
-        vision.initVuforia();
-        if(test_motors) motorConfig.testMotors(200,-200);
     }
 
     void initHardware()

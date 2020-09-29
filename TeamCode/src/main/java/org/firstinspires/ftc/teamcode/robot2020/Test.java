@@ -10,67 +10,30 @@ public class Test extends LinearOpMode
 {
     Robot robot;
 
-    public static double power = .5;
-    public static double targetAngle = 45;
-    public static double distanceForward = 12;
-    public static double distanceSideways = 12;
-    public static double moveAngle = 45;
-    public static double moveDistance = 12;
-    private boolean runningHeadless = false;
-
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap, telemetry, gamepad1, gamepad2);
-        robot.motorConfig.resetEncoders();
-        robot.motorConfig.setMotorsToRunWithEncoders();
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2);
 
-        robot.motorConfig.setMotorsToBrake();
-
-        robot.debug_methods = true;
-        robot.debug_imu = false;
-        robot.debug_motors = false;
-
-
+        robot.vision.initVuforia();
+        robot.vision.startDashboardCameraStream(24);
+        robot.vision.loadAsset("UltimateGoal");
+        robot.vision.setAllTrackablesNames();
+        robot.vision.setAllTrackablesPosition();
+        robot.vision.setPhoneTransform(new float[]{0,0,0}, new float[]{0,0,0});
 
         waitForStart();
 
         robot.startTelemetry();
+        robot.vision.activate();
 
-        while(opModeIsActive())
+        while (opModeIsActive())
         {
-            if(gamepad1.a)
-            {
-                robot.movement.turnToAngleSimple(targetAngle,.5,50,1000);
-            }
-            if(gamepad1.b)
-            {
-                robot.movement.moveForwardInches(distanceForward,power);
-                robot.motorConfig.setMotorsToRunWithEncoders();
-            }
-            if(gamepad1.x)
-            {
-                robot.resetZaxis();
-                //robot.movement.strafeSidewaysInches(distanceSideways,power);
-                //robot.motorConfig.setMotorsToRunWithEncoders();
-            }
-            if(gamepad1.y)
-            {
-                runningHeadless = !runningHeadless;
-            }
-            if(!runningHeadless)
-            {
-                robot.movement.moveForTeleOp(gamepad1);
-                robot.addTelemetryString("headless mode: ", "disabled");
-            }
-            else
-            {
-                robot.movement.headlessMoveForTeleOp(gamepad1,0);
-                robot.addTelemetryString("headless mode: ", "enabled");
-            }
-
-            robot.addTelemetryDouble("angle: ", robot.getAngles().thirdAngle);
+            robot.telemetry.addData("",robot.vision.findAnyTrackable());
+            robot.movement.moveForTeleOp(gamepad1);
             robot.sendTelemetry();
         }
+
+        robot.vision.deactivate();
     }
 }

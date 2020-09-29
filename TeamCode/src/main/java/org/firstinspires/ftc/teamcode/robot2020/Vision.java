@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
@@ -26,12 +28,28 @@ public class Vision
     //////////////////
     //user variables//
     //////////////////
+    //just some stuff to get a working vuforia object
     protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
     protected final boolean PHONE_IS_PORTRAIT = false;
+    protected boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
+
+    //set some measurements of the field(for position tracking)
+    private static final float trackablesHeight = 6;
+    private static final float halfField = 72;
+    private static final float quadField  = 36;
+
+    ////////////////////
+    // other variables//
+    ////////////////////
+    //converting inch to mm
+    private static final float mmPerInch = 25.4f;
+    // some vuforia stuff
+    protected OpenGLMatrix lastLocation = null;
     protected VuforiaLocalizer vuforia = null;
     protected VuforiaTrackables trackables;
     protected VuforiaLocalizer.Parameters parameters;
+
 
     //other class
     Robot robot;
@@ -44,14 +62,38 @@ public class Vision
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
         parameters.cameraDirection = CAMERA_CHOICE;
+        parameters.useExtendedTracking = useExtendedTracking;
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+
+        // put camera image on dashboard
     }
+
+    void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);}
+    void stopDashboardCameraStream(){FtcDashboard.getInstance().stopCameraStream();}
 
     void loadAsset(String assetName)
     {
         trackables = this.vuforia.loadTrackablesFromAsset(assetName);
+    }
+
+    void setAllTrackablesNames()
+    {
+        setTrackableName(0,"Blue Tower Goal Target");
+        setTrackableName(1,"Red Tower Goal Target");
+        setTrackableName(2,"Red Alliance Target");
+        setTrackableName(3,"Blue Alliance Target");
+        setTrackableName(4,"Front Wall Target");
+    }
+
+    void setAllTrackablesPosition()
+    {
+        setTrackableTransform(2,new float[]{0, -halfField, trackablesHeight}, new float[]{90, 0, 180});
+        setTrackableTransform(3,new float[]{0, halfField, trackablesHeight}, new float[]{90, 0, 0});
+        setTrackableTransform(4,new float[]{-halfField, 0, trackablesHeight}, new float[]{90, 0, 90});
+        setTrackableTransform(0,new float[]{halfField, quadField, trackablesHeight}, new float[]{90, 0, -90});
+        setTrackableTransform(1,new float[]{halfField, -quadField, trackablesHeight}, new float[]{90, 0, -90});
     }
 
     void setTrackableName(int posInTrackables, String name)
@@ -59,32 +101,36 @@ public class Vision
         trackables.get(posInTrackables).setName(name);
     }
     
-    void setTrackableTransform(int posInTrackables, Orientation angles, Position position) // position is in mm and rotation is in deg with order XYZ
+    void setTrackableTransform(int posInTrackables, float[] position, float[] angles) // position is in inches and rotation is in deg with order XYZ
     {
+        for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
+
         trackables.get(posInTrackables).setLocation(OpenGLMatrix
-                .translation((float)position.x, (float)position.y, (float)position.z)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, angles.firstAngle, angles.secondAngle, angles.thirdAngle)));
+                .translation(position[0], position[1], position[2])
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, angles[0], angles[1], angles[2])));
     }
 
-    void setPhoneTransform(Orientation angles, Position position) // positions is in mm: X is mm left from center line, Y is mm above ground, Z is mm forward from center line. rotation is in order XYZ in deg
+    void setPhoneTransform(float[] position, float[] angles) // positions is in mm: X is mm left from center line, Y is mm above ground, Z is mm forward from center line. rotation is in order XYZ in deg
     {
+        for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
+
         if (CAMERA_CHOICE == BACK)
         {
-            angles.secondAngle -= 90;
+            angles[1] -= 90;
         }
         else
         {
-            angles.secondAngle += 90;
+            angles[1] += 90;
         }
 
         if (PHONE_IS_PORTRAIT)
         {
-            angles.firstAngle += 90;
+            angles[0] += 90;
         }
 
         OpenGLMatrix robotFromCamera = OpenGLMatrix
-                .translation((float)position.z, (float)position.x, (float)position.y)
-                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, angles.secondAngle, angles.thirdAngle, angles.firstAngle));
+                .translation(position[2], position[0], position[1])
+                .multiplied(Orientation.getRotationMatrix(EXTRINSIC, YZX, DEGREES, angles[1], angles[2], angles[0]));
 
         for (VuforiaTrackable trackable : trackables)
         {
@@ -97,6 +143,9 @@ public class Vision
         CameraDevice.getInstance().setFlashTorchMode(on);
     }
 
+    void activate(){trackables.activate();}
+    void deactivate(){trackables.deactivate();}
+
     boolean findTrackable(int trackableNum)
     {
         if (((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).isVisible())
@@ -107,6 +156,23 @@ public class Vision
                 if(robot.debug_telemetry) robot.telemetry.addData("trackable found, name: ", trackables.get(trackableNum).getName());
             }
             return true;
+        }
+        return false;
+    }
+
+    boolean findAnyTrackable()
+    {
+        for(VuforiaTrackable track:trackables)
+        {
+            if (((VuforiaTrackableDefaultListener) track.getListener()).isVisible())
+            {
+                if(robot.debug_methods)
+                {
+                    if(robot.debug_dashboard) robot.packet.put("trackable found, name: ", track.getName());
+                    if(robot.debug_telemetry) robot.telemetry.addData("trackable found, name: ", track.getName());
+                }
+                return true;
+            }
         }
         return false;
     }

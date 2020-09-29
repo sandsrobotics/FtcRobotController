@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.tests;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -134,6 +135,9 @@ public class ConceptVuforiaUltimateGoalNavigation extends LinearOpMode {
 
         //  Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+        // put camera on dashboard
+        FtcDashboard.getInstance().startCameraStream(vuforia, 30);
+
 
         // Load the data sets for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
