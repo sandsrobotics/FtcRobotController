@@ -45,6 +45,7 @@ public class Robot
     public MotorConfig motorConfig;
     public Movement movement;
     public Vision vision;
+    public Launcher launcher;
 
     //objects
     protected HardwareMap hardwareMap;
@@ -64,6 +65,8 @@ public class Robot
         motorConfig = new MotorConfig(this);
         movement = new Movement(this);
         vision = new Vision(this);
+        //launcher = new Launcher(this);
+
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
         this.gamepad1 = gamepad1;

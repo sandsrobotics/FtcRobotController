@@ -15,8 +15,10 @@ public class MotorConfig
     protected int leftBottomMotorNum = 2;
     protected int rightTopMotorNum = 1;
     protected int rightBottomMotorNum = 3;
+    //protected int launcherMotorNum = 0;
 
     protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
+    //DcMotor launcherMotor;
     protected List<DcMotor> motors;
 
     //other class
