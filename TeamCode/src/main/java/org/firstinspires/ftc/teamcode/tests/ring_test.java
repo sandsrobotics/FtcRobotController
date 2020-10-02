@@ -113,9 +113,9 @@ public class ring_test extends LinearOpMode {
         motor0.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        motor3.setDirection(DcMotorSimple.Direction.FORWARD);
-        motor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor3.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motor3.setDirection(DcMotorEx.Direction.FORWARD);
+        motor3.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        motor3.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         motor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motor2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -135,6 +135,7 @@ public class ring_test extends LinearOpMode {
         if (spin_power2 < 0) {
             spin_power2 = 0;
         }
+        //motor3.setVelocity(90.0);
         motor3.setPower(spin_power2);
     }
 
@@ -161,7 +162,8 @@ public class ring_test extends LinearOpMode {
      */
     private void data_out() {
         // where spinRPM is my target speed, 145.6 is the motor's ticks/rev, and 7 is my gear ratio.
-        Double spinMultiplier = 60 / 145.6 * 5;
+        //Double spinMultiplier = 60 / 145.6 * 5;
+        Double spinMultiplier = 60 / 28.0;
         Double spinSpeed;
         spinSpeed = motor3.getVelocity() * spinMultiplier;
 
