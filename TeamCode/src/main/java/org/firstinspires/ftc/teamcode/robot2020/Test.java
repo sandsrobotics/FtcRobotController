@@ -13,9 +13,9 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2, true, true, true);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2, true, false, true);
 
-        robot.vision.startDashboardCameraStream(24);
+        if(robot.debug_dashboard)robot.vision.startDashboardCameraStream(24);
 
         waitForStart();
 
@@ -24,12 +24,14 @@ public class Test extends LinearOpMode
 
         while (opModeIsActive())
         {
-            robot.telemetry.addData("",robot.vision.findAnyTrackable(true));
+            robot.vision.findAnyTrackable(true);
+            robot.vision.printTelemetry();
             robot.movement.moveForTeleOp(gamepad1);
             robot.sendTelemetry();
+            if(gamepad1.a) robot.movement.findBlueTowerGoal(45,22.5);
         }
 
         robot.vision.deactivate();
-        robot.vision.stopDashboardCameraStream();
+        if(robot.debug_dashboard)robot.vision.stopDashboardCameraStream();
     }
 }

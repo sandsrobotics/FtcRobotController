@@ -59,7 +59,9 @@ public class MotorConfig
             if(flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }
-
+        resetDriveEncoders();
+        setMotorsToBrake();
+        setMotorsToRunWithEncoders();
     }
 
     public void initLauncherMotors()

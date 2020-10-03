@@ -213,4 +213,29 @@ public class Movement
 
         return moveRobotPowers(x,y,0);
     }
+
+    void findBlueTowerGoal(double rotationRange, double rotationIncrements)
+    {
+        turnToAngleSimple(0,5,20,1000);
+        if(robot.vision.findTrackable(0,true))
+        {
+            turnToAngleSimple(robot.vision.lastRotation.thirdAngle, 1, 25,2000);
+            //strafeSidewaysInches((robot.vision.lastLocation.getTranslation().));
+        }
+        else
+        {
+            robot.movement.turnToAngleSimple(-rotationRange, 5,20,1000);
+            robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.1));
+            while(robot.getAngles().thirdAngle < rotationRange && !robot.gamepad1.back && !robot.gamepad2.back && !Robot.emergencyStop)
+            {
+                //robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.15));
+                if(robot.vision.findTrackable(0,true))
+                {
+                    turnToAngleSimple(robot.vision.lastRotation.thirdAngle , 1, 25,2000);
+                    break;
+                }
+            }
+            robot.motorConfig.stopMotors();
+        }
+    }
 }

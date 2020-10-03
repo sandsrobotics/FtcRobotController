@@ -50,9 +50,13 @@ public class Vision
     private static final float mmPerInch = 25.4f;
     // some vuforia stuff
     protected OpenGLMatrix lastLocation = null;
+    protected Orientation lastRotation = null;
+    protected Position lastPosition = null;
     protected VuforiaLocalizer vuforia = null;
     protected VuforiaTrackables trackables;
     protected VuforiaLocalizer.Parameters parameters;
+    //other
+    boolean targetVisible = false;
 
 
     //other class
@@ -162,26 +166,34 @@ public class Vision
     {
         if (((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).isVisible())
         {
-            if(robot.debug_methods)
-            {
-                if(robot.debug_dashboard) robot.packet.put("trackable found, name: ", trackables.get(trackableNum).getName());
-                if(robot.debug_telemetry) robot.telemetry.addData("trackable found, name: ", trackables.get(trackableNum).getName());
-            }
+            targetVisible = true;
             if(logPosition) {
 
                 OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).getUpdatedRobotLocation();
 
-                if (robotLocationTransform != null) {
+                if (robotLocationTransform != null)
+                {
                     lastLocation = robotLocationTransform;
-                    if(robot.debug_methods)
-                    {
-                        if(robot.debug_dashboard) robot.packet.put("position: ", lastLocation);
-                        if(robot.debug_telemetry) robot.telemetry.addData("position: ", lastLocation);
-                    }
+                    lastRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+                    //lastPosition = lastLocation.;
                 }
             }
             return true;
         }
+        else
+        {
+            targetVisible = false;
+            return false;
+        }
+    }
+
+    boolean findTrackableDelay(int trackableNum, boolean logPosition, int maxTries)
+    {
+        for(int i = 0; i < maxTries; i++)
+        {
+            if(findTrackable(trackableNum,logPosition)) return true;
+        }
+
         return false;
     }
 
@@ -189,8 +201,44 @@ public class Vision
     {
         for(int i = 0; i < trackables.size(); i++)
         {
-           if(findTrackable(i,logPosition)) return true;
+            findTrackable(i,logPosition);
+           if(targetVisible) return true;
         }
         return false;
+    }
+
+    void printTelemetry()
+    {
+        if(robot.debug_methods){
+            if(targetVisible)
+            {
+                robot.addTelemetryString("target visible: ", "true");
+                if(robot.debug_dashboard)
+                {
+                    robot.packet.put("position: ", lastLocation.getTranslation());
+                    robot.packet.put("rotation: ", lastRotation);
+                }
+                if(robot.debug_telemetry)
+                {
+
+                    robot.telemetry.addData("position: ", lastLocation.getTranslation());
+                    robot.telemetry.addData("rotation: ", lastLocation);
+                }
+            }
+            else
+            {
+                robot.addTelemetryString("target visible: ", "false");
+                if(robot.debug_dashboard)
+                {
+                    robot.packet.put("position: ", null);
+                    robot.packet.put("rotation: ", null);
+                }
+                if(robot.debug_telemetry)
+                {
+                    robot.packet.put("position: ", null);
+                    robot.packet.put("rotation: ", null);
+                }
+            }
+        }
     }
 }
