@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import java.util.Arrays;
 import java.util.List;
@@ -10,17 +12,28 @@ public class MotorConfig
     //////////////////
     //user variables//
     //////////////////
-    protected boolean[] flipMotorDir = {true, true, false, false};
-    protected int leftTopMotorNum = 0;
-    protected int leftBottomMotorNum = 2;
-    protected int rightTopMotorNum = 1;
-    protected int rightBottomMotorNum = 3;
-    //protected int launcherMotorNum = 0;
+    //drive motors
+    protected boolean[] flipDriveMotorDir = {true, true, false, false};
+    protected String leftTopMotorNum = "0";
+    protected String leftBottomMotorNum = "2";
+    protected String rightTopMotorNum = "1";
+    protected String rightBottomMotorNum = "3";
+    //launcher motors
+    protected boolean[] flipLauncherMotorDir = {false, false, false};
+    protected String launcherWheelMotorNum = "0B";
+    protected String launcherHolderMotorNum = "1B";
+    protected String launcherServoNum = "4";
 
+    /////////
+    //other//
+    /////////
+    //drive
     protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
-    //DcMotor launcherMotor;
     protected List<DcMotor> motors;
-
+    //launcher
+    DcMotorEx launcherWheelMotor;
+    DcMotor launcherHolderMotor;
+    Servo launcherServo;
     //other class
     Robot robot;
 
@@ -32,7 +45,7 @@ public class MotorConfig
     ////////
     //init//
     ////////
-    public void initMotors()
+    public void initDriveMotors()
     {
         leftTopMotor = robot.hardwareMap.dcMotor.get("motor" + leftTopMotorNum);
         leftBottomMotor = robot.hardwareMap.dcMotor.get("motor" + leftBottomMotorNum);
@@ -43,18 +56,30 @@ public class MotorConfig
         int i = 0;
         for(DcMotor motor:motors)
         {
-            if(flipMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            if(flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }
 
     }
-    public void resetEncoders()
+
+    public void initLauncherMotors()
+    {
+        launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + launcherWheelMotorNum);
+        launcherHolderMotor = robot.hardwareMap.dcMotor.get("motor" + launcherHolderMotorNum);
+        launcherServo = robot.hardwareMap.servo.get("servo" + launcherServoNum);
+
+
+    }
+
+    public void resetDriveEncoders()
     {
         for(DcMotor motor: motors)
         {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
+
+    //public void resetMotorEncoder()
     ///////////////////
     //set motor modes//
     ///////////////////

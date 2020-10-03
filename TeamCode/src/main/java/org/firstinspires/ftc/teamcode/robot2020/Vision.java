@@ -34,10 +34,14 @@ public class Vision
     protected boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
-    //set some measurements of the field(for position tracking)
+    //set some measurements of the field(for position tracking) IN INCHES!!!
     private static final float trackablesHeight = 6;
     private static final float halfField = 72;
     private static final float quadField  = 36;
+
+    //to know where the phone or camera is IN INCHES!!! and degrees
+    float[] phonePosition = {0,0,0};
+    float[] phoneRotation = {0,0,0};
 
     ////////////////////
     // other variables//
@@ -55,6 +59,14 @@ public class Vision
     Robot robot;
 
     Vision(Robot robot) { this.robot = robot; }
+    void initAll()
+    {
+        initVuforia();
+        loadAsset("UltimateGoal");
+        setAllTrackablesNames();
+        setAllTrackablesPosition();
+        setPhoneTransform(phonePosition, phoneRotation);
+    }
 
     void initVuforia()
     {

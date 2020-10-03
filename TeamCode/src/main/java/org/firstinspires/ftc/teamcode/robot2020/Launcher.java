@@ -21,26 +21,26 @@ public class Launcher extends LinearOpMode {
     //user variables//
     //////////////////
     //pin num
-    protected int launcherWheelMotorNum = 3;
-    protected int launcherLifterMotorNum = 2;
+    protected int launcherWheelMotorNum = 0;
+    protected int launcherLifterMotorNum = 0;
     protected int launcherservoNum = 0;
     //flip
     protected boolean fliplauncherWheelMotor = false;
-    protected boolean fliplauncherLifterMotor = true;
+    protected boolean fliplauncherLifterMotor = false;
     protected boolean fliplauncherservo = false;
     //servo
-    protected double servoRestAngle = .55;
-    protected double servoLaunchAngle = .25;
+    protected int servoRestAngle = 0;
+    protected int servoLaunchAngle = 90;
     //wheel
     protected double gearRatio = 5;
-    protected double ticksPerRev = 145.6;
+    protected double ticksPerRev = 0;
     protected double rpmIncrements = 6;
     protected double maxRpm = 6000;
     protected boolean useEncoder = true;
     //lifter
-    protected double ticksPerDegree = 0.8;
+    protected double ticksPerDegree = 1;
     protected double maxAngle = 90;
-    protected double rotationIncrements = 4;
+    protected double rotationIncrements;
     protected boolean resetLifterDuringStart = false;
 
     /////////

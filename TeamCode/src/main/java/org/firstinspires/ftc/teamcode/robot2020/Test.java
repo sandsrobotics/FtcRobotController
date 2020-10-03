@@ -13,14 +13,9 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2, true, true, true);
 
-        robot.vision.initVuforia();
         robot.vision.startDashboardCameraStream(24);
-        robot.vision.loadAsset("UltimateGoal");
-        robot.vision.setAllTrackablesNames();
-        robot.vision.setAllTrackablesPosition();
-        robot.vision.setPhoneTransform(new float[]{0,0,0}, new float[]{0,0,0});
 
         waitForStart();
 
@@ -35,5 +30,6 @@ public class Test extends LinearOpMode
         }
 
         robot.vision.deactivate();
+        robot.vision.stopDashboardCameraStream();
     }
 }
