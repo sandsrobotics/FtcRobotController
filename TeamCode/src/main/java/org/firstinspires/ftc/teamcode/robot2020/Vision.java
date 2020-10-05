@@ -192,6 +192,7 @@ public class Vision
         for(int i = 0; i < maxTries; i++)
         {
             if(findTrackable(trackableNum,logPosition)) return true;
+            if(robot.stop()) break;
         }
 
         return false;

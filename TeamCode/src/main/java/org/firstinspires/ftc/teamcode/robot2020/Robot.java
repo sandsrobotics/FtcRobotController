@@ -5,6 +5,7 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -23,6 +24,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.opMode;
 
 @Config
 public class Robot
@@ -65,7 +68,7 @@ public class Robot
         motorConfig = new MotorConfig(this);
         if(useDrive)movement = new Movement(this);
         if(useVision) vision = new Vision(this);
-        if(useLauncher) launcher = new Launcher();
+        if(useLauncher) launcher = new Launcher(this);
 
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
@@ -161,13 +164,13 @@ public class Robot
             {
                 if(debug_telemetry)
                 {
-                telemetry.addData("motor powers: ", motorConfig.getMotorPowers());
-                telemetry.addData("motor positions:", motorConfig.getMotorPositions());
+                telemetry.addData("motor powers: ", motorConfig.getMotorPowersList(motorConfig.driveMotors));
+                telemetry.addData("motor positions:", motorConfig.getMotorPositionsList(motorConfig.driveMotors));
                 }
                 if(debug_dashboard)
                 {
-                    packet.put("motor powers: ", motorConfig.getMotorPowers());
-                    packet.put("motor positions:", motorConfig.getMotorPositions());
+                    packet.put("motor powers: ", motorConfig.getMotorPowersList(motorConfig.driveMotors));
+                    packet.put("motor positions:", motorConfig.getMotorPositionsList(motorConfig.driveMotors));
                 }
             }
 
@@ -243,5 +246,10 @@ public class Robot
         XY[1] /= total;
 
         return XY;
+    }
+
+    boolean stop()
+    {
+        return emergencyStop || gamepad1.back || gamepad2.back;
     }
 }

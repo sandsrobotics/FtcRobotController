@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+
 // test
 @Config
 @TeleOp(name = "test vision v1.1")
@@ -13,7 +14,7 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2, true, false, true);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, false, true);
 
         if(robot.debug_dashboard)robot.vision.startDashboardCameraStream(24);
 

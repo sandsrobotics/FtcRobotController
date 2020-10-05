@@ -52,12 +52,12 @@ public class Movement
             }
             else numOfTimesInTolerance = 0;
 
-            robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,pow));
+            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,pow));
 
             numOfTimesRun ++;
-            if(numOfTimesRun > maxRuntime || Robot.emergencyStop || robot.gamepad1.back || robot.gamepad2.back) break;
+            if(numOfTimesRun > maxRuntime || robot.stop()) break;
         }
-        robot.motorConfig.stopMotors();
+        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
     }
 
     void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
@@ -78,7 +78,7 @@ public class Movement
             {
                 currentAngle = robot.getAngles().thirdAngle;
                 error = robot.findAngleError(currentAngle, targetAngle);
-                robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,error * turnPID.p));
+                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,error * turnPID.p));
 
                 if(Math.abs(error) < tolerance)
                 {
@@ -90,7 +90,7 @@ public class Movement
                 }
                 numberOfTimesRun++;
 
-                if(Robot.emergencyStop || numberOfTimesRun > maxRuntime || robot.gamepad1.back || robot.gamepad2.back) break;
+                if(numberOfTimesRun > maxRuntime || robot.stop()) break;
 
                 if(robot.debug_methods)
                 {
@@ -112,7 +112,7 @@ public class Movement
                 robot.updateTelemetry();
                 robot.sendTelemetry();
             }
-            robot.motorConfig.stopMotors();
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
     }
 
@@ -122,8 +122,8 @@ public class Movement
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
-        robot.motorConfig.moveMotorForwardSeparateAmount(arr,power);
-        robot.motorConfig.waitForMotorsToFinish();
+        robot.motorConfig.moveMotorForwardSeparateAmountList(robot.motorConfig.driveMotors, arr, power);
+        robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
     void strafeSidewaysInches(double inches, double power)
@@ -136,13 +136,13 @@ public class Movement
     ////////////////
     void moveForwardInches(double inches, double power)
     {
-        robot.motorConfig.moveMotorsForward((int)(ticksPerInchForward * inches), power);
-        robot.motorConfig.waitForMotorsToFinish();
+        robot.motorConfig.moveMotorsForwardList(robot.motorConfig.driveMotors, (int)(ticksPerInchForward * inches), power);
+        robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
     void moveAtAngleWithPower(double angle, double power) //in this method angle should be from -180 to 180
     {
-        robot.motorConfig.setMotorsToSeparatePowersArray(moveAtAnglePowers(angle,power));
+        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveAtAnglePowers(angle,power));
     }
 
     void moveAtAngleToInches(double angle, double power, double inches)
@@ -152,16 +152,16 @@ public class Movement
         int totalTicks = (int)((inches*ticksPerInchForward*robot.getXYFromAngle(-angle)[1]) + (inches*ticksPerInchSideways*robot.getXYFromAngle(-angle)[0]));
 
         int i = 0;
-        for(DcMotor motor: robot.motorConfig.motors)
+        for(DcMotor motor: robot.motorConfig.driveMotors)
         {
             motor.setTargetPosition(motor.getCurrentPosition() + (int)(totalTicks * arr[i]));
             arr[i] = Math.abs(arr[i]);
             i++;
         }
 
-        robot.motorConfig.setMotorsToSeparatePowersArray(arr);
-        robot.motorConfig.setMotorsToRunToPosition();
-        robot.motorConfig.waitForMotorsToFinish();
+        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, arr);
+        robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
+        robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
     //////////
@@ -169,7 +169,7 @@ public class Movement
     //////////
     void moveForTeleOp(Gamepad gamepad1)
     {
-        robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
+        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
     }
 
     void headlessMoveForTeleOp( Gamepad gamepad1, double offset)
@@ -181,7 +181,7 @@ public class Movement
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;
         XY[1] *= power;
-        robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x));
+        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x));
     }
 
     /////////
@@ -225,8 +225,8 @@ public class Movement
         else
         {
             robot.movement.turnToAngleSimple(-rotationRange, 5,20,1000);
-            robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.1));
-            while(robot.getAngles().thirdAngle < rotationRange && !robot.gamepad1.back && !robot.gamepad2.back && !Robot.emergencyStop)
+            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,.1));
+            while(robot.getAngles().thirdAngle < rotationRange)
             {
                 //robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.15));
                 if(robot.vision.findTrackable(0,true))
@@ -234,8 +234,9 @@ public class Movement
                     turnToAngleSimple(robot.vision.lastRotation.thirdAngle , 1, 25,2000);
                     break;
                 }
+                if(robot.stop()) break;
             }
-            robot.motorConfig.stopMotors();
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
     }
 }
