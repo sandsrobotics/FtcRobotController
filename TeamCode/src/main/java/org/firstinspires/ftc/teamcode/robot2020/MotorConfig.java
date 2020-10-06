@@ -28,12 +28,12 @@ public class MotorConfig
     //other//
     /////////
     //drive
-    protected DcMotor leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
-    protected List<DcMotor> motors;
+    protected DcMotorEx leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
+    protected List<DcMotorEx> driveMotors;
     //launcher
-    DcMotorEx launcherWheelMotor;
-    DcMotor launcherHolderMotor;
+    DcMotorEx launcherWheelMotor, launcherHolderMotor;
     Servo launcherServo;
+    protected List<DcMotorEx> launcherMotors;
     //other class
     Robot robot;
 
@@ -47,31 +47,34 @@ public class MotorConfig
     ////////
     public void initDriveMotors()
     {
-        leftTopMotor = robot.hardwareMap.dcMotor.get("motor" + leftTopMotorNum);
-        leftBottomMotor = robot.hardwareMap.dcMotor.get("motor" + leftBottomMotorNum);
-        rightTopMotor = robot.hardwareMap.dcMotor.get("motor" + rightTopMotorNum);
-        rightBottomMotor = robot.hardwareMap.dcMotor.get("motor" + rightBottomMotorNum);
-        motors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
+        leftTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + leftTopMotorNum);
+        leftBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + leftBottomMotorNum);
+        rightTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + rightTopMotorNum);
+        rightBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + rightBottomMotorNum);
+        driveMotors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
 
         int i = 0;
-        for(DcMotor motor:motors)
+        for(DcMotor motor:driveMotors)
         {
             if(flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }
 
+        resetDriveEncodersList(driveMotors);
+        setMotorsToBrakeList(driveMotors);
+        setMotorsToRunWithEncodersList(driveMotors);
     }
 
     public void initLauncherMotors()
     {
         launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + launcherWheelMotorNum);
-        launcherHolderMotor = robot.hardwareMap.dcMotor.get("motor" + launcherHolderMotorNum);
+        launcherHolderMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + launcherHolderMotorNum);
         launcherServo = robot.hardwareMap.servo.get("servo" + launcherServoNum);
-
+        launcherMotors = Arrays.asList(launcherWheelMotor, launcherHolderMotor);
 
     }
 
-    public void resetDriveEncoders()
+    public void resetDriveEncodersList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -80,10 +83,11 @@ public class MotorConfig
     }
 
     //public void resetMotorEncoder()
+
     ///////////////////
     //set motor modes//
     ///////////////////
-    public void setMotorsToCoast()
+    public void setDriveMotorsToCoastList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -91,7 +95,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToBrake()
+    public void setMotorsToBrakeList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -99,7 +103,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToRunWithoutEncoders()
+    public void setMotorsToRunWithoutEncodersList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -107,7 +111,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToRunWithEncoders()
+    public void setMotorsToRunWithEncodersList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -115,7 +119,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToRunToPosition()
+    public void setMotorsToRunToPositionList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -126,7 +130,7 @@ public class MotorConfig
     ///////////////
     //motor power//
     ///////////////
-    public void stopMotors()
+    public void stopMotorsList(List<DcMotorEx> motors)
     {
         for(DcMotor motor: motors)
         {
@@ -134,7 +138,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToPower(double power)
+    public void setMotorsToPowerList(List<DcMotorEx> motors, double power)
     {
         for(DcMotor motor: motors)
         {
@@ -142,7 +146,7 @@ public class MotorConfig
         }
     }
 
-    public void setMotorsToSeparatePowersArray(double[] powers)
+    public void setMotorsToSeparatePowersArrayList(List<DcMotorEx> motors, double[] powers)
     {
         int i = 0;
         for(DcMotor motor: motors)
@@ -152,9 +156,9 @@ public class MotorConfig
         }
     }
 
-    public double[] getMotorPowers()
+    public double[] getMotorPowersList(List<DcMotorEx> motors)
     {
-        double[] arr = new double[4];
+        double[] arr = new double[motors.size()];
         int i = 0;
         for(DcMotor motor: motors)
         {
@@ -167,7 +171,7 @@ public class MotorConfig
     ///////////////
     //motor ticks//
     ///////////////
-    public void setMotorsToPosition(int ticks, double power)
+    public void setMotorsToPositionList(List<DcMotorEx> motors, int ticks, double power)
     {
         for(DcMotor motor: motors)
         {
@@ -176,7 +180,7 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
-    public void moveMotorsForward(int ticks, double power)
+    public void moveMotorsForwardList(List<DcMotorEx> motors, int ticks, double power)
     {
         for(DcMotor motor: motors)
         {
@@ -185,7 +189,7 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
-    public void moveMotorForwardSeparateAmount(int[] ticks, double power)
+    public void moveMotorForwardSeparateAmountList(List<DcMotorEx> motors, int[] ticks, double power)
     {
         int i = 0;
         for(DcMotor motor: motors)
@@ -197,9 +201,9 @@ public class MotorConfig
         }
     }
 
-    public int[] getMotorPositions()
+    public int[] getMotorPositionsList(List<DcMotorEx> motors)
     {
-        int[] arr = new int[4];
+        int[] arr = new int[motors.size()];
         int i = 0;
         for(DcMotor motor: motors)
         {
@@ -212,8 +216,17 @@ public class MotorConfig
     /////////
     //other//
     /////////
-    void waitForMotorsToFinish()
+    public void waitForMotorsToFinishList(List<DcMotorEx> motors)
     {
-        while((robot.motorConfig.leftTopMotor.isBusy() || robot.motorConfig.leftBottomMotor.isBusy() || robot.motorConfig.rightTopMotor.isBusy() || robot.motorConfig.rightBottomMotor.isBusy()) && !Robot.emergencyStop && !robot.gamepad1.back && !robot.gamepad2.back){}
+        int totalMotorsDone = 0;
+        while(totalMotorsDone < motors.size())
+        {
+            totalMotorsDone = 0;
+            if (robot.stop()) break;
+            for (DcMotorEx motor : motors)
+            {
+                if(!motor.isBusy()) totalMotorsDone++;
+            }
+        }
     }
 }
