@@ -16,21 +16,23 @@ public class Test extends LinearOpMode
     {
         robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, true);
 
+        robot.vision.initAll(false, true);
         if(robot.debug_dashboard)robot.vision.startDashboardCameraStream(24);
-        robot.launcher.readcsv();
 
         waitForStart();
 
-        robot.startTelemetry();
         robot.vision.activate();
 
         while (opModeIsActive())
         {
+            robot.startTelemetry();
             robot.vision.findAnyTrackable(true);
             robot.vision.printTelemetry();
             robot.movement.moveForTeleOp(gamepad1);
-            robot.sendTelemetry();
+
             if(gamepad1.a) robot.movement.findBlueTowerGoal(45,22.5);
+
+            robot.sendTelemetry();
         }
 
         robot.vision.deactivate();

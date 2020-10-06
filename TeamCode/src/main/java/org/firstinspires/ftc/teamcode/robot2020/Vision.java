@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
@@ -70,7 +71,7 @@ public class Vision
     protected VuforiaLocalizer.Parameters parameters;
     //some openCV stuff
     OpenCvInternalCamera phoneCam;
-    EasyOpenCVExample.SkystoneDeterminationPipeline pipeline;
+    Vision.SkystoneDeterminationPipeline pipeline;
     //other
     protected boolean targetVisible = false;
     protected boolean useVuforia = false;
@@ -81,6 +82,9 @@ public class Vision
 
     Vision(Robot robot) { this.robot = robot; }
 
+    //////////////////
+    //Vision Methods//
+    //////////////////
     void initAll(boolean useVuforia, boolean useOpenCV)
     {
         this.useVuforia = useVuforia;
@@ -99,7 +103,7 @@ public class Vision
 
         if(useOpenCV)
         {
-
+            initOpenCV();
         }
     }
 
@@ -108,6 +112,44 @@ public class Vision
         cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
     }
 
+    void printTelemetry()
+{
+    if(robot.debug_methods){
+        if(targetVisible)
+        {
+            robot.addTelemetryString("target visible: ", "true");
+            if(robot.debug_dashboard)
+            {
+                robot.packet.put("position: ", lastLocation.getTranslation());
+                robot.packet.put("rotation: ", lastRotation);
+            }
+            if(robot.debug_telemetry)
+            {
+
+                robot.telemetry.addData("position: ", lastLocation.getTranslation());
+                robot.telemetry.addData("rotation: ", lastLocation);
+            }
+        }
+        else
+        {
+            robot.addTelemetryString("target visible: ", "false");
+            if(robot.debug_dashboard)
+            {
+                robot.packet.put("position: ", null);
+                robot.packet.put("rotation: ", null);
+            }
+            if(robot.debug_telemetry)
+            {
+                robot.packet.put("position: ", null);
+                robot.packet.put("rotation: ", null);
+            }
+        }
+    }
+}
+
+    ///////////////////
+    //Vuforia Methods//
+    ///////////////////
     void initVuforia()
     {
         //make a parameters object
@@ -120,29 +162,6 @@ public class Vision
 
         //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
-    }
-
-    void initOpenCV()
-    {
-        //creating a camera object
-        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
-
-        //creating a openCV pipeline
-        pipeline = new EasyOpenCVExample.SkystoneDeterminationPipeline();
-
-        //integrate the openCV pipeline with the camera
-        phoneCam.setPipeline(pipeline);
-        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
-
-        //start camera
-        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
-        {
-            @Override
-            public void onOpened()
-            {
-                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
-            }
-        });
     }
 
     void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);}
@@ -267,40 +286,38 @@ public class Vision
         return false;
     }
 
-    void printTelemetry()
+    //////////////////
+    //OpenCV Methods//
+    //////////////////
+    void initOpenCV()
     {
-        if(robot.debug_methods){
-            if(targetVisible)
-            {
-                robot.addTelemetryString("target visible: ", "true");
-                if(robot.debug_dashboard)
-                {
-                    robot.packet.put("position: ", lastLocation.getTranslation());
-                    robot.packet.put("rotation: ", lastRotation);
-                }
-                if(robot.debug_telemetry)
-                {
+        //creating a camera object
+        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
 
-                    robot.telemetry.addData("position: ", lastLocation.getTranslation());
-                    robot.telemetry.addData("rotation: ", lastLocation);
-                }
-            }
-            else
+        //creating a openCV pipeline
+        pipeline = new Vision.SkystoneDeterminationPipeline();
+
+        //integrate the openCV pipeline with the camera
+        phoneCam.setPipeline(pipeline);
+        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+
+        //start camera
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
             {
-                robot.addTelemetryString("target visible: ", "false");
-                if(robot.debug_dashboard)
-                {
-                    robot.packet.put("position: ", null);
-                    robot.packet.put("rotation: ", null);
-                }
-                if(robot.debug_telemetry)
-                {
-                    robot.packet.put("position: ", null);
-                    robot.packet.put("rotation: ", null);
-                }
+                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
-        }
+        });
     }
+
+    int getNumberOfRings()
+    {
+        return pipeline.numOfRings();
+    }
+
+
 
     public static class SkystoneDeterminationPipeline extends OpenCvPipeline
     {
@@ -403,6 +420,19 @@ public class Vision
         public int getAnalysis()
         {
             return avg1;
+        }
+
+        public int numOfRings()
+        {
+            if(position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR)
+            {
+                return 4;
+            }
+            else if(position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE)
+            {
+                return 1;
+            }
+            else return 0;
         }
     }
 }
