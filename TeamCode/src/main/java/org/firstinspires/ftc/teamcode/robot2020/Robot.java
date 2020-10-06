@@ -77,7 +77,7 @@ public class Robot
 
         initHardware();
         if(useDrive) motorConfig.initDriveMotors();
-        if(useLauncher) motorConfig.initLauncherMotors();
+        //if(useLauncher) motorConfig.initLauncherMotors();
         if(useVision) vision.initAll();
     }
 

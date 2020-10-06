@@ -72,6 +72,8 @@ public class Vision
         setPhoneTransform(phonePosition, phoneRotation);
     }
 
+
+
     void initVuforia()
     {
         int cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());

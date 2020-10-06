@@ -14,9 +14,10 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, false, true);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, true);
 
         if(robot.debug_dashboard)robot.vision.startDashboardCameraStream(24);
+        robot.launcher.readcsv();
 
         waitForStart();
 
