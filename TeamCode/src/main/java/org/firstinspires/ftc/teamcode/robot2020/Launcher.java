@@ -1,17 +1,14 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 
 @Config
 @TeleOp(name = "test launcher v1.1")
@@ -21,34 +18,43 @@ public class Launcher extends LinearOpMode {
     //user variables//
     //////////////////
     //pin num
-    protected int launcherWheelMotorNum = 0;
-    protected int launcherLifterMotorNum = 0;
+    protected int launcherWheelMotorNum = 3;
+    protected int launcherLifterMotorNum = 2;
     protected int launcherservoNum = 0;
     //flip
     protected boolean fliplauncherWheelMotor = false;
-    protected boolean fliplauncherLifterMotor = false;
+    protected boolean fliplauncherLifterMotor = true;
     protected boolean fliplauncherservo = false;
     //servo
-    protected int servoRestAngle = 0;
-    protected int servoLaunchAngle = 90;
+    protected double servoRestAngle = .55;
+    protected double servoLaunchAngle = .25;
     //wheel
     protected double gearRatio = 5;
-    protected double ticksPerRev = 0;
-    protected double rpmIncrements = 6;
+    protected double ticksPerRev = 145.6;
+    protected double rpmIncrements = 500;
     protected double maxRpm = 6000;
+
+    // Use Encoder for Launcher wheel
     protected boolean useEncoder = true;
     //lifter
-    protected double ticksPerDegree = 1;
+    protected double ticksPerDegree = 2*1120/360; //Andymark 40:1  2:1 chain gear ratio
     protected double maxAngle = 90;
-    protected double rotationIncrements;
-    protected boolean resetLifterDuringStart = false;
+    protected double rotationIncrements = 10;
+    protected boolean resetLifterDuringStart = true;
 
     /////////
     //other//
     /////////
     protected double setLifterAngle = 0;
+    protected double chainLashOffset = 9;
+    protected double initialLifterOffsetAngle = -30;
     protected double setWheelRpm = 0;
     protected Boolean runWheelOnTrigger = true;
+    protected FtcDashboard dashboard;
+    Double spinMultiplier;
+    Double spinVelocity;
+    boolean b_pressed, x_pressed, y_pressed, dl_pressed, dr_pressed = false;
+    TelemetryPacket packet;
 
     DcMotorEx launcherWheelMotor;
     DcMotor launcherLifterMotor;
@@ -59,17 +65,26 @@ public class Launcher extends LinearOpMode {
     {
         initStuff();
 
+        waitForStart();
+
         while(opModeIsActive())
         {
             setLauncherSevo();
             setLauncherWheelMotor();
             setLauncherLifterMotor();
             getInputs();
+            data_out();
         }
+        // set ramp down easy
+        setLifterAngle = initialLifterOffsetAngle + 10;
+        setLauncherLifterMotor();
     }
 
     void initStuff()
     {
+        dashboard = FtcDashboard.getInstance();
+        packet = new TelemetryPacket();
+
         //initiate
         launcherWheelMotor = hardwareMap.get(DcMotorEx.class,"motor" + launcherWheelMotorNum);
         launcherLifterMotor = hardwareMap.dcMotor.get("motor" + launcherLifterMotorNum);
@@ -90,6 +105,22 @@ public class Launcher extends LinearOpMode {
         if(useEncoder) launcherWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         else launcherWheelMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         launcherLifterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        //set multiplier
+        spinMultiplier = 60 / ticksPerRev * gearRatio;
+    }
+
+    private void data_out() {
+        double RPM = launcherWheelMotor.getVelocity() * spinMultiplier;
+        telemetry.addData("RPM",RPM);
+        telemetry.addData("Set RPM", setWheelRpm);
+        // 0 encoder = ? Degrees
+        telemetry.addData("Ramp Encoder", launcherLifterMotor.getCurrentPosition());
+        telemetry.addData("Ramp Angle", setLifterAngle);
+        telemetry.update();
+
+        packet.put("RPM: ", RPM);
+        dashboard.sendTelemetryPacket(packet);
     }
 
     void resetLifter()
@@ -106,26 +137,56 @@ public class Launcher extends LinearOpMode {
     void setLauncherWheelMotor()
     {
         if(runWheelOnTrigger)launcherWheelMotor.setPower(gamepad1.left_trigger);
-        else launcherWheelMotor.setVelocity(setWheelRpm * ticksPerRev * 60 / gearRatio);
+        else launcherWheelMotor.setVelocity(setWheelRpm/spinMultiplier);
     }
 
     void setLauncherLifterMotor()
     {
-        launcherLifterMotor.setTargetPosition((int)(setLifterAngle * ticksPerDegree));
+        launcherLifterMotor.setTargetPosition((int) -((setLifterAngle - initialLifterOffsetAngle + chainLashOffset) * ticksPerDegree));
         launcherLifterMotor.setPower(.3);
         launcherLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     void getInputs()
     {
-        if(gamepad1.y) runWheelOnTrigger = !runWheelOnTrigger;
+        if(gamepad1.y) {
+            if (!y_pressed) {
+                y_pressed = true;
+                runWheelOnTrigger = !runWheelOnTrigger;
+            }
+        } else y_pressed = false;
 
-        if(gamepad1.b) setWheelRpm += rpmIncrements;
-        else if(gamepad1.x) setWheelRpm -= rpmIncrements;
+        if(gamepad1.b) {
+            if (!b_pressed) {
+                setWheelRpm += rpmIncrements;
+                b_pressed = true;
+            }
+        } else b_pressed = false;
+
+        if(gamepad1.x) {
+            if (!x_pressed) {
+                x_pressed = true;
+                setWheelRpm -= rpmIncrements;
+            }
+        } else x_pressed = false;
+
         if(setWheelRpm > maxRpm) setWheelRpm = maxRpm;
+        if(setWheelRpm < 0) setWheelRpm = 0;
 
-        if(gamepad1.dpad_right) setLifterAngle += rotationIncrements;
-        else if(gamepad1.dpad_left) setLifterAngle -= rotationIncrements;
+        if(gamepad1.dpad_right) {
+            if (!dr_pressed) {
+                dr_pressed = true;
+                setLifterAngle += rotationIncrements;
+            }
+        } else dr_pressed = false;
+
+        if(gamepad1.dpad_left) {
+            if (!dl_pressed) {
+                dl_pressed = true;
+                setLifterAngle -= rotationIncrements;
+            }
+        } else dl_pressed = false;
+
         if(setLifterAngle < 0) setLifterAngle = 0;
         else if(setLifterAngle > maxAngle) setLifterAngle = maxAngle;
 
