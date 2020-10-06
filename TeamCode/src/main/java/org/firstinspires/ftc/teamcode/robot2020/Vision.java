@@ -12,6 +12,18 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.tests.EasyOpenCVExample;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
+import org.openftc.easyopencv.OpenCvInternalCamera;
+import org.openftc.easyopencv.OpenCvPipeline;
 
 import java.util.prefs.BackingStoreException;
 
@@ -29,7 +41,8 @@ public class Vision
     //user variables//
     //////////////////
     //just some stuff to get a working vuforia object
-    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE = BACK;
+    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK;
+    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
     protected final boolean PHONE_IS_PORTRAIT = false;
     protected boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
@@ -55,37 +68,81 @@ public class Vision
     protected VuforiaLocalizer vuforia = null;
     protected VuforiaTrackables trackables;
     protected VuforiaLocalizer.Parameters parameters;
+    //some openCV stuff
+    OpenCvInternalCamera phoneCam;
+    EasyOpenCVExample.SkystoneDeterminationPipeline pipeline;
     //other
-    boolean targetVisible = false;
-
-
+    protected boolean targetVisible = false;
+    protected boolean useVuforia = false;
+    protected boolean useOpenCV = false;
+    protected int cameraMonitorViewId;
     //other class
     Robot robot;
 
     Vision(Robot robot) { this.robot = robot; }
-    void initAll()
+
+    void initAll(boolean useVuforia, boolean useOpenCV)
     {
-        initVuforia();
-        loadAsset("UltimateGoal");
-        setAllTrackablesNames();
-        setAllTrackablesPosition();
-        setPhoneTransform(phonePosition, phoneRotation);
+        this.useVuforia = useVuforia;
+        this.useOpenCV = useOpenCV;
+
+        initCamera();
+
+        if(useVuforia)
+        {
+            initVuforia();
+            loadAsset("UltimateGoal");
+            setAllTrackablesNames();
+            setAllTrackablesPosition();
+            setPhoneTransform(phonePosition, phoneRotation);
+        }
+
+        if(useOpenCV)
+        {
+
+        }
     }
 
-
+    void initCamera()
+    {
+        cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
+    }
 
     void initVuforia()
     {
-        int cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
+        //make a parameters object
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
+
+        //define the parameters object
         parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = CAMERA_CHOICE;
+        parameters.cameraDirection = CAMERA_CHOICE_V;
         parameters.useExtendedTracking = useExtendedTracking;
 
-        //  Instantiate the Vuforia engine
+        //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
+    }
 
-        // put camera image on dashboard
+    void initOpenCV()
+    {
+        //creating a camera object
+        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
+
+        //creating a openCV pipeline
+        pipeline = new EasyOpenCVExample.SkystoneDeterminationPipeline();
+
+        //integrate the openCV pipeline with the camera
+        phoneCam.setPipeline(pipeline);
+        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+
+        //start camera
+        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        {
+            @Override
+            public void onOpened()
+            {
+                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            }
+        });
     }
 
     void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);}
@@ -132,7 +189,7 @@ public class Vision
     {
         for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
 
-        if (CAMERA_CHOICE == BACK)
+        if (CAMERA_CHOICE_V == BACK)
         {
             angles[1] -= 90;
         }
@@ -242,6 +299,110 @@ public class Vision
                     robot.packet.put("rotation: ", null);
                 }
             }
+        }
+    }
+
+    public static class SkystoneDeterminationPipeline extends OpenCvPipeline
+    {
+        /*
+         * An enum to define the skystone position
+         */
+        public enum RingPosition
+        {
+            FOUR,
+            ONE,
+            NONE
+        }
+
+        /*
+         * Some color constants
+         */
+        static final Scalar BLUE = new Scalar(0, 0, 255);
+        static final Scalar GREEN = new Scalar(0, 255, 0);
+
+        /*
+         * The core values which define the location and size of the sample regions
+         */
+        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+
+        static final int REGION_WIDTH = 35;
+        static final int REGION_HEIGHT = 25;
+
+        final int FOUR_RING_THRESHOLD = 150;
+        final int ONE_RING_THRESHOLD = 135;
+
+        Point region1_pointA = new Point(
+                REGION1_TOPLEFT_ANCHOR_POINT.x,
+                REGION1_TOPLEFT_ANCHOR_POINT.y);
+        Point region1_pointB = new Point(
+                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
+                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
+
+        /*
+         * Working variables
+         */
+        Mat region1_Cb;
+        Mat YCrCb = new Mat();
+        Mat Cb = new Mat();
+        int avg1;
+
+        // Volatile since accessed by OpMode thread w/o synchronization
+        private volatile EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR;
+
+        /*
+         * This function takes the RGB frame, converts to YCrCb,
+         * and extracts the Cb channel to the 'Cb' variable
+         */
+        void inputToCb(Mat input)
+        {
+            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+            Core.extractChannel(YCrCb, Cb, 1);
+        }
+
+        @Override
+        public void init(Mat firstFrame)
+        {
+            inputToCb(firstFrame);
+
+            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
+        }
+
+        @Override
+        public Mat processFrame(Mat input)
+        {
+            inputToCb(input);
+
+            avg1 = (int) Core.mean(region1_Cb).val[0];
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    BLUE, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
+            position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR; // Record our analysis
+            if(avg1 > FOUR_RING_THRESHOLD){
+                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR;
+            }else if (avg1 > ONE_RING_THRESHOLD){
+                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE;
+            }else{
+                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.NONE;
+            }
+
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    region1_pointA, // First point which defines the rectangle
+                    region1_pointB, // Second point which defines the rectangle
+                    GREEN, // The color the rectangle is drawn in
+                    -1); // Negative thickness means solid fill
+
+            return input;
+        }
+
+        public int getAnalysis()
+        {
+            return avg1;
         }
     }
 }
