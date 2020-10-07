@@ -360,6 +360,7 @@ public class Vision
          */
         Mat region1_Cb;
         Mat YCrCb = new Mat();
+        Mat HSV = new Mat();
         Mat Cb = new Mat();
         int avg1;
 
@@ -374,6 +375,12 @@ public class Vision
         {
             Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
             Core.extractChannel(YCrCb, Cb, 1);
+        }
+
+         // This function takes the RGB frame, converts to HSV,
+        public void inputToHSV(Mat input)
+        {
+            Imgproc.cvtColor(input, HSV, Imgproc.COLOR_RGB2HSV);
         }
 
         @Override
