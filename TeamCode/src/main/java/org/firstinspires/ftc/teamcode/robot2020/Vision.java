@@ -237,8 +237,8 @@ public class Vision
         CameraDevice.getInstance().setFlashTorchMode(on);
     }
 
-    void activate(){trackables.activate();}
-    void deactivate(){trackables.deactivate();}
+    void activateVuforia(){trackables.activate();}
+    void deactivateVuforia(){trackables.deactivate();}
 
     boolean findTrackable(int trackableNum, boolean logPosition)
     {
@@ -314,58 +314,73 @@ public class Vision
 
     int getNumberOfRings()
     {
-        return pipeline.numOfRings();
+        return pipeline.position;
     }
 
+    int getNumberOfRingPixels()
+    {
+        return pipeline.avg1;
+    }
 
 
     public static class SkystoneDeterminationPipeline extends OpenCvPipeline
     {
+        //////////////////
+        //user variables//
+        //////////////////
+        //for ring detection
+        static final Point RING_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+
+        static final int RING_REGION_WIDTH = 35;
+        static final int RING_REGION_HEIGHT = 25;
+
+        final int FOUR_RING_THRESHOLD = 150;
+        final int ONE_RING_THRESHOLD = 135;
+
+        //for other
+        static final Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+
+        static final int OTHER_REGION_WIDTH = 35;
+        static final int OTHER_REGION_HEIGHT = 25;
+
+        //these values are in the hsv color space(openCV uses 0-180 for H, 0-255 for S and V)
+        final int[] OTHER_COLOR_UPPER = new int[]{0,0,0};
+        final int[] OTHER_COLOR_LOWER = new int[]{0,0,0};
+
+        final int OTHER_THRESHOLD = 150;
+
+        ///////////////////
+        //other variables//
+        ///////////////////
+        //Some color constants
+        static final Scalar BLUE = new Scalar(0, 0, 255);
+        static final Scalar GREEN = new Scalar(0, 255, 0);
+
+        //edge points for the box for scanning for rings
+        Point region1_pointA = new Point(
+                RING_TOPLEFT_ANCHOR_POINT.x,
+                RING_TOPLEFT_ANCHOR_POINT.y);
+        Point region1_pointB = new Point(
+                RING_TOPLEFT_ANCHOR_POINT.x + RING_REGION_WIDTH,
+                RING_TOPLEFT_ANCHOR_POINT.y + RING_REGION_HEIGHT);
+
+        //images
+        Mat region1_Cb;
+        Mat YCrCb = new Mat();
+        Mat Cb = new Mat();
+
+        int avg1;
+        int position;
+
         /*
-         * An enum to define the skystone position
-         */
+        //an enum to define the skystone position
         public enum RingPosition
         {
             FOUR,
             ONE,
             NONE
         }
-
-        /*
-         * Some color constants
-         */
-        static final Scalar BLUE = new Scalar(0, 0, 255);
-        static final Scalar GREEN = new Scalar(0, 255, 0);
-
-        /*
-         * The core values which define the location and size of the sample regions
-         */
-        static final Point REGION1_TOPLEFT_ANCHOR_POINT = new Point(181,98);
-
-        static final int REGION_WIDTH = 35;
-        static final int REGION_HEIGHT = 25;
-
-        final int FOUR_RING_THRESHOLD = 150;
-        final int ONE_RING_THRESHOLD = 135;
-
-        Point region1_pointA = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x,
-                REGION1_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
-                REGION1_TOPLEFT_ANCHOR_POINT.x + REGION_WIDTH,
-                REGION1_TOPLEFT_ANCHOR_POINT.y + REGION_HEIGHT);
-
-        /*
-         * Working variables
-         */
-        Mat region1_Cb;
-        Mat YCrCb = new Mat();
-        Mat HSV = new Mat();
-        Mat Cb = new Mat();
-        int avg1;
-
-        // Volatile since accessed by OpMode thread w/o synchronization
-        private volatile EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR;
+        */
 
         /*
          * This function takes the RGB frame, converts to YCrCb,
@@ -378,10 +393,7 @@ public class Vision
         }
 
          // This function takes the RGB frame, converts to HSV,
-        public void inputToHSV(Mat input)
-        {
-            Imgproc.cvtColor(input, HSV, Imgproc.COLOR_RGB2HSV);
-        }
+
 
         @Override
         public void init(Mat firstFrame)
@@ -405,13 +417,13 @@ public class Vision
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
-            position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR; // Record our analysis
+            // Record our analysis
             if(avg1 > FOUR_RING_THRESHOLD){
-                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR;
+                position = 4;
             }else if (avg1 > ONE_RING_THRESHOLD){
-                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE;
+                position = 1;
             }else{
-                position = EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.NONE;
+                position = 0;
             }
 
             Imgproc.rectangle(
@@ -429,17 +441,19 @@ public class Vision
             return avg1;
         }
 
-        public int numOfRings()
+
+        public Mat inputToHSV(Mat input)
         {
-            if(position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.FOUR)
-            {
-                return 4;
-            }
-            else if(position == EasyOpenCVExample.SkystoneDeterminationPipeline.RingPosition.ONE)
-            {
-                return 1;
-            }
-            else return 0;
+            Mat imgReturn = new Mat();
+            Imgproc.cvtColor(input, imgReturn, Imgproc.COLOR_RGB2HSV);
+            return imgReturn;
+        }
+
+        public Mat filterColor(Mat input, int[] lower, int[] upper)
+        {
+            Mat imgReturn = new Mat();
+            Core.extractChannel(input, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), imgReturn);
+            return imgReturn;
         }
     }
 }
