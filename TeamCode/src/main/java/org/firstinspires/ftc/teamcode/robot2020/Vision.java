@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import android.graphics.Color;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.vuforia.CameraDevice;
@@ -16,9 +18,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.tests.EasyOpenCVExample;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.features2d.FastFeatureDetector;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -26,6 +31,9 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 import java.util.prefs.BackingStoreException;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
@@ -343,7 +351,7 @@ public class Vision
         static final int OTHER_REGION_WIDTH = 35;
         static final int OTHER_REGION_HEIGHT = 25;
 
-        //these values are in the hsv color space(openCV uses 0-180 for H, 0-255 for S and V)
+        //these values are in the HSV color space(openCV uses 0-180 for H, and 0-255 for S and V)
         final int[] OTHER_COLOR_UPPER = new int[]{0,0,0};
         final int[] OTHER_COLOR_LOWER = new int[]{0,0,0};
 
@@ -357,12 +365,21 @@ public class Vision
         static final Scalar GREEN = new Scalar(0, 255, 0);
 
         //edge points for the box for scanning for rings
-        Point region1_pointA = new Point(
+        Point Ring_region1_pointA = new Point(
                 RING_TOPLEFT_ANCHOR_POINT.x,
                 RING_TOPLEFT_ANCHOR_POINT.y);
-        Point region1_pointB = new Point(
+        Point Ring_region1_pointB = new Point(
                 RING_TOPLEFT_ANCHOR_POINT.x + RING_REGION_WIDTH,
                 RING_TOPLEFT_ANCHOR_POINT.y + RING_REGION_HEIGHT);
+
+        Point Other_region1_pointA = new Point(
+                RING_TOPLEFT_ANCHOR_POINT.x,
+                RING_TOPLEFT_ANCHOR_POINT.y);
+        Point Other_region1_pointB = new Point(
+                OTHER_TOPLEFT_ANCHOR_POINT.x + OTHER_REGION_WIDTH,
+                OTHER_TOPLEFT_ANCHOR_POINT.y + OTHER_REGION_HEIGHT);
+
+
 
         //images
         Mat region1_Cb;
@@ -371,6 +388,9 @@ public class Vision
 
         int avg1;
         int position;
+
+        List<MatOfPoint> contours;
+        Mat hierarchy;
 
         /*
         //an enum to define the skystone position
@@ -400,7 +420,7 @@ public class Vision
         {
             inputToCb(firstFrame);
 
-            region1_Cb = Cb.submat(new Rect(region1_pointA, region1_pointB));
+            region1_Cb = Cb.submat(new Rect(Ring_region1_pointA, Ring_region1_pointB));
         }
 
         @Override
@@ -412,8 +432,8 @@ public class Vision
 
             Imgproc.rectangle(
                     input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
+                    Ring_region1_pointA, // First point which defines the rectangle
+                    Ring_region1_pointB, // Second point which defines the rectangle
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
@@ -426,12 +446,11 @@ public class Vision
                 position = 0;
             }
 
-            Imgproc.rectangle(
-                    input, // Buffer to draw on
-                    region1_pointA, // First point which defines the rectangle
-                    region1_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
-                    -1); // Negative thickness means solid fill
+            getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER);
+            for(int i = 0; i < contours.size(); i++)
+            {
+                if(Imgproc.contourArea(contours.get(i)) > OTHER_THRESHOLD){Imgproc.drawContours(input, contours, i, GREEN, 3, Imgproc.LINE_8, hierarchy, 0, new Point());}
+            }
 
             return input;
         }
@@ -441,19 +460,21 @@ public class Vision
             return avg1;
         }
 
-
-        public Mat inputToHSV(Mat input)
+        public void getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper)
         {
-            Mat imgReturn = new Mat();
-            Imgproc.cvtColor(input, imgReturn, Imgproc.COLOR_RGB2HSV);
-            return imgReturn;
-        }
+            //prepossessing
+            Imgproc.cvtColor(input,input,Imgproc.COLOR_RGB2HSV);
+            Core.inRange(input, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), input);
+            input = input.submat(new Rect(Ring_region1_pointA, Ring_region1_pointB));
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    Ring_region1_pointA, // First point which defines the rectangle
+                    Ring_region1_pointB, // Second point which defines the rectangle
+                    GREEN, // The color the rectangle is drawn in
+                    4);// Negative thickness means solid fill
 
-        public Mat filterColor(Mat input, int[] lower, int[] upper)
-        {
-            Mat imgReturn = new Mat();
-            Core.extractChannel(input, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), imgReturn);
-            return imgReturn;
+            //finding contours
+            Imgproc.findContours(input, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         }
     }
 }
