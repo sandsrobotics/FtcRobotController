@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import android.graphics.Color;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.vuforia.CameraDevice;
 
@@ -330,7 +331,7 @@ public class Vision
         return pipeline.avg1;
     }
 
-
+    @Config
     public static class SkystoneDeterminationPipeline extends OpenCvPipeline
     {
         //////////////////
@@ -346,16 +347,16 @@ public class Vision
         final int ONE_RING_THRESHOLD = 135;
 
         //for other
-        static final Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(60,70);
+        public static Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(60,70);
 
-        static final int OTHER_REGION_WIDTH = 200;
-        static final int OTHER_REGION_HEIGHT = 100;
+        public static int OTHER_REGION_WIDTH = 200;
+        public static int OTHER_REGION_HEIGHT = 100;
 
         //these values are in the HSV color space(openCV uses 0-180 for H, and 0-255 for S and V)
-        final int[] OTHER_COLOR_UPPER = new int[]{60,255,255};
-        final int[] OTHER_COLOR_LOWER = new int[]{20,100,50};
+        public static int[] OTHER_COLOR_UPPER = new int[]{60,255,255};
+        public static int[] OTHER_COLOR_LOWER = new int[]{20,100,50};
 
-        final int OTHER_THRESHOLD = 50;
+        public static int OTHER_THRESHOLD = 50;
 
         ///////////////////
         //other variables//
@@ -389,7 +390,7 @@ public class Vision
         int avg1;
         int position;
 
-        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
         /*
         //an enum to define the skystone position
