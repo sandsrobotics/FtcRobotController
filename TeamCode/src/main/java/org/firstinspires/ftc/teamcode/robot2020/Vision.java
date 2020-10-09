@@ -346,16 +346,16 @@ public class Vision
         final int ONE_RING_THRESHOLD = 135;
 
         //for other
-        static final Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+        static final Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(60,70);
 
-        static final int OTHER_REGION_WIDTH = 35;
-        static final int OTHER_REGION_HEIGHT = 25;
+        static final int OTHER_REGION_WIDTH = 200;
+        static final int OTHER_REGION_HEIGHT = 100;
 
         //these values are in the HSV color space(openCV uses 0-180 for H, and 0-255 for S and V)
-        final int[] OTHER_COLOR_UPPER = new int[]{0,0,0};
-        final int[] OTHER_COLOR_LOWER = new int[]{0,0,0};
+        final int[] OTHER_COLOR_UPPER = new int[]{60,255,255};
+        final int[] OTHER_COLOR_LOWER = new int[]{20,100,50};
 
-        final int OTHER_THRESHOLD = 150;
+        final int OTHER_THRESHOLD = 50;
 
         ///////////////////
         //other variables//
@@ -389,9 +389,8 @@ public class Vision
         int avg1;
         int position;
 
-        List<MatOfPoint> contours;
-        Mat hierarchy;
-
+        List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+        Mat hierarchy = new Mat();
         /*
         //an enum to define the skystone position
         public enum RingPosition
@@ -463,18 +462,20 @@ public class Vision
         public void getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper)
         {
             //prepossessing
-            Imgproc.cvtColor(input,input,Imgproc.COLOR_RGB2HSV);
-            Core.inRange(input, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), input);
-            input = input.submat(new Rect(Ring_region1_pointA, Ring_region1_pointB));
+            Mat process = input.clone();
+
+            Imgproc.cvtColor(process,process,Imgproc.COLOR_RGB2HSV);
+            Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
+            process = process.submat(new Rect(Ring_region1_pointA, Ring_region1_pointB));
             Imgproc.rectangle(
-                    input, // Buffer to draw on
+                    process, // Buffer to draw on
                     Ring_region1_pointA, // First point which defines the rectangle
                     Ring_region1_pointB, // Second point which defines the rectangle
                     GREEN, // The color the rectangle is drawn in
                     4);// Negative thickness means solid fill
 
             //finding contours
-            Imgproc.findContours(input, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+            Imgproc.findContours(process, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
         }
     }
 }

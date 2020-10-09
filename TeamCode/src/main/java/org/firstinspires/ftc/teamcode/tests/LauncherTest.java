@@ -26,8 +26,8 @@ public class LauncherTest extends LinearOpMode {
     protected boolean fliplauncherLifterMotor = true;
     protected boolean fliplauncherservo = false;
     //servo
-    protected double servoRestAngle = .55;
-    protected double servoLaunchAngle = .25;
+    protected double servoRestAngle = .25;
+    protected double servoLaunchAngle = .55;
     //wheel
     protected double gearRatio = 5;
     protected double ticksPerRev = 145.6;

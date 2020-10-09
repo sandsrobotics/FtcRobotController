@@ -16,7 +16,7 @@ public class Test extends LinearOpMode
     {
         robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, true);
 
-        robot.vision.initAll(false, true);
+        //robot.vision.initAll(false, true);
 
         waitForStart();
 
