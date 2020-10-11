@@ -63,11 +63,11 @@ public class Robot
     protected double rotationOffset = 0;
     TelemetryPacket packet;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useLauncher, boolean useVision)
+    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         motorConfig = new MotorConfig(this);
         if(useDrive)movement = new Movement(this);
-        if(useVision) vision = new Vision(this);
+        if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
 
         this.hardwareMap = hardwareMap;
@@ -78,7 +78,7 @@ public class Robot
         initHardware();
         if(useDrive) motorConfig.initDriveMotors();
         //if(useLauncher) motorConfig.initLauncherMotors();
-        if(useVision) vision.initAll(false, true);
+        if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
     }
 
     void initHardware()

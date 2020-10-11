@@ -14,16 +14,18 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, true);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, false, false);
 
-        //robot.vision.initAll(false, true);
+        robot.startTelemetry();
+        robot.launcher.readCsv();
+        robot.sendTelemetry();
 
         waitForStart();
 
         while (opModeIsActive())
         {
             robot.startTelemetry();
-            robot.addTelemetryDouble("number of rings", robot.vision.getNumberOfRings());
+            robot.packet.put("check",robot.launcher.calibrationValues);
             robot.sendTelemetry();
         }
     }
