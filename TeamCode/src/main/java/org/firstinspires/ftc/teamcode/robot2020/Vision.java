@@ -463,6 +463,13 @@ public class Vision
                     BLUE, // The color the rectangle is drawn in
                     2); // Thickness of the rectangle lines
 
+            Imgproc.rectangle(
+                    input, // Buffer to draw on
+                    Other_region1_pointA, // First point which defines the rectangle
+                    Other_region1_pointB, // Second point which defines the rectangle
+                    GREEN, // The color the rectangle is drawn in
+                    2); // Thickness of the rectangle lines
+
             // Record our analysis
             if(avg1 > FOUR_RING_THRESHOLD){
                 position = 4;
@@ -473,14 +480,12 @@ public class Vision
             }
 
             contours = getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER, Other_region1_pointA, Other_region1_pointB);
-            /*
 
             for(int i = 0; i < contours.size(); i++)
             {
                 if(Imgproc.contourArea(contours.get(i)) > OTHER_THRESHOLD){Imgproc.drawContours(input, contours, i, GREEN, 2);}
             }
 
-             */
             return input;
         }
 
