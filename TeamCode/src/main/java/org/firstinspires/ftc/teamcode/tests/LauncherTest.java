@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Config
 @TeleOp(name = "test launcher v1.1")
 public class LauncherTest extends LinearOpMode {
 
@@ -37,7 +36,7 @@ public class LauncherTest extends LinearOpMode {
     // Use Encoder for Launcher wheel
     protected boolean useEncoder = true;
     //lifter
-    protected double ticksPerDegree = 2 * 1120 / 360; //Andymark 40:1  2:1 chain gear ratio
+    protected double ticksPerDegree = 2.0 * 1120.0 / 360.0; //Andymark 40:1  2:1 chain gear ratio
     protected double maxAngle = 90;
     protected double rotationIncrements = 10;
     protected boolean resetLifterDuringStart = true;

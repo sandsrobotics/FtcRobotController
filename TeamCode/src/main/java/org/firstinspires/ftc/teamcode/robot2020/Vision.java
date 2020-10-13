@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.vuforia.CameraDevice;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
@@ -31,6 +32,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
+import org.openftc.easyopencv.OpenCvWebcam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +81,7 @@ public class Vision
     protected VuforiaTrackables trackables;
     protected VuforiaLocalizer.Parameters parameters;
     //some openCV stuff
-    OpenCvInternalCamera phoneCam;
+    OpenCvWebcam webcam;
     Vision.SkystoneDeterminationPipeline pipeline;
     //other
     protected boolean targetVisible = false;
@@ -301,22 +303,22 @@ public class Vision
     void initOpenCV()
     {
         //creating a camera object
-        phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
+        webcam = OpenCvCameraFactory.getInstance().createWebcam(robot.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         //creating a openCV pipeline
         pipeline = new Vision.SkystoneDeterminationPipeline();
 
         //integrate the openCV pipeline with the camera
-        phoneCam.setPipeline(pipeline);
-        phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+        webcam.setPipeline(pipeline);
+        webcam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
 
         //start camera
-        phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
             public void onOpened()
             {
-                phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
     }
@@ -338,13 +340,13 @@ public class Vision
         //user variables//
         //////////////////
         //for ring detection
-        static final Point RING_TOPLEFT_ANCHOR_POINT = new Point(181,98);
+        public static Point RING_TOPLEFT_ANCHOR_POINT = new Point(181,98);
 
-        static final int RING_REGION_WIDTH = 35;
-        static final int RING_REGION_HEIGHT = 25;
+        public static int RING_REGION_WIDTH = 35;
+        public static int RING_REGION_HEIGHT = 25;
 
-        final int FOUR_RING_THRESHOLD = 150;
-        final int ONE_RING_THRESHOLD = 135;
+        public static int FOUR_RING_THRESHOLD = 150;
+        public static int ONE_RING_THRESHOLD = 135;
 
         //for other
         public static Point OTHER_TOPLEFT_ANCHOR_POINT = new Point(60,70);
@@ -353,8 +355,8 @@ public class Vision
         public static int OTHER_REGION_HEIGHT = 100;
 
         //these values are in the HSV color space(openCV uses 0-180 for H, and 0-255 for S and V)
-        public static int[] OTHER_COLOR_UPPER = new int[]{60,255,255};
-        public static int[] OTHER_COLOR_LOWER = new int[]{20,100,50};
+        protected int[] OTHER_COLOR_UPPER = new int[]{60,255,255};
+        protected int[] OTHER_COLOR_LOWER = new int[]{20,100,50};
 
         public static int OTHER_THRESHOLD = 50;
 
@@ -374,8 +376,8 @@ public class Vision
                 RING_TOPLEFT_ANCHOR_POINT.y + RING_REGION_HEIGHT);
 
         Point Other_region1_pointA = new Point(
-                RING_TOPLEFT_ANCHOR_POINT.x,
-                RING_TOPLEFT_ANCHOR_POINT.y);
+                OTHER_TOPLEFT_ANCHOR_POINT.x,
+                OTHER_TOPLEFT_ANCHOR_POINT.y);
         Point Other_region1_pointB = new Point(
                 OTHER_TOPLEFT_ANCHOR_POINT.x + OTHER_REGION_WIDTH,
                 OTHER_TOPLEFT_ANCHOR_POINT.y + OTHER_REGION_HEIGHT);
@@ -446,12 +448,11 @@ public class Vision
                 position = 0;
             }
 
-            getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER);
+            contours = getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER, Other_region1_pointA, Other_region1_pointB);
             for(int i = 0; i < contours.size(); i++)
             {
-                if(Imgproc.contourArea(contours.get(i)) > OTHER_THRESHOLD){Imgproc.drawContours(input, contours, i, GREEN, 3, Imgproc.LINE_8, hierarchy, 0, new Point());}
+                if(Imgproc.contourArea(contours.get(i)) > OTHER_THRESHOLD){Imgproc.drawContours(input, contours, i, GREEN, 2);}
             }
-
             return input;
         }
 
@@ -460,23 +461,19 @@ public class Vision
             return avg1;
         }
 
-        public void getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper)
+        public List<MatOfPoint> getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper, Point upperLeftPoint, Point lowerRightPoint)
         {
             //prepossessing
             Mat process = input.clone();
 
             Imgproc.cvtColor(process,process,Imgproc.COLOR_RGB2HSV);
             Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
-            process = process.submat(new Rect(Ring_region1_pointA, Ring_region1_pointB));
-            Imgproc.rectangle(
-                    process, // Buffer to draw on
-                    Ring_region1_pointA, // First point which defines the rectangle
-                    Ring_region1_pointB, // Second point which defines the rectangle
-                    GREEN, // The color the rectangle is drawn in
-                    4);// Negative thickness means solid fill
+            process = process.submat(new Rect(upperLeftPoint, lowerRightPoint));
 
             //finding contours
-            Imgproc.findContours(process, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+            List<MatOfPoint> out = new ArrayList<>();
+            Imgproc.findContours(process, out, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+            return out;
         }
     }
 }
