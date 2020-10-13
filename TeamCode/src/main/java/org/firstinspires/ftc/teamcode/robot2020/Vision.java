@@ -54,7 +54,6 @@ public class Vision
     //////////////////
     //just some stuff to get a working vuforia object
     protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK;
-    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
     protected final boolean PHONE_IS_PORTRAIT = false;
     protected boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
@@ -67,6 +66,10 @@ public class Vision
     //to know where the phone or camera is IN INCHES!!! and degrees
     float[] phonePosition = {0,0,0};
     float[] phoneRotation = {0,0,0};
+
+    //to set up easy openCV camera
+    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
+    public static boolean usingWebcam = true;
 
     ////////////////////
     // other variables//
@@ -82,6 +85,7 @@ public class Vision
     protected VuforiaLocalizer.Parameters parameters;
     //some openCV stuff
     OpenCvWebcam webcam;
+    OpenCvCamera phoneCam;
     Vision.SkystoneDeterminationPipeline pipeline;
     //other
     protected boolean targetVisible = false;
@@ -302,35 +306,49 @@ public class Vision
     //////////////////
     void initOpenCV()
     {
-        //creating a camera object
-        webcam = OpenCvCameraFactory.getInstance().createWebcam(robot.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
-
-        //creating a openCV pipeline
-        pipeline = new Vision.SkystoneDeterminationPipeline();
-
-        //integrate the openCV pipeline with the camera
-        webcam.setPipeline(pipeline);
-        webcam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
-
-        //start camera
-        webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+        if(usingWebcam)
         {
-            @Override
-            public void onOpened()
+            //creating a camera object
+            webcam = OpenCvCameraFactory.getInstance().createWebcam(robot.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+
+            //creating a openCV pipeline
+            pipeline = new Vision.SkystoneDeterminationPipeline();
+
+            //integrate the openCV pipeline with the camera
+            webcam.setPipeline(pipeline);
+
+            //start camera
+            webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
             {
-                webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
-            }
-        });
-    }
+                @Override
+                public void onOpened()
+                {
+                    webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                }
+            });
+        }
+        else
+        {
+            //creating a camera object
+            phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
 
-    int getNumberOfRings()
-    {
-        return pipeline.position;
-    }
+            //creating a openCV pipeline
+            pipeline = new Vision.SkystoneDeterminationPipeline();
 
-    int getNumberOfRingPixels()
-    {
-        return pipeline.avg1;
+            //integrate the openCV pipeline with the camera
+            phoneCam.setPipeline(pipeline);
+            phoneCam.setViewportRenderingPolicy(OpenCvCamera.ViewportRenderingPolicy.OPTIMIZE_VIEW);
+
+            //start camera
+            phoneCam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
+            {
+                @Override
+                public void onOpened()
+                {
+                    phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                }
+            });
+        }
     }
 
     @Config
@@ -375,9 +393,7 @@ public class Vision
                 RING_TOPLEFT_ANCHOR_POINT.x + RING_REGION_WIDTH,
                 RING_TOPLEFT_ANCHOR_POINT.y + RING_REGION_HEIGHT);
 
-        Point Other_region1_pointA = new Point(
-                OTHER_TOPLEFT_ANCHOR_POINT.x,
-                OTHER_TOPLEFT_ANCHOR_POINT.y);
+        Point Other_region1_pointA = OTHER_TOPLEFT_ANCHOR_POINT;
         Point Other_region1_pointB = new Point(
                 OTHER_TOPLEFT_ANCHOR_POINT.x + OTHER_REGION_WIDTH,
                 OTHER_TOPLEFT_ANCHOR_POINT.y + OTHER_REGION_HEIGHT);
@@ -408,9 +424,17 @@ public class Vision
          * This function takes the RGB frame, converts to YCrCb,
          * and extracts the Cb channel to the 'Cb' variable
          */
+        boolean rectInImg(Mat img, Rect rect)
+        {
+            return  rect.x >= 0 &&
+                    rect.y >= 0 &&
+                    rect.x + rect.width <= img.cols() &&
+                    rect.y + rect.height <= img.rows();
+        }
+
         void inputToCb(Mat input)
         {
-            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
+            Imgproc.cvtColor(input.clone(), YCrCb, Imgproc.COLOR_RGB2YCrCb);
             Core.extractChannel(YCrCb, Cb, 1);
         }
 
@@ -449,10 +473,14 @@ public class Vision
             }
 
             contours = getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER, Other_region1_pointA, Other_region1_pointB);
+            /*
+
             for(int i = 0; i < contours.size(); i++)
             {
                 if(Imgproc.contourArea(contours.get(i)) > OTHER_THRESHOLD){Imgproc.drawContours(input, contours, i, GREEN, 2);}
             }
+
+             */
             return input;
         }
 
@@ -468,7 +496,9 @@ public class Vision
 
             Imgproc.cvtColor(process,process,Imgproc.COLOR_RGB2HSV);
             Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
-            process = process.submat(new Rect(upperLeftPoint, lowerRightPoint));
+
+            Rect rect = new Rect(upperLeftPoint, lowerRightPoint);
+            if(rectInImg(process, rect))process = process.submat(rect);
 
             //finding contours
             List<MatOfPoint> out = new ArrayList<>();
