@@ -503,7 +503,7 @@ public class Vision
             Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
 
             Rect rect = new Rect(upperLeftPoint, lowerRightPoint);
-            if(rectInImg(process, rect))process = process.submat(rect);
+            if(rectInImg(process, rect)) process = process.submat(rect);
 
             //finding contours
             List<MatOfPoint> out = new ArrayList<>();
