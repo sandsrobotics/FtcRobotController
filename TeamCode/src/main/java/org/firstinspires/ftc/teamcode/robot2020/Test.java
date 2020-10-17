@@ -18,10 +18,7 @@ public class Test extends LinearOpMode
     {
         robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,false, true, false, false);
 
-        robot.startTelemetry();
-        robot.launcher.getCalibration();
-        robot.addTelemetryString("values", robot.launcher.powers.toString());
-        robot.sendTelemetry();
+
 
         waitForStart();
 

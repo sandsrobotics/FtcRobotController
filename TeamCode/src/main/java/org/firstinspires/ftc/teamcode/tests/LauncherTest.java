@@ -30,7 +30,7 @@ public class LauncherTest extends LinearOpMode {
     //wheel
     protected double gearRatio = 5;
     protected double ticksPerRev = 145.6;
-    protected double rpmIncrements = 500;
+    protected double rpmIncrements = 100;
     protected double maxRpm = 6000;
 
     // Use Encoder for Launcher wheel

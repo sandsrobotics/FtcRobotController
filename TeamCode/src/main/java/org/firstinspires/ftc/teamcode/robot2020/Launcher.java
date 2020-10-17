@@ -14,17 +14,19 @@ public class Launcher {
     //////////////////
     //user variables//
     //////////////////
-    public static String calibrationFileDir = "assets";
-    public static String calibrationFileName =  "launcher test.csv";
-    public static int powerColumn = 1;
-    public static int distanceColumn = 1;
+    protected String calibrationFileDir = "assets";
+    protected String calibrationFileName =  "Launcher Config - Test.csv";
+
+    protected boolean useRPM = true;
+    protected int powerColumn = 0;
+    protected int rpmColumn = 1;
+    protected int distanceColumn = 2;
 
     ///////////////////
     //other variables//
     ///////////////////
     protected ArrayList<List<Double>> calibrationValues;
-    protected List<Double> powers;
-    protected List<Double> distances;
+    protected ArrayList<List<Double>> formattedCalibrationValues;
 
     //other classes
     Robot robot;
@@ -38,8 +40,9 @@ public class Launcher {
             InputStream is = getClass().getClassLoader().getResourceAsStream(calibrationFileDir + "/" + calibrationFileName);
             if(is == null) throw new Exception("file directory or name are incorrect");
             calibrationValues = readFile(is);
-            powers = getColumn(calibrationValues,powerColumn);
-            distances = getColumn(calibrationValues,distanceColumn);
+            formattedCalibrationValues = removeDataWithYZeros(calibrationValues,distanceColumn);
+            if(useRPM && powerColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues,powerColumn);
+            else if(rpmColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues, rpmColumn);
         }
         catch (Exception e) {robot.addTelemetryString("error", e.toString());}
     }
@@ -78,9 +81,23 @@ public class Launcher {
         return out;
     }
 
-    List<Double> getEquation(List<Double> x, List<Double> y)// will give you
+    ArrayList<List<Double>> removeColumn(ArrayList<List<Double>> data, int column)
+    {
+        for(int i = 0; i < data.size(); i++) data.get(i).remove(column);
+        return data;
+    }
+
+    ArrayList<List<Double>> removeDataWithYZeros(ArrayList<List<Double>> data, int yPos)
+    {
+        ArrayList<List<Double>> out = new ArrayList<>();
+        for(List<Double> line: data) if(line.get(yPos) != 0) out.add(line);
+        return out;
+    }
+
+    List<Double> getEquation(List<Double> x, List<Double> y)//will return m,x,b
     {
         List<Double> out = new ArrayList<>();
+
 
         return out;
     }
