@@ -16,6 +16,8 @@ public class Launcher {
     //////////////////
     public static String calibrationFileDir = "assets";
     public static String calibrationFileName =  "launcher test.csv";
+    public static int powerColumn = 1;
+    public static int distanceColumn = 1;
 
     ///////////////////
     //other variables//
@@ -36,8 +38,8 @@ public class Launcher {
             InputStream is = getClass().getClassLoader().getResourceAsStream(calibrationFileDir + "/" + calibrationFileName);
             if(is == null) throw new Exception("file directory or name are incorrect");
             calibrationValues = readFile(is);
-            powers = getColumn(calibrationValues,1);
-            distances = getColumn(calibrationValues,4);
+            powers = getColumn(calibrationValues,powerColumn);
+            distances = getColumn(calibrationValues,distanceColumn);
         }
         catch (Exception e) {robot.addTelemetryString("error", e.toString());}
     }
@@ -73,6 +75,13 @@ public class Launcher {
     {
         List<Double> out = new ArrayList<>();
         for(List<Double> line: data) out.add(line.get(column - 1));
+        return out;
+    }
+
+    List<Double> getEquation(List<Double> x, List<Double> y)// will give you
+    {
+        List<Double> out = new ArrayList<>();
+
         return out;
     }
 }// class end
