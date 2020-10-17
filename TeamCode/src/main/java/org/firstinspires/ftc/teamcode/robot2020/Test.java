@@ -6,26 +6,28 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 // test
 @Config
-@TeleOp(name = "test vision v1.1")
+@TeleOp(name = "test launcher read")
 public class Test extends LinearOpMode
 {
 
     Robot robot;
 
+
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, true, false, false);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,false, true, false, false);
 
         robot.startTelemetry();
-        robot.launcher.readCSV("Launcher Config");
-        robot.addTelemetryString("values", robot.launcher.calibrationValues.toString());
+        robot.launcher.getCalibration();
+        robot.addTelemetryString("values", robot.launcher.powers.toString());
         robot.sendTelemetry();
 
         waitForStart();
 
         while (opModeIsActive())
         {
+
         }
     }
 }

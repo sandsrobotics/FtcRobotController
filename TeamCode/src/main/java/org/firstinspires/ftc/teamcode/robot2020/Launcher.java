@@ -1,51 +1,53 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import com.acmerobotics.dashboard.config.Config;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static android.os.Environment.DIRECTORY_DOWNLOADS;
-import static android.os.Environment.getRootDirectory;
-import static org.firstinspires.ftc.robotcontroller.external.samples.ConceptVuMarkIdentification.TAG;
-
 @Config
-public class Launcher extends AppCompatActivity {
+public class Launcher {
 
     //////////////////
     //user variables//
     //////////////////
+    public static String calibrationFileDir = "assets";
+    public static String calibrationFileName =  "launcher test.csv";
+
+    ///////////////////
+    //other variables//
+    ///////////////////
     protected ArrayList<List<Double>> calibrationValues;
+    protected List<Double> powers;
+    protected List<Double> distances;
 
     //other classes
     Robot robot;
 
     Launcher(Robot robot) { this.robot = robot; }
 
-    void readCSV(String Name)
+    void getCalibration()
     {
         try
         {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(getAssets().open(Name)));
+            InputStream is = getClass().getClassLoader().getResourceAsStream(calibrationFileDir + "/" + calibrationFileName);
+            if(is == null) throw new Exception("file directory or name are incorrect");
+            calibrationValues = readFile(is);
+            powers = getColumn(calibrationValues,1);
+            distances = getColumn(calibrationValues,4);
+        }
+        catch (Exception e) {robot.addTelemetryString("error", e.toString());}
+    }
 
+    ArrayList<List<Double>> readFile(InputStream is)
+    {
+        ArrayList<List<Double>> out = new ArrayList<>();
+        try
+        {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
             String Line;
             while ((Line = reader.readLine()) != null)
             {
@@ -57,12 +59,20 @@ public class Launcher extends AppCompatActivity {
                     try { values.add(Double.parseDouble(element)); }
                     catch (Exception e){ valid = false; }
                 }
-                if(valid) calibrationValues.add(values);
+                if(valid) out.add(values);
             }
         }
         catch (IOException e)
         {
             robot.addTelemetryString("error", e.toString());
         }
+        return out;
+    }
+
+    List<Double> getColumn(ArrayList<List<Double>> data, int column)
+    {
+        List<Double> out = new ArrayList<>();
+        for(List<Double> line: data) out.add(line.get(column - 1));
+        return out;
     }
 }// class end
