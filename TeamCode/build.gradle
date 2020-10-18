@@ -19,6 +19,11 @@ repositories {
 }
 
 dependencies {
+    def room_version = "2.2.5"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
     annotationProcessor files('lib/OpModeAnnotationProcessor.jar')
     implementation 'androidx.core:core:1.1.0'
     implementation 'org.openftc:easyopencv:1.4.1'

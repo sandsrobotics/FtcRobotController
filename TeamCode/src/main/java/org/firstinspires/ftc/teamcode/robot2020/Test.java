@@ -16,15 +16,24 @@ public class Test extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,false, true, false, false);
+        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,false, true, false, false, false);
 
-
+        robot.startTelemetry();
+        robot.complexMovement.startRecording(true);
+        robot.sendTelemetry();
 
         waitForStart();
 
         while (opModeIsActive())
         {
-
+            while(robot.complexMovement.isRecording && opModeIsActive())
+            {
+                robot.startTelemetry();
+                robot.complexMovement.recorder();
+                robot.sendTelemetry();
+            }
+            robot.complexMovement.stopRecording(true, "test");
+            break;
         }
     }
 }

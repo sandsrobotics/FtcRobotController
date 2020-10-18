@@ -76,7 +76,7 @@ public class MotorConfig
 
     public void resetDriveEncodersList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
@@ -89,7 +89,7 @@ public class MotorConfig
     ///////////////////
     public void setDriveMotorsToCoastList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         }
@@ -97,7 +97,7 @@ public class MotorConfig
 
     public void setMotorsToBrakeList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
@@ -105,7 +105,7 @@ public class MotorConfig
 
     public void setMotorsToRunWithoutEncodersList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         }
@@ -113,7 +113,7 @@ public class MotorConfig
 
     public void setMotorsToRunWithEncodersList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
@@ -121,7 +121,7 @@ public class MotorConfig
 
     public void setMotorsToRunToPositionList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
@@ -132,7 +132,7 @@ public class MotorConfig
     ///////////////
     public void stopMotorsList(List<DcMotorEx> motors)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setPower(0);
         }
@@ -140,7 +140,7 @@ public class MotorConfig
 
     public void setMotorsToPowerList(List<DcMotorEx> motors, double power)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setPower(power);
         }
@@ -149,7 +149,7 @@ public class MotorConfig
     public void setMotorsToSeparatePowersArrayList(List<DcMotorEx> motors, double[] powers)
     {
         int i = 0;
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setPower(powers[i]);
             i++;
@@ -160,7 +160,7 @@ public class MotorConfig
     {
         double[] arr = new double[motors.size()];
         int i = 0;
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             arr[i] = motor.getPower();
             i++;
@@ -173,7 +173,7 @@ public class MotorConfig
     ///////////////
     public void setMotorsToPositionList(List<DcMotorEx> motors, int ticks, double power)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setTargetPosition(ticks);
             motor.setPower(power);
@@ -182,7 +182,7 @@ public class MotorConfig
     }
     public void moveMotorsForwardList(List<DcMotorEx> motors, int ticks, double power)
     {
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setTargetPosition(motor.getCurrentPosition() + ticks);
             motor.setPower(power);
@@ -192,7 +192,7 @@ public class MotorConfig
     public void moveMotorForwardSeparateAmountList(List<DcMotorEx> motors, int[] ticks, double power)
     {
         int i = 0;
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             motor.setTargetPosition(motor.getCurrentPosition() + ticks[i]);
             motor.setPower(power);
@@ -205,9 +205,21 @@ public class MotorConfig
     {
         int[] arr = new int[motors.size()];
         int i = 0;
-        for(DcMotor motor: motors)
+        for(DcMotorEx motor: motors)
         {
             arr[i] = motor.getCurrentPosition();
+            i++;
+        }
+        return arr;
+    }
+
+    public double[] getMotorVelocitiesList(List<DcMotorEx> motors)
+    {
+        double[] arr = new double[motors.size()];
+        int i = 0;
+        for(DcMotorEx motor: motors)
+        {
+            arr[i] = motor.getVelocity();
             i++;
         }
         return arr;

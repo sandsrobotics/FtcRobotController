@@ -20,6 +20,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,6 +50,7 @@ public class Robot
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
+    public ComplexMovement complexMovement;
 
     //objects
     protected HardwareMap hardwareMap;
@@ -63,12 +65,13 @@ public class Robot
     protected double rotationOffset = 0;
     TelemetryPacket packet;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         motorConfig = new MotorConfig(this);
         if(useDrive)movement = new Movement(this);
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
+        if(useComplexMovement) complexMovement = new ComplexMovement(this);
 
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
@@ -76,7 +79,7 @@ public class Robot
         this.gamepad2 = gamepad2;
 
         initHardware();
-        if(useDrive) motorConfig.initDriveMotors();
+        if(useDrive || useComplexMovement) motorConfig.initDriveMotors();
         //if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
     }
