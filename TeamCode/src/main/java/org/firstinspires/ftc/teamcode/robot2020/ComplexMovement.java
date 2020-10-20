@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import android.database.Cursor;
+
 import androidx.room.Room;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
@@ -18,6 +20,7 @@ public class ComplexMovement {
     //////////////////
     protected long measureDelay = 10; //in ms
     protected long maxTime = 1000; //in ms
+    protected String dataBaseName = "FIRST_INSPIRE_2020";
 
     ///////////////////
     //other variables//
@@ -28,6 +31,7 @@ public class ComplexMovement {
     protected double curRecordingLength = 0;
     protected boolean startOfRecording = true;
     protected int[] motorStartOffset;
+    protected AppDatabase db;
 
     //other class objects
     Robot robot;
@@ -44,7 +48,7 @@ public class ComplexMovement {
         {
             if(curRecordingLength + measureDelay > maxTime)
             {
-                robot.addTelemetryString("ComplexMovement.recorder has stopped recording: ", "this recording has stopped at time " + curRecordingLength + "ms: stop recording to make file");
+                robot.addTelemetryString("ComplexMovement.recorder has stopped recording: ", "this recording has stopped at time " + curRecordingLength + " ms: stop recording to make file");
                 isRecording = false;
             }
             else
@@ -77,20 +81,11 @@ public class ComplexMovement {
         isRecording = false;
     }
 
-    void stopRecording(boolean makeFile, String name)
+    void stopRecording(boolean makeFile, String moveName)
     {
         if(makeFile)
         {
-            if (name == null || name.equals("")) name = "not named";
-            AppDatabase db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, "FIRST_INSPIRE_2020").build();
-            MovementEntity entity = new MovementEntity(name, 0, (int) maxTime, measureDelay);
-            db.movementEntityDAO().insertAll(entity);
-            for (int i = 0; i < positions.size(); i++) {
-                for (int m = 1; m <= robot.motorConfig.driveMotors.size(); m++) {
-                    MovementEntity entity1 = new MovementEntity(name, m, positions.get(i)[m-1], velocities.get(i)[m-1]);
-                    db.movementEntityDAO().insertAll(entity1);
-                }
-            }
+            makeFile(moveName);
         }
         isRecording = false;
     }
@@ -102,5 +97,26 @@ public class ComplexMovement {
         curRecordingLength = 0;
         startOfRecording = true;
         motorStartOffset = null;
+    }
+
+    void makeFile(String moveName)
+    {
+        if (moveName == null || moveName.equals("")) moveName = "not named";
+        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
+        MovementEntity entity = new MovementEntity(moveName, 0, (int) maxTime, measureDelay);
+        db.movementEntityDAO().insertAll(entity);
+        for (int i = 0; i < positions.size(); i++)
+        {
+            for (int m = 0; m < robot.motorConfig.driveMotors.size(); m++) {
+                MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m], velocities.get(i)[m]);
+                db.movementEntityDAO().insertAll(entity1);
+            }
+        }
+    }
+
+    void readData(String moveName)
+    {
+         Cursor cursor = db.query(moveName, new  String[]{"motor_pos"});
+
     }
 }
