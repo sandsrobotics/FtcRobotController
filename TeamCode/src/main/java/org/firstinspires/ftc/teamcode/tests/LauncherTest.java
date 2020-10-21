@@ -21,12 +21,12 @@ public class LauncherTest extends LinearOpMode {
     protected int launcherLifterMotorNum = 2;
     protected int launcherservoNum = 0;
     //flip
-    protected boolean fliplauncherWheelMotor = false;
+    protected boolean fliplauncherWheelMotor = true;
     protected boolean fliplauncherLifterMotor = true;
     protected boolean fliplauncherservo = false;
     //servo
-    protected double servoRestAngle = .25;
-    protected double servoLaunchAngle = .55;
+    protected double servoRestAngle = .65;
+    protected double servoLaunchAngle = .25;
     //wheel
     protected double gearRatio = 5;
     protected double ticksPerRev = 145.6;
@@ -90,7 +90,7 @@ public class LauncherTest extends LinearOpMode {
         if (fliplauncherWheelMotor)
             launcherWheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         if (fliplauncherLifterMotor)
-            launcherWheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            launcherLifterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         if (fliplauncherservo) launcherServo.setDirection(Servo.Direction.REVERSE);
 
         // zero motors
@@ -137,7 +137,7 @@ public class LauncherTest extends LinearOpMode {
 
     void setLauncherLifterMotor() {
         launcherLifterMotor.setTargetPosition((int) -((setLifterAngle - initialLifterOffsetAngle + chainLashOffset) * ticksPerDegree));
-        launcherLifterMotor.setPower(.3);
+        launcherLifterMotor.setPower(.5);
         launcherLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 

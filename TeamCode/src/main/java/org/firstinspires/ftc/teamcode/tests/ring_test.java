@@ -47,11 +47,11 @@ public class ring_test extends LinearOpMode {
         waitForStart();
         if (opModeIsActive()) {
             while (opModeIsActive()) {
-                launcher();
+                //launcher();
                 standard_drive();
                 spin_power();
-                launch();
-                sweep();
+                //launch();
+                //sweep();
                 data_out();
             }
         }

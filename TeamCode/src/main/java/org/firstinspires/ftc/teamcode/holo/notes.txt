@@ -1,0 +1,16 @@
+            // must keep things proportional when the sum of any x or y > 1
+            double frontMax = Math.max(Math.abs(leftFront), Math.abs(rightFront));
+            double BackMax = Math.max(Math.abs(leftBack), Math.abs(rightBack));
+            double maxDrive = Math.max(frontMax, BackMax);
+            maxDrive = Math.max(maxDrive, robot.MOTORMAX);
+
+            // scale and clip the front motors, then the aft
+            leftFront = leftFront/maxDrive;
+            leftFront = Range.clip(leftFront, robot.MOTORMIN, robot.MOTORMAX);
+            rightFront = rightFront/maxDrive;
+            rightFront = Range.clip(rightFront, robot.MOTORMIN, robot.MOTORMAX);
+
+            leftBack = leftBack/maxDrive;
+            leftBack = Range.clip(leftBack, robot.MOTORMIN, robot.MOTORMAX);
+            rightBack = rightBack/maxDrive;
+            rightBack = Range.clip(rightBack, robot.MOTORMIN,robot. MOTORMAX);
