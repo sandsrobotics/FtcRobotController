@@ -4,6 +4,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -213,6 +215,9 @@ public class MotorConfig
         return arr;
     }
 
+    ////////////////////
+    //motor velocities//
+    ////////////////////
     public double[] getMotorVelocitiesList(List<DcMotorEx> motors)
     {
         double[] arr = new double[motors.size()];
@@ -223,6 +228,16 @@ public class MotorConfig
             i++;
         }
         return arr;
+    }
+
+    void setMotorVelocitiesList(List<DcMotorEx> motors, double[] velocities)
+    {
+        int i = 0;
+        for(DcMotorEx motor: motors)
+        {
+            motor.setVelocity(velocities[i]);
+            i++;
+        }
     }
 
     /////////

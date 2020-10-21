@@ -31,8 +31,6 @@ public class Test extends LinearOpMode
             {
                 robot.startTelemetry();
                 robot.complexMovement.recorder();
-                robot.addTelemetryDouble("size", robot.complexMovement.positions.size());
-                robot.addTelemetryDouble("size 2", robot.complexMovement.velocities.size());
                 robot.sendTelemetry();
             }
             robot.complexMovement.stopRecording(true, "test");
