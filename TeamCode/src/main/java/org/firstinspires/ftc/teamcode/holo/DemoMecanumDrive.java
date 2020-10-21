@@ -9,16 +9,11 @@ public class DemoMecanumDrive extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot = new SandsRobot(hardwareMap, telemetry);
+        robot = new SandsRobot(hardwareMap, telemetry, gamepad1, gamepad2);
         waitForStart();
 
         while(opModeIsActive()){
-            double leftFront = -gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
-            double rightFront = gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
-            double leftBack = gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
-            double rightBack = -gamepad1.left_stick_x + gamepad1.left_stick_y + gamepad1.right_stick_x;
-
-            robot.setPowerAll(rightFront,rightBack,leftFront,leftBack );
+            robot.controlDrivetrain();
         }
         robot.stop();
     }
