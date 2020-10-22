@@ -179,7 +179,7 @@ public class ComplexMovement {
             }
         }
     }
-
+/*
     void loadMoveCSV(String fileName)
     {
         try
@@ -223,7 +223,7 @@ public class ComplexMovement {
             if(robot.debug_methods)robot.addTelemetryString("error", e.toString());
         }
     }
-
+*/
     void scaleLoadedMove(boolean scaleToMaxPower)
     {
         double maxMeasuredVelocity = 0;
@@ -255,7 +255,7 @@ public class ComplexMovement {
         loaded_TotalMeasureDelay = 0;
         loaded_TotalTime = 0;
     }
-
+/*
     void runMove(double speedMultiplier)
     {
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
@@ -282,7 +282,7 @@ public class ComplexMovement {
         }
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
     }
-
+*/
     void runMoveV2(double speedMultiplier)
     {
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
