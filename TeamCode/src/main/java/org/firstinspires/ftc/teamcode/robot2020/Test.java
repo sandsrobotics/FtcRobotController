@@ -17,23 +17,24 @@ public class Test extends LinearOpMode
     public void runOpMode()
     {
         robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,false, true, false, false, false);
-        robot.motorConfig.setDriveMotorsToCoastList(robot.motorConfig.driveMotors);
-        robot.startTelemetry();
+
         robot.complexMovement.startRecording(true);
-        robot.sendTelemetry();
+        robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
 
         waitForStart();
 
         while (opModeIsActive())
         {
-
-            while(robot.complexMovement.isRecording && opModeIsActive())
+            robot.startTelemetry();
+            while(robot.complexMovement.isRecording && !robot.stop())
             {
-                robot.startTelemetry();
                 robot.complexMovement.recorder();
-                robot.sendTelemetry();
             }
-            robot.complexMovement.stopRecording(true, "test");
+            robot.complexMovement.stopRecording(true, "move2");
+            while(!gamepad1.a){if(robot.stop()) break;}
+            robot.complexMovement.loadMoveDB("move2");
+            robot.complexMovement.scaleLoadedMove(false);
+            robot.complexMovement.runMoveV2(1);
             robot.sendTelemetry();
             break;
         }

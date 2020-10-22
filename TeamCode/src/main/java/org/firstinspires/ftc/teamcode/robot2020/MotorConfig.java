@@ -89,7 +89,7 @@ public class MotorConfig
     ///////////////////
     //set motor modes//
     ///////////////////
-    public void setDriveMotorsToCoastList(List<DcMotorEx> motors)
+    public void setMotorsToCoastList(List<DcMotorEx> motors)
     {
         for(DcMotorEx motor: motors)
         {
@@ -179,7 +179,18 @@ public class MotorConfig
         {
             motor.setTargetPosition(ticks);
             motor.setPower(power);
+            if(motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
+    }
+    public void setMotorsToSeparatePositionsAndPowersList(List<DcMotorEx> motors, int[] ticks, double[] power)
+    {
+        int i = 0;
+        for(DcMotorEx motor: motors)
+        {
+            motor.setTargetPosition(ticks[i]);
+            motor.setPower(power[i]);
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            i++;
         }
     }
     public void moveMotorsForwardList(List<DcMotorEx> motors, int ticks, double power)
@@ -188,7 +199,7 @@ public class MotorConfig
         {
             motor.setTargetPosition(motor.getCurrentPosition() + ticks);
             motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            if(motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         }
     }
     public void moveMotorForwardSeparateAmountList(List<DcMotorEx> motors, int[] ticks, double power)
@@ -198,11 +209,21 @@ public class MotorConfig
         {
             motor.setTargetPosition(motor.getCurrentPosition() + ticks[i]);
             motor.setPower(power);
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            if(motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             i++;
         }
     }
-
+    public void moveMotorForwardSeparateAmountsAndPowersList(List<DcMotorEx> motors, int[] ticks, double[] power)
+    {
+        int i = 0;
+        for(DcMotorEx motor: motors)
+        {
+            motor.setTargetPosition(motor.getCurrentPosition() + ticks[i]);
+            motor.setPower(power[i]);
+            if(motor.getMode() != DcMotor.RunMode.RUN_TO_POSITION) motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            i++;
+        }
+    }
     public int[] getMotorPositionsList(List<DcMotorEx> motors)
     {
         int[] arr = new int[motors.size()];

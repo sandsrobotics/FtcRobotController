@@ -10,8 +10,11 @@ import java.util.List;
 public interface MovementEntityDAO {
 
     @Insert
-    void insertAll(MovementEntity ... entities);
+    public void insertAll(MovementEntity ... entities);
 
     @Query("SELECT * FROM Movement")
-    List<MovementEntity> getAll();
+    public List<MovementEntity> getAll();
+
+    @Query("SELECT * FROM MOVEMENT WHERE name = :name ORDER BY ID")
+    public List<MovementEntity> loadMovementByName(String name);
 }

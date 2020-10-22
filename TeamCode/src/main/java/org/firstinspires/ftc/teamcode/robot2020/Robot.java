@@ -80,7 +80,7 @@ public class Robot
 
         initHardware();
         if(useDrive || useComplexMovement) motorConfig.initDriveMotors();
-        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
     }
 
