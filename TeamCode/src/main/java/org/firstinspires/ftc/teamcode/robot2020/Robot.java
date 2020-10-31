@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -45,6 +49,22 @@ public class Robot
     //user dashboard variables
     public static boolean emergencyStop = false;
 
+    //position start
+    double startPositionX = 5; // in inches
+    double startPositionY = 5; // in inches
+    double startRotation = 5; //in degrees from goal
+    public static double wheelDistanceFromCenter = 9.6; //in inches
+
+    ///////////////////
+    //other variables//
+    ///////////////////
+    //robot position
+    double[] position = new double[]{startPositionX, startPositionY, startRotation};
+    double ticksPerRotation = (2 * wheelDistanceFromCenter * Math.PI) * ((Movement.ticksPerInchForward + Movement.ticksPerInchSideways) / 2);
+    double lastAngle = 0;
+    List<double[]> recordedMotorsAndAngles = new ArrayList<>();
+    double[] lastMotorsAndAngles;
+
     //other classes
     public MotorConfig motorConfig;
     public Movement movement;
@@ -62,7 +82,7 @@ public class Robot
     protected double I = 0;
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
-    protected double rotationOffset = 0;
+    protected double rotationOffset = -startRotation;
     TelemetryPacket packet;
 
     Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
@@ -250,6 +270,97 @@ public class Robot
 
         return XY;
     }
+
+    void updatePosWithEncoders()
+    {
+        addPositionDataPoint();
+
+        double[] totalMovement = new double[]{0,0,0};
+        double[] movementPerDataPoint;
+
+        addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
+
+        for(int i = 1; i < recordedMotorsAndAngles.size(); i++)
+        {
+            addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
+        }
+
+        addPositionDataPoint();
+        lastMotorsAndAngles = recordedMotorsAndAngles.get(-1);
+
+        recordedMotorsAndAngles.clear();
+
+        addDoubleArrays(position, totalMovement);
+    }
+
+    boolean allSameValues(double[] values)
+    {
+        double lastValueSign = Math.signum(values[0]);
+        for(double value:values){if(lastValueSign != Math.signum(value)) return false;}
+        return true;
+    }
+
+    double maxAbsoluteValue(double[] values)
+    {
+        double max = 0;
+        for(double value:values)if(Math.abs(value) > max) max = Math.abs(value);
+        return max;
+    }
+
+    void addDoubleArrays(double[] main, double[] second)
+    {
+        if(main.length == second.length) { for(int i = 0; i < main.length; i++) main[i] += second[i]; }
+    }
+
+    double[] getMovementFromMotorAndAngle(double[] curMotorPosAndAngles, double[] lastMotorPosAndAngles)
+    {
+        double[] moved = new double[3];
+
+        double[] motorDifference = new double[curMotorPosAndAngles.length - 1];
+        for(int i = 0; i < motorDifference.length; i++) motorDifference[i] = (curMotorPosAndAngles[i + 1] - lastMotorPosAndAngles[i + 1]);
+
+        //set and take rotation out of motor movement
+        moved[2] = findAngleError(curMotorPosAndAngles[0], lastMotorPosAndAngles[0]);
+        int ticksRotated = (int)((moved[2] / 360) * ticksPerRotation);
+        motorDifference[0] -= ticksRotated;
+        motorDifference[1] -= ticksRotated;
+        motorDifference[2] += ticksRotated;
+        motorDifference[3] += ticksRotated;
+
+        //get the difference amount moved sideways
+        double diff1To4 = motorDifference[0] - motorDifference[3];
+        double diff2to3 = motorDifference[1] - motorDifference[2];
+
+        //get the amount moved forward
+        if(allSameValues(motorDifference))
+        {
+            moved[0] = (maxAbsoluteValue(motorDifference) * Math.signum(motorDifference[0]) * getXYFromAngle(getAngles().thirdAngle)[1]) / Movement.ticksPerInchForward;
+        }
+        else moved[0] = 0;
+
+        //get amount strafed sideways
+
+        return moved;
+    }
+
+    void addPositionDataPoint()
+    {
+        int[] positions = motorConfig.getMotorPositionsList(motorConfig.driveMotors);
+        double[] out = new double[positions.length + 1];
+        for(int i = 1; i < out.length; i++) out[i] = positions[i-1];
+        out[0] = getAngles().thirdAngle;
+        recordedMotorsAndAngles.add(out);
+    }
+
+/*
+    void updateTotalDegrees()
+    {
+        double angle = getAngles().thirdAngle;
+        totalDegrees -= findAngleError(angle, lastAngle);
+        lastAngle = angle;
+    }
+
+ */
 
     boolean stop()
     {

@@ -235,6 +235,17 @@ public class MotorConfig
         }
         return arr;
     }
+    public int[] getMotorSetPositions(List<DcMotorEx> motors)
+    {
+        int[] arr = new int[motors.size()];
+        int i = 0;
+        for(DcMotorEx motor: motors)
+        {
+            arr[i] = motor.getCurrentPosition();
+            i++;
+        }
+        return arr;
+    }
 
     ////////////////////
     //motor velocities//
