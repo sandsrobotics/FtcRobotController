@@ -288,4 +288,10 @@ public class MotorConfig
             }
         }
     }
+
+    public boolean motorPositionsInToleranceList(List<DcMotorEx> motors, int tolerance)
+    {
+        for (DcMotorEx m:motors){if(Math.abs(m.getTargetPosition()-m.getCurrentPosition()) > tolerance) return false;}
+        return true;
+    }
 }

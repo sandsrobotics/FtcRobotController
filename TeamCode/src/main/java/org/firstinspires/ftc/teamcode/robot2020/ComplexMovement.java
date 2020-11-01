@@ -18,12 +18,9 @@ public class ComplexMovement {
     //////////////////
     //user variables//
     //////////////////
-    //make
     protected String dataBaseName = "FIRST_INSPIRE_2020";
     public static double measureDelay = 0; //in ms
-    public static double maxTime = 3000; //in ms
-    //other
-    public static double maxVelocity = 537.6 * 312; //in ticks per second
+    public static double maxTime = 6000; //in ms
 
     ///////////////////
     //other variables//
@@ -31,7 +28,6 @@ public class ComplexMovement {
     protected AppDatabase db;
     //make
     protected List<int[]> positions = new ArrayList<>();
-    protected List<double[]> velocities = new ArrayList<>();
     protected boolean isRecording = false;
     protected double curRecordingLength = 0;
     protected boolean startOfRecording = true;
@@ -39,7 +35,6 @@ public class ComplexMovement {
     long startMs;
     //load
     protected List<int[]> loaded_Positions = new ArrayList<>();
-    protected List<double[]> loaded_Velocities = new ArrayList<>();
     protected double loaded_MeasureDelay;
     protected double loaded_TotalTime;
 
@@ -79,8 +74,6 @@ public class ComplexMovement {
                 int[] pos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
                 for(int i = 0; i < pos.length; i++) pos[i] -= motorStartOffset[i];
                 positions.add(pos);
-
-                velocities.add(robot.motorConfig.getMotorVelocitiesList(robot.motorConfig.driveMotors));
             }
             if(measureDelay > 0) sleep((long)measureDelay);
             curRecordingLength = System.currentTimeMillis() - startMs;
@@ -90,6 +83,7 @@ public class ComplexMovement {
     void startRecording()
     {
         resetRecording();
+        robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
         isRecording = true;
     }
 
@@ -105,7 +99,6 @@ public class ComplexMovement {
     void resetRecording()
     {
         positions.clear();
-        velocities.clear();
         curRecordingLength = 0;
         startOfRecording = true;
         motorStartOffset = null;
@@ -114,12 +107,14 @@ public class ComplexMovement {
     void makeFile(String moveName)
     {
         if (moveName == null || moveName.equals("")) moveName = "not named";
-        MovementEntity entity = new MovementEntity(moveName, 0, (int) curRecordingLength, curRecordingLength/velocities.size());
+        MovementEntity entity = new MovementEntity(moveName, 0, (int) curRecordingLength);
+        db.movementEntityDAO().insertAll(entity);
+        entity = new MovementEntity(moveName, 0, (float)(curRecordingLength/positions.size()));
         db.movementEntityDAO().insertAll(entity);
         for (int i = 0; i < positions.size(); i++)
         {
             for (int m = 0; m < robot.motorConfig.driveMotors.size(); m++) {
-                MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m], velocities.get(i)[m]);
+                MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m]);
                 db.movementEntityDAO().insertAll(entity1);
             }
         }
@@ -129,25 +124,31 @@ public class ComplexMovement {
     {
         List<MovementEntity> data = db.movementEntityDAO().loadMovementByName(moveName);
         int[] currentLoadTick = new int[4];
-        double[] currentLoadVelocity = new double[4];
+        loaded_Positions.clear();
+        int i = 0;
 
         for(MovementEntity m:data)
         {
-            if(m.motor_id == 0)
-            {
-                loaded_TotalTime = m.motor_tick;
-                loaded_MeasureDelay = m.motor_velocity;
+            if(m.motor_id == 0){
+                if(i == 0)
+                {
+                    loaded_TotalTime = m.motor_tick;
+                    i++;
+                }
+                else if(i == 1)
+                {
+                    loaded_MeasureDelay = m.motor_tick;
+                    i++;
+                }
+                else break;
             }
             else
             {
-                currentLoadTick[m.motor_id - 1] = m.motor_tick;
-                currentLoadVelocity[m.motor_id - 1] = m.motor_velocity;
+                currentLoadTick[m.motor_id - 1] = (int)(m.motor_tick);
                 if(m.motor_id == 4)
                 {
                     loaded_Positions.add(currentLoadTick);
-                    loaded_Velocities.add(currentLoadVelocity);
                     currentLoadTick = new int[4];
-                    currentLoadVelocity = new double[4];
                 }
             }
         }
@@ -197,6 +198,7 @@ public class ComplexMovement {
         }
     }
 */
+/*
     void scaleLoadedMove(boolean scaleToMaxPower)
     {
         double maxMeasuredVelocity = 0;
@@ -221,101 +223,51 @@ public class ComplexMovement {
         }
     }
 
+
+ */
     void clearLoadedMove()
     {
         loaded_Positions.clear();
-        loaded_Velocities.clear();
         loaded_MeasureDelay = 0;
         loaded_TotalTime = 0;
     }
-/*
-    void runLoadedMove(double speedMultiplier, boolean stopIfTimeIsMoreThanMoveTime, double motorPowerProportional)
-    {
-        double timeRunning = 0;
-        final int numOfMotor = robot.motorConfig.driveMotors.size();
-        long delay = (long)(loaded_MeasureDelay - timePerLoadLoop);
-        double totalTimePerLoop = loaded_MeasureDelay;
-        double motorPower;
-        boolean start = true;
-        int[] motorOffset = new int[numOfMotor];
-
-        robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
-
-        if(delay < 0)
-        {
-            totalTimePerLoop = timePerLoadLoop;
-            delay = 0;
-            if(robot.debug_methods) robot.addTelemetryString("warning in ComplexMovement.runMove: ", "the time between setting motors is more than the time between reading them");
-        }
-
-        for(int i = 0; i < loaded_Velocities.size(); i ++)
-        {
-            if(start)
-            {
-                motorOffset = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
-            }
-            for(int m = 0; m < numOfMotor; m++)
-            {
-                robot.motorConfig.driveMotors.get(m).setTargetPosition(loaded_Positions.get(i)[m] + motorOffset[m]);
-                //robot.motorConfig.driveMotors.get(m).setVelocity(loaded_Velocities.get(i)[m]);
-                motorPower = (robot.motorConfig.driveMotors.get(m).getTargetPosition() - robot.motorConfig.driveMotors.get(m).getCurrentPosition()) * motorPowerProportional;
-                motorPower += loaded_Velocities.get(i)[m]/maxVelocity*speedMultiplier;
-                robot.motorConfig.driveMotors.get(m).setPower(Math.abs(motorPower));
-            }
-            robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
-            //robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
-
-            if(timeRunning > loaded_TotalTime)
-            {
-                if(robot.debug_methods) robot.addTelemetryString("warning in ComplexMovement.runMove: ", "the time to run this move is more than the recorded move time");
-                if(stopIfTimeIsMoreThanMoveTime) break;
-            }
-
-            if(robot.stop()) break;
-
-            timeRunning += totalTimePerLoop;
-            sleep(delay);
-        }
-
-        robot.motorConfig.setMotorsToBrakeList(robot.motorConfig.driveMotors);
-        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-    }
-
- */
 
     void runLoadedMoveV2(double speedMultiplier, boolean stopIfTimeIsMoreThanMoveTime, double motorPowerProportional)
     {
-        int curInstruction = 0;
-        double[] curLoadedVelocities = new double[4];
-        int[] motorStartPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
-        boolean start = true;
-        robot.motorConfig.setMotorsToBrakeList(robot.motorConfig.driveMotors);
-        double startMs = System.currentTimeMillis();
-
-        while(!robot.stop())
+        if(loaded_Positions.size() != 0)
         {
-            if(curInstruction * loaded_MeasureDelay <= System.currentTimeMillis() - startMs)
-            {
-                for(int m = 0; m < 4; m++){robot.motorConfig.driveMotors.get(m).setTargetPosition(loaded_Positions.get(curInstruction)[m] + motorStartPos[m]);}
-                curLoadedVelocities = loaded_Velocities.get(curInstruction);
-                curInstruction++;
-            }
-            for(int m = 0; m < 4; m++) { robot.motorConfig.driveMotors.get(m).setPower(Math.abs(((robot.motorConfig.driveMotors.get(m).getTargetPosition() - robot.motorConfig.driveMotors.get(m).getCurrentPosition()) * motorPowerProportional) + (curLoadedVelocities[m]/maxVelocity))); }
-            if(start)
-            {
-                robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
-                start = false;
-            }
-            if(curInstruction == loaded_Velocities.size()) break;
-            if(stopIfTimeIsMoreThanMoveTime && System.currentTimeMillis() - startMs >= loaded_TotalTime)
-            {
-                if(robot.debug_methods) robot.addTelemetryString("error in ComplexMovement.runLoadedMoveV2: ", "this move took longer than expected to run. Ending move...");
-                break;
-            }
-        }
+            int curInstruction = 0;
+            double[] curLoadedVelocities = new double[4];
+            int[] motorStartPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+            boolean start = true;
+            robot.motorConfig.setMotorsToBrakeList(robot.motorConfig.driveMotors);
 
-        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-        robot.motorConfig.setMotorsToRunWithEncodersList(robot.motorConfig.driveMotors);
+            double startMs = System.currentTimeMillis();
+
+            while (!robot.stop()) {
+                if (curInstruction * loaded_MeasureDelay <= System.currentTimeMillis() - startMs) {
+                    for (int m = 0; m < 4; m++) {
+                        robot.motorConfig.driveMotors.get(m).setTargetPosition(loaded_Positions.get(curInstruction)[m] + motorStartPos[m]);
+                    }
+                    curInstruction++;
+                }
+                if (start) {
+                    robot.motorConfig.setMotorsToPowerList(robot.motorConfig.driveMotors,1);
+                    robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
+                    start = false;
+                }
+                if (curInstruction == loaded_Positions.size() || robot.stop()) break;
+                if (stopIfTimeIsMoreThanMoveTime && System.currentTimeMillis() - startMs >= loaded_TotalTime) {
+                    if (robot.debug_methods) robot.addTelemetryString("error in ComplexMovement.runLoadedMoveV2: ", "this move took longer than expected to run. Ending move...");
+                    break;
+                }
+            }
+            while(!robot.motorConfig.motorPositionsInToleranceList(robot.motorConfig.driveMotors, 5) && !stopIfTimeIsMoreThanMoveTime){if(robot.stop()) break;}
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            robot.motorConfig.setMotorsToRunWithEncodersList(robot.motorConfig.driveMotors);
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+        }
+        else if(robot.debug_methods) robot.addTelemetryString("warning in ComplexMovement.RunMoveV2: ", "no loaded move!");
     }
 
     void clearDatabase()

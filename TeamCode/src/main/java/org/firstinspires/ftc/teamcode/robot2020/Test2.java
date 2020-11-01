@@ -11,7 +11,7 @@ public class Test2 extends LinearOpMode
 {
 
     Robot robot;
-    public static double proportional = .02;
+    public static double proportional = .08;
 
     @Override
     public void runOpMode()
@@ -20,52 +20,48 @@ public class Test2 extends LinearOpMode
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
 
         robot.startTelemetry();
-        robot.complexMovement.startRecording();
         robot.addTelemetryString("Robot: ", "ready :)");
         robot.sendTelemetry();
 
         waitForStart();
 
-        robot.startTelemetry();
-        long start = System.currentTimeMillis();
-        while(robot.complexMovement.isRecording && !robot.stop())
-        {
-            robot.complexMovement.recorder(true);
-        }
-        long end = System.currentTimeMillis();
-        long mills =  end - start;
-        robot.addTelemetryDouble("start time: ", start);
-        robot.addTelemetryDouble("end time: ", end);
-        robot.addTelemetryDouble("mills time: ", mills);
-        robot.sendTelemetry();
-
-        robot.startTelemetry();
-        robot.complexMovement.stopRecording(false, "test");
-        robot.complexMovement.loadMoveDB("test");
-        robot.addTelemetryString("Robot: ", "ready to move");
-        robot.sendTelemetry();
         while(!robot.stop() && opModeIsActive())
         {
+            robot.startTelemetry();
+
+            if(robot.complexMovement.isRecording)
+            {
+                robot.addTelemetryString("Robot: ", "recording");
+                robot.sendTelemetry();
+                while (robot.complexMovement.isRecording && !robot.stop()) { robot.complexMovement.recorder(true); }
+                robot.addTelemetryString("Robot: ", "done recording");
+                robot.sendTelemetry();
+                robot.complexMovement.stopRecording(true, "test");
+                robot.addTelemetryString("Robot: ", "ready to move");
+                robot.sendTelemetry();
+            }
+
             if(gamepad1.a)
             {
                 robot.startTelemetry();
+                robot.complexMovement.loadMoveDB("test");
                 robot.complexMovement.runLoadedMoveV2(1,false, proportional);
                 robot.addTelemetryString("Robot: ", "done with move");
                 robot.sendTelemetry();
-                sleep(10000);
             }
-            if(gamepad1.b && gamepad1.x)
+            else if(gamepad1.b && gamepad1.x)
             {
                 robot.startTelemetry();
-                robot.addTelemetryString("database clear activated: ", "hold B for 1 second to clear");
+                robot.addTelemetryString("database clear activated: ", "hold B for 2 second to clear");
                 robot.sendTelemetry();
-                sleep(1000);
+                sleep(2000);
                 if(gamepad1.b)
                 {
                     robot.complexMovement.clearDatabase();
                     robot.startTelemetry();
                     robot.addTelemetryString("database cleared", "");
                     robot.sendTelemetry();
+                    sleep(1000);
                 }
                 else
                 {
@@ -74,6 +70,7 @@ public class Test2 extends LinearOpMode
                     robot.sendTelemetry();
                 }
             }
+            else if(gamepad1.y) robot.complexMovement.startRecording();
         }
     }
 }
