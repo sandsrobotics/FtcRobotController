@@ -317,4 +317,9 @@ public class ComplexMovement {
         robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         robot.motorConfig.setMotorsToRunWithEncodersList(robot.motorConfig.driveMotors);
     }
+
+    void clearDatabase()
+    {
+        db.movementEntityDAO().deleteAll();
+    }
 }
