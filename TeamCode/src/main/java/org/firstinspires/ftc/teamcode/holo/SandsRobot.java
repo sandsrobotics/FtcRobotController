@@ -71,6 +71,11 @@ public class SandsRobot {
 
     // Sends messages and values to bottom of driver's screen
     void sendTelemetry() {
+        Integer motorNum = 0;
+        for (DcMotorEx motor : motors) {
+            telemetry.addData(motorNum.toString(),motor.getPower());
+            motorNum++;
+        }
         telemetry.update();
     }
 

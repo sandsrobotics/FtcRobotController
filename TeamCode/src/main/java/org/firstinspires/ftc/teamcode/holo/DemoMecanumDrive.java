@@ -14,6 +14,7 @@ public class DemoMecanumDrive extends LinearOpMode {
 
         while(opModeIsActive()){
             robot.controlDrivetrain();
+           //robot.sendTelemetry();
         }
         robot.stop();
     }
