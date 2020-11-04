@@ -69,7 +69,7 @@ public class Launcher {
         }
         catch (IOException e)
         {
-            robot.addTelemetryString("error", e.toString());
+            if(robot.debug_methods)robot.addTelemetryString("error", e.toString());
         }
         return out;
     }

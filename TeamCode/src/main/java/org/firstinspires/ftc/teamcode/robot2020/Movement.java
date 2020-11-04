@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 @Config
 public class Movement
@@ -15,6 +14,14 @@ public class Movement
     public static double ticksPerInchForward = 44;
     public static double ticksPerInchSideways = 88;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
+
+
+    ///////////////////
+    //other variables//
+    ///////////////////
+    protected double speedMultiplier = 1;
+    protected double speedMultiplierMin = .2;
+    protected double speedMultiplierMax = 2;
 
     //other class
     Robot robot;
@@ -167,6 +174,24 @@ public class Movement
     //////////
     //teleOp//
     //////////
+
+    void setSpeedMultiplier(double amount)
+    {
+        if(amount > speedMultiplierMax)
+        {
+            if (robot.debug_methods) robot.addTelemetryString("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
+            amount = speedMultiplierMax;
+        }
+        else if(amount < speedMultiplierMin)
+        {
+            if (robot.debug_methods) robot.addTelemetryString("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
+            amount = speedMultiplierMin;
+        }
+        speedMultiplier = amount;
+    }
+    void setSpeedMultiplierToMax() { speedMultiplier = speedMultiplierMax; }
+    void setSpeedMultiplierToMin() { speedMultiplier = speedMultiplierMin; }
+
     void moveForTeleOp(Gamepad gamepad1)
     {
         robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
@@ -239,4 +264,6 @@ public class Movement
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
     }
+
+
 }

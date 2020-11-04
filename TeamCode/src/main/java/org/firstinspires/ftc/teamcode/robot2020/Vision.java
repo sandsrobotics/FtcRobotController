@@ -20,6 +20,7 @@ import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -61,7 +62,7 @@ public class Vision
 
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    public static boolean usingWebcam = true;
+    public static boolean usingWebcam = false;
 
     ////////////////////
     // other variables//
@@ -337,7 +338,7 @@ public class Vision
                 @Override
                 public void onOpened()
                 {
-                    phoneCam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                    phoneCam.startStreaming(320,240, OpenCvCameraRotation.UPRIGHT);
                 }
             });
         }
@@ -385,8 +386,8 @@ public class Vision
                 RING_TOPLEFT_ANCHOR_POINT.x + RING_REGION_WIDTH,
                 RING_TOPLEFT_ANCHOR_POINT.y + RING_REGION_HEIGHT);
 
-        Point Other_region1_pointA = OTHER_TOPLEFT_ANCHOR_POINT;
-        Point Other_region1_pointB = new Point(
+        public static Point Other_region1_pointA = OTHER_TOPLEFT_ANCHOR_POINT;
+        public static Point Other_region1_pointB = new Point(
                 OTHER_TOPLEFT_ANCHOR_POINT.x + OTHER_REGION_WIDTH,
                 OTHER_TOPLEFT_ANCHOR_POINT.y + OTHER_REGION_HEIGHT);
 
@@ -396,26 +397,14 @@ public class Vision
         Mat region1_Cb;
         Mat YCrCb = new Mat();
         Mat Cb = new Mat();
+        Mat imgCopy;
 
         int avg1;
         int position;
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
-        /*
-        //an enum to define the skystone position
-        public enum RingPosition
-        {
-            FOUR,
-            ONE,
-            NONE
-        }
-        */
 
-        /*
-         * This function takes the RGB frame, converts to YCrCb,
-         * and extracts the Cb channel to the 'Cb' variable
-         */
         boolean rectInImg(Mat img, Rect rect)
         {
             return  rect.x >= 0 &&
@@ -426,12 +415,9 @@ public class Vision
 
         void inputToCb(Mat input)
         {
-            Imgproc.cvtColor(input.clone(), YCrCb, Imgproc.COLOR_RGB2YCrCb);
+            Imgproc.cvtColor(input, YCrCb, Imgproc.COLOR_RGB2YCrCb);
             Core.extractChannel(YCrCb, Cb, 1);
         }
-
-         // This function takes the RGB frame, converts to HSV,
-
 
         @Override
         public void init(Mat firstFrame)
@@ -444,7 +430,8 @@ public class Vision
         @Override
         public Mat processFrame(Mat input)
         {
-            inputToCb(input);
+            imgCopy = input.clone();
+            inputToCb(imgCopy);
 
             avg1 = (int) Core.mean(region1_Cb).val[0];
 
@@ -471,7 +458,7 @@ public class Vision
                 position = 0;
             }
 
-            contours = getColorRangeContoursFromImage(input, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER, Other_region1_pointA, Other_region1_pointB);
+            contours = getColorRangeContoursFromImage(imgCopy, OTHER_COLOR_LOWER, OTHER_COLOR_UPPER, Other_region1_pointA, Other_region1_pointB);
 
             for(int i = 0; i < contours.size(); i++)
             {
@@ -489,12 +476,13 @@ public class Vision
         public List<MatOfPoint> getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper, Point upperLeftPoint, Point lowerRightPoint)
         {
             //prepossessing
-            Mat process = input.clone();
+            Mat process = input;
 
             Imgproc.cvtColor(process,process,Imgproc.COLOR_RGB2HSV);
             Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
 
-            Rect rect = new Rect(upperLeftPoint, lowerRightPoint);
+            Rect rect = new Rect(upperLeftPoint, new Size(50,50));
+
             if(rectInImg(process, rect)) process = process.submat(rect);
 
             //finding contours
