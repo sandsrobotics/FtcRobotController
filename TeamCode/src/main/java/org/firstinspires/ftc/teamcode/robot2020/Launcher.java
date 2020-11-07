@@ -44,7 +44,7 @@ public class Launcher {
             if(useRPM && powerColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues,powerColumn);
             else if(rpmColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues, rpmColumn);
         }
-        catch (Exception e) {robot.addTelemetryString("error", e.toString());}
+        catch (Exception e) {robot.addTelemetry("error", e.toString());}
     }
 
     ArrayList<List<Double>> readFile(InputStream is)
@@ -69,7 +69,7 @@ public class Launcher {
         }
         catch (IOException e)
         {
-            if(robot.debug_methods)robot.addTelemetryString("error", e.toString());
+            if(robot.debug_methods)robot.addTelemetry("error", e.toString());
         }
         return out;
     }

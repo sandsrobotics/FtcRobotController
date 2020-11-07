@@ -12,24 +12,27 @@ public class Test extends LinearOpMode
 
     Robot robot;
 
-    int[] pos = new int[4];
-
     @Override
     public void runOpMode()
     {
-        robot = new Robot(hardwareMap,telemetry,gamepad1,gamepad2,true, false, false, false, false);
+        robot = new Robot(this,true, false, false, false, false);
 
-        robot.movement.setSpeedMultiplier(.5);
+        robot.startTelemetry();
+        robot.addTelemetry("Robot: ", "ready :)");
+        robot.sendTelemetry();
 
         waitForStart();
 
-        while (opModeIsActive())
+        robot.position.start();
+
+        while(opModeIsActive())
         {
             robot.startTelemetry();
 
+            robot.addTelemetry("velocity: ", robot.position.currentVelocity);
+
             robot.movement.moveForTeleOp(gamepad1);
-            pos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
-            for(int i = 0; i < 4; i++) robot.addTelemetryDouble("motor " + i + ": ", pos[i]);
+
             robot.sendTelemetry();
         }
     }

@@ -125,7 +125,7 @@ public class Vision
     if(robot.debug_methods){
         if(targetVisible)
         {
-            robot.addTelemetryString("target visible: ", "true");
+            robot.addTelemetry("target visible: ", "true");
             if(robot.debug_dashboard)
             {
                 robot.packet.put("position: ", lastLocation.getTranslation());
@@ -140,7 +140,7 @@ public class Vision
         }
         else
         {
-            robot.addTelemetryString("target visible: ", "false");
+            robot.addTelemetry("target visible: ", "false");
             if(robot.debug_dashboard)
             {
                 robot.packet.put("position: ", null);
