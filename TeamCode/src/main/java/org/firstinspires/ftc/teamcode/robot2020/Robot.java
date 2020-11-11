@@ -100,8 +100,9 @@ public class Robot
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.loggingEnabled = false;
+        parameters.accelUnit = BNO055IMU.AccelUnit.MILLI_EARTH_GRAVITY;
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
+        parameters.loggingEnabled = true;
         parameters.loggingTag = "IMU";
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -112,6 +113,8 @@ public class Robot
             sleep(50);
             opMode.idle();
         }
+
+        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 10);
 
         /////////////
         //dashboard//
@@ -205,4 +208,13 @@ public class Robot
     }
 
     boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
+
+    void delay(long ms)
+    {
+        for(long i = 0; i < ms; i++)
+        {
+            sleep(1);
+            if(stop())break;
+        }
+    }
 }

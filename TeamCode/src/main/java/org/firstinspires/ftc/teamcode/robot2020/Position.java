@@ -30,35 +30,33 @@ public class Position extends Thread
     ///////////////////
     //robot position
     protected double[] currentPosition = new double[]{startPositionX, startPositionY, startRotation};
-
-        //with encoders
-        double ticksPerRotation = (2 * wheelDistanceFromCenter * Math.PI) * ((Movement.ticksPerInchForward + Movement.ticksPerInchSideways) / 2);
-        List<double[]> recordedMotorsAndAngles = new ArrayList<>();
-        double[] lastMotorsAndAngles;
-
-        //with accelerometer
-        double[] recordedAccelAndTime;
-        double[] lastRecodedAccelAndTime;
+    double[] recordedAccelAndTime;
+    double[] lastRecodedAccelAndTime;
 
     //rotation
-    volatile Orientation currentAllAxisRotations;
+    volatile Orientation currentAllAxisRotations = new Orientation();
     volatile double currentRotation;
     protected double rotationOffset = -startRotation;
 
     //velocity
-    volatile Velocity currentVelocity;
+    volatile Velocity currentVelocity = new Velocity();
+    volatile Velocity velocityOffset = new Velocity();
 
     //angular velocity
-    volatile AngularVelocity currentAngularVelocity;
+    volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //acceleration
-    volatile Acceleration currentAcceleration;
+    volatile Acceleration currentAcceleration = new Acceleration();
+    volatile Acceleration accelerationOffset = new Acceleration();
 
     //other class
     Robot robot;
 
     Position(Robot robot){this.robot = robot;}
 
+    //////////
+    //angles//
+    //////////
     Orientation updateAngles()
     {
         Orientation angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
@@ -69,71 +67,56 @@ public class Position extends Thread
         return angles;
     }
 
-    void resetZRotationAxis() {rotationOffset = -robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle;}
+    void resetZAxisRotation() { rotationOffset = -robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle - startRotation;}
+
+    ////////////
+    //velocity//
+    ////////////
+    void resetVelocity()
+    {
+        velocityOffset = robot.imu.getVelocity();
+    }
+
+    Velocity updateVelocity()
+    {
+
+        Velocity out = robot.imu.getVelocity();
+
+        if(out.xVeloc > 1 && out.yVeloc > 5 && out.zVeloc > 10)
+        {
+            out.xVeloc -= velocityOffset.xVeloc;
+            out.yVeloc -= velocityOffset.yVeloc;
+            out.zVeloc -= velocityOffset.zVeloc;
+            return out;
+        }
+        return currentVelocity;
+    }
+
+    ////////////////
+    //acceleration//
+    ////////////////
+    void resetAcceleration()
+    {
+        accelerationOffset = robot.imu.getAcceleration();
+    }
+
+    Acceleration updateAcceleration()
+    {
+        Acceleration out = robot.imu.getAcceleration();
+        out.xAccel -= accelerationOffset.xAccel;
+        out.yAccel -= accelerationOffset.yAccel;
+        out.zAccel -= accelerationOffset.zAccel;
+        return out;
+    }
 
     ////////////////////
     //position finding//
     ////////////////////
-    void updatePosWithEncodersAndAngles()
-    {
-        addEncoderAndAngleDataPoint();
-
-        double[] totalMovement = new double[]{0,0,0};
-        double[] movementPerDataPoint;
-
-        robot.addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
-
-        for(int i = 1; i < recordedMotorsAndAngles.size(); i++)
-        {
-            robot.addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
-        }
-
-        addEncoderAndAngleDataPoint();
-        lastMotorsAndAngles = recordedMotorsAndAngles.get(-1);
-
-        recordedMotorsAndAngles.clear();
-
-        robot.addDoubleArrays(currentPosition, totalMovement);
-    }
-
-
-
-    double[] getMovementFromMotorAndAngle(double[] curMotorPosAndAngles, double[] lastMotorPosAndAngles)
-    {
-        double[] moved = new double[3];
-
-        double[] motorDifference = new double[curMotorPosAndAngles.length - 1];
-        for(int i = 0; i < motorDifference.length; i++) motorDifference[i] = (curMotorPosAndAngles[i + 1] - lastMotorPosAndAngles[i + 1]);
-
-        //set and take rotation out of motor movement
-        moved[2] = robot.findAngleError(curMotorPosAndAngles[0], lastMotorPosAndAngles[0]);
-        int ticksRotated = (int)((moved[2] / 360) * ticksPerRotation);
-        motorDifference[0] -= ticksRotated;
-        motorDifference[1] -= ticksRotated;
-        motorDifference[2] += ticksRotated;
-        motorDifference[3] += ticksRotated;
-
-
-
-        return moved;
-    }
-
     void updateMovementFromAccelerometer()
     {
         double[] moved = new double[3];
 
         currentPosition[2] = currentRotation;
-
-
-    }
-
-    void addEncoderAndAngleDataPoint()
-    {
-        int[] positions = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
-        double[] out = new double[positions.length + 1];
-        for(int i = 1; i < out.length; i++) out[i] = positions[i-1];
-        out[0] = currentRotation;
-        recordedMotorsAndAngles.add(out);
     }
 
     void addAccelAndTimeDataPoint()
@@ -146,17 +129,23 @@ public class Position extends Thread
     //////////////////
     //runs in thread//
     //////////////////
+    void updateAll()
+    {
+        currentAcceleration = updateAcceleration();
+        currentVelocity = updateVelocity();
+        currentAngularVelocity = robot.imu.getAngularVelocity();
+        currentAllAxisRotations = updateAngles();
+        currentRotation = currentAllAxisRotations.thirdAngle;
+    }
+
     @Override
     public void run()
     {
         while (!Thread.currentThread().isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
-            currentAcceleration = robot.imu.getAcceleration();
-            currentVelocity = robot.imu.getVelocity();
-            currentAngularVelocity = robot.imu.getAngularVelocity();
-            currentAllAxisRotations = updateAngles();
-            currentRotation = currentAllAxisRotations.thirdAngle;
+            updateAll();
+
         }
     }
 
