@@ -22,28 +22,22 @@ public class Test extends LinearOpMode
 
         robot = new Robot(this,true, false, false, false, false);
 
-        robot.startTelemetry();
-
         waitForStart();
 
-        robot.position.start();
+        //robot.position.start();
 
-        calibrate(10);
-
-        robot.delay(10000);
-
-    }
-
-    void test()
-    {
-        for(int i = 0; i < 10; i++)
+        while (opModeIsActive())
         {
-
-            robot.startTelemetry();
-            robot.addTelemetry("test: ", i + 1);
+            robot.movement.moveForTeleOp(gamepad1);
+            robot.addTelemetry("raw: ", robot.imu.getVelocity());
+            //robot.addTelemetry("vel: ", robot.position.currentVelocity);
             robot.sendTelemetry();
-            robot.delay(100);
+            if(gamepad1.x)
+            {
+                //robot.position.resetVelocity();
+            }
         }
+
     }
 
     Velocity calibrate(int sec)

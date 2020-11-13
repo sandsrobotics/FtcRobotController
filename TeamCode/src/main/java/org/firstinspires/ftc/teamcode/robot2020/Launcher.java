@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.Gamepad;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,28 +13,63 @@ import java.util.List;
 @Config
 public class Launcher {
 
+    Robot robot;
+
     //////////////////
     //user variables//
     //////////////////
+    //controls
+    Gamepad launcherGamepad = robot.gamepad1;
+    GamepadButtons revIncreaseButton = GamepadButtons.X;
+    GamepadButtons revDecreaseButton = GamepadButtons.X;
+    GamepadButtons revPowerSlide = GamepadButtons.X;
+    GamepadButtons revModeButton = GamepadButtons.X;
+    GamepadButtons launchButton = GamepadButtons.A;
+
+    //servo and motor config
+    double ticksPerRev = 10;
+    double gearRatio = 1;
+    double maxRPM = 6000;
+    double servoRestAngle = 15;
+    double servoLaunchAngle = 30;
+
+    //calibration data
     protected String calibrationFileDir = "assets";
     protected String calibrationFileName =  "Launcher Config - Test.csv";
-
     protected boolean useRPM = true;
     protected int powerColumn = 0;
     protected int rpmColumn = 1;
     protected int distanceColumn = 2;
 
+    //other
+    double rpmIncrements = 50;
+
+
     ///////////////////
     //other variables//
     ///////////////////
+    //controls
+    boolean revIncreaseButtonPressed = false;
+    boolean revDecreaseButtonPressed = false;
+    boolean revModeButtonPressed = false;
+
+
+    //servo and motor
+    double spinMultiplier = 60 / ticksPerRev * gearRatio;
+
+    //calibration
     protected ArrayList<List<Double>> calibrationValues;
     protected ArrayList<List<Double>> formattedCalibrationValues;
 
-    //other classes
-    Robot robot;
+    //other
+    boolean runWheelOnTrigger = false;
+    double targetWheelRpm = 0;
 
     Launcher(Robot robot) { this.robot = robot; }
 
+    ///////////////
+    //Calibration//
+    ///////////////
     void getCalibration()
     {
         try
@@ -100,5 +137,79 @@ public class Launcher {
 
 
         return out;
+    }
+
+    ////////////////////
+    //launcher control//
+    ////////////////////
+    void initStuff()
+    {
+        // zero motors
+        robot.motorConfig.launcherServo.setPosition(servoRestAngle);
+
+        //reset variables
+        boolean runWheelOnTrigger = false;
+        double setWheelRpm = 0;
+    }
+
+    void telemetryDataOut()
+    {
+        double RPM = robot.motorConfig.launcherWheelMotor.getVelocity() * spinMultiplier;
+        robot.addTelemetry("RPM", RPM);
+        robot.addTelemetry("Set RPM", targetWheelRpm);
+        robot.sendTelemetry();
+    }
+
+    void setLauncherServo()
+    {
+        if (launchButton.getButtonPressed(launcherGamepad)) robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
+        else robot.motorConfig.launcherServo.setPosition(servoRestAngle);
+    }
+
+    void setLauncherWheelMotor()
+    {
+        //inputs
+        if(revDecreaseButton.getButtonPressed(launcherGamepad))
+        {
+            if(!revDecreaseButtonPressed)
+            {
+                targetWheelRpm -= rpmIncrements;
+                if(targetWheelRpm < 0) targetWheelRpm = 0;
+                revDecreaseButtonPressed = true;
+            }
+        }
+        else revDecreaseButtonPressed = false;
+
+        if(revIncreaseButton.getButtonPressed(launcherGamepad))
+        {
+            if(!revIncreaseButtonPressed)
+            {
+                targetWheelRpm += rpmIncrements;
+                if(targetWheelRpm > maxRPM) targetWheelRpm = maxRPM;
+                revIncreaseButtonPressed = true;
+            }
+        }
+        else revIncreaseButtonPressed = false;
+
+        if(revModeButton.getButtonPressed(launcherGamepad))
+        {
+            if(!revModeButtonPressed)
+            {
+                runWheelOnTrigger =! runWheelOnTrigger;
+                revModeButtonPressed = true;
+            }
+        }
+        else revModeButtonPressed = false;
+
+        //setting motor
+        if (runWheelOnTrigger) robot.motorConfig.launcherWheelMotor.setPower(revPowerSlide.getSliderValue(launcherGamepad));
+        else robot.motorConfig.launcherWheelMotor.setVelocity(targetWheelRpm / spinMultiplier);
+    }
+
+    void telemetryRun(boolean telemetry)
+    {
+        setLauncherServo();
+        setLauncherWheelMotor();
+        if(telemetry)telemetryDataOut();
     }
 }// class end

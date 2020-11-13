@@ -1,38 +1,15 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
-
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static android.os.SystemClock.sleep;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.opMode;
 
 @Config
 public class Robot
@@ -71,6 +48,7 @@ public class Robot
     protected Gamepad gamepad2;
     TelemetryPacket packet;
 
+
     Robot(LinearOpMode opMode, boolean useDrive, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         motorConfig = new MotorConfig(this);
@@ -100,9 +78,9 @@ public class Robot
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        parameters.accelUnit = BNO055IMU.AccelUnit.MILLI_EARTH_GRAVITY;
+        parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         parameters.calibrationDataFile = "BNO055IMUCalibration.json";
-        parameters.loggingEnabled = true;
+        parameters.loggingEnabled = false;
         parameters.loggingTag = "IMU";
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -114,13 +92,13 @@ public class Robot
             opMode.idle();
         }
 
-        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 10);
+        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 50);
 
         /////////////
         //dashboard//
         /////////////
         if(debug_dashboard) dashboard = FtcDashboard.getInstance();
-
+        startTelemetry();
     }
 
     //------------------My Methods------------------//
@@ -211,10 +189,75 @@ public class Robot
 
     void delay(long ms)
     {
-        for(long i = 0; i < ms; i++)
+        long last = System.currentTimeMillis();
+        while(System.currentTimeMillis() - last < ms)
         {
             sleep(1);
             if(stop())break;
         }
+    }
+}
+
+enum GamepadButtons
+{
+    dpadUP,
+    dpadDOWN,
+    dpadLEFT,
+    dpadRIGHT,
+
+    A,
+    B,
+    X,
+    Y,
+
+    START,
+    BACK,
+    leftBUMPER,
+    rightBUMPER,
+
+    leftJoyStickX,
+    leftJoyStickY,
+    leftJoyStickBUTTON,
+    leftTRIGGER,
+
+    rightJoyStickX,
+    rightJoyStickY,
+    rightJoyStickBUTTON,
+    rightTRIGGER;
+
+    boolean getButtonPressed(Gamepad gamepad)
+    {
+        if(this == GamepadButtons.A) return gamepad.a;
+        if(this == GamepadButtons.B) return gamepad.a;
+        if(this == GamepadButtons.X) return gamepad.x;
+        if(this == GamepadButtons.Y) return gamepad.y;
+
+        if(this == GamepadButtons.dpadUP) return gamepad.dpad_up;
+        if(this == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
+        if(this == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
+        if(this == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
+
+        if(this == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
+        if(this == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
+        if(this == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
+        if(this == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
+
+        if(this == GamepadButtons.START) return gamepad.start;
+        if(this == GamepadButtons.BACK) return gamepad.back;
+
+        return false;
+    }
+
+    float getSliderValue(Gamepad gamepad)
+    {
+        if(this == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
+        if(this == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
+        if(this == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
+        if(this == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
+
+        if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
+        if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+
+        return 0;
     }
 }

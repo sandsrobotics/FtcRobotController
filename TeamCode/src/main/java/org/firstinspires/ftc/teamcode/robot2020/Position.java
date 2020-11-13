@@ -7,10 +7,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class Position extends Thread
 {
@@ -29,9 +25,10 @@ public class Position extends Thread
     //other variables//
     ///////////////////
     //robot position
-    protected double[] currentPosition = new double[]{startPositionX, startPositionY, startRotation};
-    double[] recordedAccelAndTime;
-    double[] lastRecodedAccelAndTime;
+    protected double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
+    protected int[] lastMotorPos;
+
+    double a = Math.atan(Movement.ticksPerInchForward/Movement.ticksPerInchSideways);
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
@@ -79,17 +76,14 @@ public class Position extends Thread
 
     Velocity updateVelocity()
     {
+        Velocity out = currentVelocity;//robot.imu.getVelocity();
 
-        Velocity out = robot.imu.getVelocity();
+        out.xVeloc -= velocityOffset.xVeloc;
+        out.yVeloc -= velocityOffset.yVeloc;
+        out.zVeloc -= velocityOffset.zVeloc;
+        return out;
 
-        if(out.xVeloc > 1 && out.yVeloc > 5 && out.zVeloc > 10)
-        {
-            out.xVeloc -= velocityOffset.xVeloc;
-            out.yVeloc -= velocityOffset.yVeloc;
-            out.zVeloc -= velocityOffset.zVeloc;
-            return out;
-        }
-        return currentVelocity;
+        //return currentVelocity;
     }
 
     ////////////////
@@ -112,23 +106,20 @@ public class Position extends Thread
     ////////////////////
     //position finding//
     ////////////////////
-    void updateMovementFromAccelerometer()
+    void getPosFromEncoder()
     {
-        double[] moved = new double[3];
-
-        currentPosition[2] = currentRotation;
-    }
-
-    void addAccelAndTimeDataPoint()
-    {
-        double[] data = new double[4];
-        data[0] = currentAcceleration.xAccel;
-        //double
+        int[] currPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currentRobotPosition[0] = (.25*(currPos[0] + currPos[1] + currPos[2] + currPos[3]))/Movement.ticksPerInchForward;
     }
 
     //////////////////
     //runs in thread//
     //////////////////
+    void initialize()
+    {
+        lastMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+    }
+
     void updateAll()
     {
         currentAcceleration = updateAcceleration();
@@ -141,6 +132,7 @@ public class Position extends Thread
     @Override
     public void run()
     {
+        initialize();
         while (!Thread.currentThread().isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
