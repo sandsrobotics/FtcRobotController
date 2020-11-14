@@ -14,9 +14,9 @@ public class Position extends Thread
     //user variables//
     //////////////////
     //position start
-    double startPositionX = 5; // in inches
-    double startPositionY = 5; // in inches
-    double startRotation = 5; //in degrees from goal
+    double startPositionX = 0; // in inches
+    double startPositionY = 0; // in inches
+    double startRotation = 0; //in degrees from goal
 
     //for using encoders
     public static double wheelDistanceFromCenter = 9.6; //in inches
@@ -27,6 +27,7 @@ public class Position extends Thread
     //robot position
     protected double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
     protected int[] lastMotorPos;
+    protected int[] currMotorPos;
 
     double a = Math.atan(Movement.ticksPerInchForward/Movement.ticksPerInchSideways);
 
@@ -108,8 +109,23 @@ public class Position extends Thread
     ////////////////////
     void getPosFromEncoder()
     {
-        int[] currPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
-        currentRobotPosition[0] = (.25*(currPos[0] + currPos[1] + currPos[2] + currPos[3]))/Movement.ticksPerInchForward;
+        //get difference
+        lastMotorPos = currMotorPos;
+        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        int[] diff = new int[4];
+        for(int i = 0; i < 4; i++)
+        {
+            diff[i] = currMotorPos[i] - lastMotorPos[i];
+        }
+
+        //get movement
+        double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/Movement.ticksPerInchForward;
+        double XMove = (.5 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
+
+        //rotate and add to robot position
+        currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[2] = currentRotation;
     }
 
     //////////////////
@@ -117,7 +133,7 @@ public class Position extends Thread
     //////////////////
     void initialize()
     {
-        lastMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
     }
 
     void updateAll()
@@ -127,6 +143,7 @@ public class Position extends Thread
         currentAngularVelocity = robot.imu.getAngularVelocity();
         currentAllAxisRotations = updateAngles();
         currentRotation = currentAllAxisRotations.thirdAngle;
+        getPosFromEncoder();
     }
 
     @Override

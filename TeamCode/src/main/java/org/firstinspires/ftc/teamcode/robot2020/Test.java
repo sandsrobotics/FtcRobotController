@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 // test
 @Config
-@TeleOp(name = "test position tracking")
+@TeleOp(name = "test position tracking v2.4")
 public class Test extends LinearOpMode
 {
     public static int calTime = 1;
@@ -21,53 +21,20 @@ public class Test extends LinearOpMode
     {
 
         robot = new Robot(this,true, false, false, false, false);
+        robot.movement.setSpeedMultiplier(.25);
 
         waitForStart();
 
-        //robot.position.start();
+        robot.startTelemetry();
+        robot.position.start();
 
         while (opModeIsActive())
         {
             robot.movement.moveForTeleOp(gamepad1);
-            robot.addTelemetry("raw: ", robot.imu.getVelocity());
-            //robot.addTelemetry("vel: ", robot.position.currentVelocity);
-            robot.sendTelemetry();
-            if(gamepad1.x)
-            {
-                //robot.position.resetVelocity();
-            }
-        }
-
-    }
-
-    Velocity calibrate(int sec)
-    {
-        Velocity[] changes = new Velocity[sec];
-
-        for(int i = 0; i < sec; i++)
-        {
-            robot.position.resetVelocity();
-            robot.delay(1000);
-
-            changes[i] = robot.position.currentVelocity;
-            robot.startTelemetry();
-            robot.addTelemetry("change in second " + i + " is: ", changes[i]);
+            robot.addTelemetry("position x: ", robot.position.currentRobotPosition[0]);
+            robot.addTelemetry("position y: ", robot.position.currentRobotPosition[1]);
+            robot.addTelemetry("rotation: ", robot.position.currentRobotPosition[2]);
             robot.sendTelemetry();
         }
-
-        Velocity out = new Velocity();
-
-        for(Velocity v:changes)
-        {
-            out.xVeloc += v.xVeloc;
-            out.yVeloc += v.yVeloc;
-            out.zVeloc += v.zVeloc;
-        }
-
-        out.xVeloc /= sec;
-        out.yVeloc /= sec;
-        out.zVeloc /= sec;
-
-        return out;
     }
 }
