@@ -14,6 +14,7 @@ public class Movement
     public static double ticksPerInchForward = 44;
     public static double ticksPerInchSideways = 88;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
+    public static PIDCoefficients movePID = new PIDCoefficients(.05,0,0);
 
     protected double speedMultiplier = 1;
     protected final double speedMultiplierMin = .2;
@@ -39,55 +40,33 @@ public class Movement
 
     void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime)
     {
-        double currentAngle = robot.position.currentRotation;
-        double error = robot.findAngleError(currentAngle, targetAngle);
+        double error = robot.findAngleError(robot.position.currentRotation, targetAngle);
 
-        if(Math.abs(error) > tolerance)
-        {
+        if(Math.abs(error) > tolerance) {
+
             int numberOfTimesInTolerance = 0;
             int numberOfTimesRun = 0;
-            double totalError = 0;
-            double lastError;
             double power;
+            PID pid = new PID(turnPID, -1, 1);
 
-            while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
+            while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && numberOfTimesRun < maxRuntime && !robot.stop())
             {
-                lastError = error;
                 error = robot.findAngleError(robot.position.currentRotation, targetAngle);
-                totalError += error;
-                power = getCorrectionFromPID(error, totalError, error - lastError);
+                power = pid.updatePIDAndReturnValue(error);
 
-                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,power));
+                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0, 0, power));
 
-                if(Math.abs(error) < tolerance) numberOfTimesInTolerance++;
+                if (Math.abs(error) < tolerance) numberOfTimesInTolerance++;
                 else numberOfTimesInTolerance = 0;
 
                 numberOfTimesRun++;
 
-                if(numberOfTimesRun > maxRuntime || robot.stop()) break;
-
-                if(robot.debug_methods)
-                {
-                    if(robot.debug_telemetry)
-                    {
-                        robot.telemetry.addData("angle error: ", error);
-                        robot.telemetry.addData("total angle error: ", totalError);
-                        robot.telemetry.addData("angle error change: ", error - lastError);
-                        robot.telemetry.addData("current power: ", power);
-                        robot.telemetry.addData("number of times run: ", numberOfTimesRun);
-                        robot.telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                    if(robot.debug_dashboard)
-                    {
-                        robot.packet.put("angle error: ", error);
-                        robot.packet.put("total angle error: ", totalError);
-                        robot.packet.put("angle error change: ", error - lastError);
-                        robot.packet.put("current power: ", power);
-                        robot.packet.put("number of times run: ", numberOfTimesRun);
-                        robot.packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                }
-
+                robot.addTelemetry("angle error: ", error);
+                robot.addTelemetry("total angle error: ", pid.totalError);
+                robot.addTelemetry("angle error change: ", pid.currentError - pid.lastError);
+                robot.addTelemetry("current power: ", power);
+                robot.addTelemetry("number of times run: ", numberOfTimesRun);
+                robot.addTelemetry("number of times in tolerance: ", numberOfTimesInTolerance);
                 robot.sendTelemetry();
             }
 
@@ -141,6 +120,55 @@ public class Movement
         robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, arr);
         robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
         robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
+    }
+
+    void moveToPosition(double[] targetPos, double[] tol, int maxLoops, PIDCoefficients movePID, PIDCoefficients turnPID, double maxSpeed)
+    {
+        PID xPID = new PID(movePID, -maxSpeed, maxSpeed);
+        PID yPID = new PID(movePID, -maxSpeed, maxSpeed);
+        PID rotPID = new PID(turnPID, -maxSpeed, maxSpeed);
+
+        double[] currentPos;
+        double[] powers = new double[3];
+
+        double errorVectorRot;
+        double errorVectorMag;
+
+        while (!robot.stop())
+        {
+            currentPos = robot.position.currentRobotPosition;
+
+            //calculate the error vector
+            errorVectorMag = Math.sqrt(Math.pow((targetPos[0] - currentPos[0]), 2) + Math.pow((targetPos[1] - currentPos[1]), 2));
+            errorVectorRot = Math.atan2((targetPos[1] - currentPos[1]),(targetPos[0] - currentPos[0]));
+
+            //take out robot rotation
+            errorVectorRot -= currentPos[2];
+            errorVectorRot = robot.scaleAngle(errorVectorRot);
+
+            //get the errors comps
+            powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(errorVectorRot));
+            powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
+            powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
+
+            robot.addTelemetry("pow x:", powers[0]);
+            robot.addTelemetry("pow y:", powers[1]);
+            robot.addTelemetry("pow rot:", powers[2]);
+            robot.addTelemetry("pos x:", currentPos[0]);
+            robot.addTelemetry("pos y:", currentPos[1]);
+            robot.addTelemetry("pos rot:", currentPos[2]);
+            robot.addTelemetry("mag: ", errorVectorMag);
+            robot.addTelemetry("rot: ", errorVectorRot);
+            robot.sendTelemetry();
+
+            if(Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2])
+            {
+                break;
+            }
+            //robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2]));
+            maxLoops--;
+        }
+        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
     }
 
     //////////
@@ -215,6 +243,7 @@ public class Movement
         X = applySmoothing(X, lastMovePowers[0], moveSmoothingSteps);
         Y = applySmoothing(Y, lastMovePowers[1], moveSmoothingSteps);
         rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+
         lastMovePowers[0] = X;
         lastMovePowers[1] = Y;
         lastMovePowers[2] = rotation;
@@ -226,24 +255,20 @@ public class Movement
     {
         double[] arr;
         arr = robot.getXYFromAngle(angle);
-        double x = arr[0];
-        double y = arr[1];
+        double x = arr[0] * basePower;
+        double y = arr[1] * basePower;
 
         return moveRobotPowers(x,y,0);
     }
 
-    double getCorrectionFromPID(double error, double totalError, double rateOfChange) // this method takes values from -180 to 180 and returns a value from -1 to 1
+    double[] moveAtAnglePowers(double angle, double basePower, double moveSmoothingSteps, double rotationSmoothingSteps)
     {
-        double value;
-        value = (error * turnPID.p) + (totalError * turnPID.d) + (rateOfChange * turnPID.i);
-        return Math.max(Math.min(value , 1), -1);
-    }
+        double[] arr;
+        arr = robot.getXYFromAngle(angle);
+        double x = arr[0] * basePower;
+        double y = arr[1] * basePower;
 
-    double getCorrectionFromPID(double error, double totalError, double rateOfChange, double P, double I, double D) // this method takes values from -180 to 180 and returns a value from -1 to 1
-    {
-        double value;
-        value = (error * P) + (totalError * I) + (rateOfChange * D);
-        return Math.max(Math.min(value , 1), -1);
+        return moveRobotPowers(x,y,0, moveSmoothingSteps, rotationSmoothingSteps);
     }
 
     double applySmoothing(double currentVal, double lastVal, double smoothingSteps)

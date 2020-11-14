@@ -13,6 +13,7 @@ public class Test extends LinearOpMode
 {
     public static int calTime = 1;
     Velocity diff;
+    public int i = 0;
 
     Robot robot;
 
@@ -21,20 +22,22 @@ public class Test extends LinearOpMode
     {
 
         robot = new Robot(this,true, false, false, false, false);
-        //robot.movement.setSpeedMultiplier(.25);
 
         waitForStart();
 
         robot.startTelemetry();
         robot.position.start();
-
-        while (opModeIsActive())
-        {
-            robot.movement.headlessMoveForTeleOp(gamepad1 , 0);
+        //robot.movement.turnToAngle(90,.5,50,1000);
+        robot.movement.moveToPosition(new double[]{10,10,90}, new double[]{1,1,3}, 1000, Movement.movePID, Movement.turnPID, .5);
+/*
+            //robot.movement.headlessMoveForTeleOp(gamepad1 , 0);
             robot.addTelemetry("position x: ", robot.position.currentRobotPosition[0]);
             robot.addTelemetry("position y: ", robot.position.currentRobotPosition[1]);
             robot.addTelemetry("rotation: ", robot.position.currentRobotPosition[2]);
-            robot.sendTelemetry();
-        }
+            robot.addTelemetry("test: ", i);
+
+ */
+        robot.sendTelemetry();
+
     }
 }

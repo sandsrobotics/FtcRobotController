@@ -7,6 +7,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 import static android.os.SystemClock.sleep;
@@ -186,9 +188,10 @@ public class Robot
         return max;
     }
 
-    void addDoubleArrays(double[] main, double[] second)
+    double[] addDoubleArrays(double[] main, double[] second)
     {
         if(main.length == second.length) { for(int i = 0; i < main.length; i++) main[i] += second[i]; }
+        return main;
     }
 
     boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
@@ -265,5 +268,53 @@ enum GamepadButtons
         if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
 
         return 0;
+    }
+}
+
+class PID
+{
+    PIDCoefficients PIDs;
+    double maxClamp;
+    double minClamp;
+    
+    double totalError;
+    double lastError;
+    double currentError;
+    
+    PID(PIDCoefficients PIDs, double minClamp, double maxClamp)
+    {
+        this.PIDs = PIDs;
+        this.minClamp = minClamp;
+        this.maxClamp = maxClamp;
+    }
+    
+    void updatePID(double error)
+    {
+        lastError = currentError;
+        currentError = error;
+        totalError += error;
+        
+        double value = (error * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+
+        if((value > maxClamp || value < minClamp) && Math.signum(error) != Math.signum(totalError))
+        {
+            totalError = 0;
+        }
+    }
+    
+    double updatePIDAndReturnValue(double error)
+    {
+        updatePID(error);
+        return returnValue();
+    }
+    
+    double returnValue()
+    {
+        return Math.max(Math.min((currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d), maxClamp), minClamp);
+    }
+    
+    double returnUncappedValue()
+    {
+        return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
     }
 }
