@@ -21,7 +21,7 @@ public class Test extends LinearOpMode
     {
 
         robot = new Robot(this,true, false, false, false, false);
-        robot.movement.setSpeedMultiplier(.25);
+        //robot.movement.setSpeedMultiplier(.25);
 
         waitForStart();
 
@@ -30,7 +30,7 @@ public class Test extends LinearOpMode
 
         while (opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1);
+            robot.movement.headlessMoveForTeleOp(gamepad1 , 0);
             robot.addTelemetry("position x: ", robot.position.currentRobotPosition[0]);
             robot.addTelemetry("position y: ", robot.position.currentRobotPosition[1]);
             robot.addTelemetry("rotation: ", robot.position.currentRobotPosition[2]);

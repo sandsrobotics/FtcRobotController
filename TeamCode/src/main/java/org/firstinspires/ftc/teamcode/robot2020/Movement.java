@@ -15,13 +15,15 @@ public class Movement
     public static double ticksPerInchSideways = 88;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
 
+    protected double speedMultiplier = 1;
+    protected final double speedMultiplierMin = .2;
+    protected final double speedMultiplierMax = 2;
 
     ///////////////////
     //other variables//
     ///////////////////
-    protected double speedMultiplier = 1;
-    protected double speedMultiplierMin = .2;
-    protected double speedMultiplierMax = 2;
+    //for move robot
+    protected double[] lastMovePowers = new double[]{0,0,0};
 
     //other class
     Robot robot;
@@ -162,14 +164,21 @@ public class Movement
     void setSpeedMultiplierToMax() { speedMultiplier = speedMultiplierMax; }
     void setSpeedMultiplierToMin() { speedMultiplier = speedMultiplierMin; }
 
-    void moveForTeleOp(Gamepad gamepad1)
+    void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
     {
-        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
+        if(breakButton.getButtonPressed(gamepad1))
+        {
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
+
+        }
+        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, .05 , .05));
     }
 
-    void headlessMoveForTeleOp( Gamepad gamepad1, double offset)
+    void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
-        double curAngle = -robot.position.currentRotation;
+        double curAngle = -robot.position.currentRotation + offset;
+        curAngle = robot.scaleAngle(curAngle);
         double gamepadAngle = robot.getAngleFromXY(-gamepad1.left_stick_x, -gamepad1.left_stick_y);
         double error = -robot.findAngleError(curAngle,gamepadAngle);
         double power = Math.max(Math.abs(gamepad1.left_stick_x), Math.abs(gamepad1.left_stick_y));
@@ -200,6 +209,19 @@ public class Movement
         return (arr);
     }
 
+    double[] moveRobotPowers(double X, double Y, double rotation, double moveSmoothingSteps, double rotationSmoothingSteps)
+    {
+        //smoothing for XYR
+        X = applySmoothing(X, lastMovePowers[0], moveSmoothingSteps);
+        Y = applySmoothing(Y, lastMovePowers[1], moveSmoothingSteps);
+        rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+        lastMovePowers[0] = X;
+        lastMovePowers[1] = Y;
+        lastMovePowers[2] = rotation;
+
+        return moveRobotPowers(X, Y, rotation);
+    }
+
     double[] moveAtAnglePowers(double angle, double basePower)
     {
         double[] arr;
@@ -224,30 +246,10 @@ public class Movement
         return Math.max(Math.min(value , 1), -1);
     }
 
-/*
-    void findBlueTowerGoal(double rotationRange, double rotationIncrements)
+    double applySmoothing(double currentVal, double lastVal, double smoothingSteps)
     {
-        turnToAngleSimple(0,5,20,1000);
-        if(robot.vision.findTrackable(0,true))
-        {
-            turnToAngleSimple(robot.vision.lastRotation.thirdAngle, 1, 25,2000);
-        }
-        else
-        {
-            robot.movement.turnToAngleSimple(-rotationRange, 5,20,1000);
-            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,.1));
-            while(robot.getAngles().thirdAngle < rotationRange)
-            {
-                //robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.15));
-                if(robot.vision.findTrackable(0,true))
-                {
-                    turnToAngleSimple(robot.vision.lastRotation.thirdAngle , 1, 25,2000);
-                    break;
-                }
-                if(robot.stop()) break;
-            }
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-        }
+        if(currentVal - lastVal > smoothingSteps) { currentVal = lastVal + smoothingSteps; }
+        else if(currentVal - lastVal < -smoothingSteps) { currentVal = lastVal - smoothingSteps; }
+        return currentVal;
     }
- */
 }

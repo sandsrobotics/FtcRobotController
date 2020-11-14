@@ -131,11 +131,7 @@ public class Robot
     ////////////////
     double findAngleError(double currentAngle, double targetAngle)
     {
-        if (targetAngle > 180) {
-            targetAngle = targetAngle - 360;
-        } else if (targetAngle < -180) {
-            targetAngle = targetAngle + 360;
-        }
+        targetAngle = scaleAngle(targetAngle);
         double angleError = currentAngle - targetAngle;
         if (angleError > 180) {
             angleError = angleError - 360;
@@ -143,6 +139,16 @@ public class Robot
             angleError = angleError + 360;
         }
         return -angleError;
+    }
+
+    double scaleAngle(double angle)// scales an angle to fit in -180 to 180
+    {
+        if (angle > 180) {
+            angle = angle - 360;
+        } else if (angle < -180) {
+            angle = angle + 360;
+        }
+        return angle;
     }
 
     double getAngleFromXY(double X, double Y)
