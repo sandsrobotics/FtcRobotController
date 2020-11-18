@@ -122,7 +122,7 @@ public class Movement
         robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
-    void moveToPosition(double[] targetPos, double[] tol, int maxLoops, PIDCoefficients movePID, PIDCoefficients turnPID, double maxSpeed)
+    void moveToPosition(double[] targetPos, double[] tol, int maxLoops, int timesToStayInTolerance, PIDCoefficients movePID, PIDCoefficients turnPID, double maxSpeed)
     {
         PID xPID = new PID(movePID, -maxSpeed, maxSpeed);
         PID yPID = new PID(movePID, -maxSpeed, maxSpeed);
@@ -134,7 +134,9 @@ public class Movement
         double errorVectorRot;
         double errorVectorMag;
 
-        while (!robot.stop())
+        int numOfTimesInTolerance = 0;
+
+        while (!robot.stop() && maxLoops > 0 && numOfTimesInTolerance < timesToStayInTolerance)
         {
             currentPos = robot.position.currentRobotPosition;
 
@@ -151,21 +153,12 @@ public class Movement
             powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
             powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
 
-            robot.addTelemetry("pow x:", powers[0]);
-            robot.addTelemetry("pow y:", powers[1]);
-            robot.addTelemetry("pow rot:", powers[2]);
-            robot.addTelemetry("pos x:", currentPos[0]);
-            robot.addTelemetry("pos y:", currentPos[1]);
-            robot.addTelemetry("pos rot:", currentPos[2]);
-            robot.addTelemetry("mag: ", errorVectorMag);
-            robot.addTelemetry("rot: ", errorVectorRot);
-            robot.sendTelemetry();
-
             if(Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2])
             {
-                break;
+                numOfTimesInTolerance++;
             }
-            //robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2]));
+
+            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2]));
             maxLoops--;
         }
         robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);

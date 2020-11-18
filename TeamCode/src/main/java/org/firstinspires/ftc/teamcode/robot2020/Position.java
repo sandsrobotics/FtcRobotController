@@ -18,9 +18,6 @@ public class Position extends Thread
     double startPositionY = 0; // in inches
     double startRotation = 0; //in degrees from goal
 
-    //for using encoders
-    public static double wheelDistanceFromCenter = 9.6; //in inches
-
     ///////////////////
     //other variables//
     ///////////////////
@@ -29,23 +26,13 @@ public class Position extends Thread
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
 
-    double a = Math.atan(Movement.ticksPerInchForward/Movement.ticksPerInchSideways);
-
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
     volatile double currentRotation;
     protected double rotationOffset = -startRotation;
 
-    //velocity
-    volatile Velocity currentVelocity = new Velocity();
-    volatile Velocity velocityOffset = new Velocity();
-
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
-
-    //acceleration
-    volatile Acceleration currentAcceleration = new Acceleration();
-    volatile Acceleration accelerationOffset = new Acceleration();
 
     //other class
     Robot robot;
@@ -60,49 +47,11 @@ public class Position extends Thread
         Orientation angles = robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
         angles.thirdAngle *= -1;
         angles.thirdAngle -= rotationOffset;
-        if(angles.thirdAngle < -180) {angles.thirdAngle = 360 + angles.thirdAngle;}
-        else if(angles.thirdAngle > 180){angles.thirdAngle = angles.thirdAngle - 360;}
+        angles.thirdAngle = (float)robot.scaleAngle(angles.thirdAngle);
         return angles;
     }
 
     void resetZAxisRotation() { rotationOffset = -robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle - startRotation;}
-
-    ////////////
-    //velocity//
-    ////////////
-    void resetVelocity()
-    {
-        velocityOffset = robot.imu.getVelocity();
-    }
-
-    Velocity updateVelocity()
-    {
-        Velocity out = currentVelocity;//robot.imu.getVelocity();
-
-        out.xVeloc -= velocityOffset.xVeloc;
-        out.yVeloc -= velocityOffset.yVeloc;
-        out.zVeloc -= velocityOffset.zVeloc;
-        return out;
-
-        //return currentVelocity;
-    }
-
-    ////////////////
-    //acceleration//
-    ////////////////
-    void resetAcceleration()
-    {
-        accelerationOffset = robot.imu.getAcceleration();
-    }
-
-    Acceleration updateAcceleration()
-    {
-        Acceleration out = robot.imu.getAcceleration();
-        out.xAccel -= accelerationOffset.xAccel;
-        out.yAccel -= accelerationOffset.yAccel;
-        out.zAccel -= accelerationOffset.zAccel;
-        return out;
-    }
 
     ////////////////////
     //position finding//
@@ -138,8 +87,6 @@ public class Position extends Thread
 
     void updateAll()
     {
-        currentAcceleration = updateAcceleration();
-        currentVelocity = updateVelocity();
         currentAngularVelocity = robot.imu.getAngularVelocity();
         currentAllAxisRotations = updateAngles();
         currentRotation = currentAllAxisRotations.thirdAngle;
