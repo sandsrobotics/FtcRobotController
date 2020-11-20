@@ -16,7 +16,7 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this,false, true, false, false, false);
+        robot = new Robot(this,false, true, false, false, false, false);
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
 
         robot.startTelemetry();

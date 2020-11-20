@@ -187,7 +187,7 @@ public class Movement
 
     void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
     {
-        if(breakButton.getButtonPressed(gamepad1))
+        if(breakButton.getButtonHeld(gamepad1))
         {
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;

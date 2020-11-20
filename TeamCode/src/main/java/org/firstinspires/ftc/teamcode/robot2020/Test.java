@@ -4,16 +4,13 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 // test
 @Config
-@TeleOp(name = "test position tracking v2.4")
-public class Test extends LinearOpMode
-{
-    public static int calTime = 1;
-    Velocity diff;
-    public int i = 0;
+@TeleOp(name = "test vision v1.1")
+public class Test extends LinearOpMode {
 
     Robot robot;
 
@@ -21,23 +18,28 @@ public class Test extends LinearOpMode
     public void runOpMode()
     {
 
-        robot = new Robot(this,true, false, false, false, false);
+        robot = new Robot(this,false, false, false, false, true, false);
 
         waitForStart();
 
         robot.startTelemetry();
         robot.position.start();
-        //robot.movement.turnToAngle(90,.5,50,1000);
-        robot.movement.moveToPosition(new double[]{10,10,90}, new double[]{1,1,3}, 1000, Movement.movePID, Movement.turnPID, .5);
-/*
-            //robot.movement.headlessMoveForTeleOp(gamepad1 , 0);
-            robot.addTelemetry("position x: ", robot.position.currentRobotPosition[0]);
-            robot.addTelemetry("position y: ", robot.position.currentRobotPosition[1]);
-            robot.addTelemetry("rotation: ", robot.position.currentRobotPosition[2]);
-            robot.addTelemetry("test: ", i);
+        robot.vision.start();
+        robot.vision.startDashboardCameraStream(24);
 
- */
-        robot.sendTelemetry();
+        while(opModeIsActive())
+        {
+            for(int i = 1; i < 6; i++)
+            {
+                if(robot.vision.currentTrackablesLocations[i-1] != null) robot.addTelemetry("target " + i + " pos: ", robot.vision.currentTrackablesLocations[i - 1].getTranslation());
+                else robot.addTelemetry("target " + i + " pos: ", new double[]{0,0,0});
+                robot.addTelemetry("target " + i + " rot: ", robot.vision.getTrackableAngles(robot.vision.currentTrackablesLocations[i - 1]));
+            }
+            if(robot.vision.currentCalculatedRobotLocation != null)robot.addTelemetry("robot pos: ", robot.vision.currentCalculatedRobotLocation.getTranslation());
+            else robot.addTelemetry("robot pos: ", new double[]{0,0,0});
+            robot.addTelemetry("robot rot: ", robot.vision.getTrackableAngles(robot.vision.currentCalculatedRobotLocation));
 
+            robot.sendTelemetry();
+        }
     }
 }

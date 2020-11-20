@@ -61,6 +61,9 @@ public class Vision extends Thread
     float[] phonePosition = {0,0,0};
     float[] phoneRotation = {0,0,0};
 
+    //to see where goal is
+    int goalPictureNum = 3;
+
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
     public static boolean usingWebcam = true;
@@ -236,6 +239,17 @@ public class Vision extends Thread
             }
             i++;
         }
+    }
+
+    OpenGLMatrix getCurrentGaolLocation()
+    {
+        return currentTrackablesLocations[goalPictureNum];
+    }
+
+    Orientation getTrackableAngles(OpenGLMatrix m)
+    {
+        if(m != null) return Orientation.getOrientation(m, EXTRINSIC, XYZ, DEGREES);
+        return null;
     }
 
     //////////////////

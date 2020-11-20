@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import static android.os.SystemClock.sleep;
+
 
 @Config
 public class Robot
@@ -51,14 +51,15 @@ public class Robot
     TelemetryPacket packet;
 
 
-    Robot(LinearOpMode opMode, boolean useDrive, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         motorConfig = new MotorConfig(this);
+        position = new Position(this, usePositionTracking);
+
         if(useDrive)movement = new Movement(this);
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
         if(useComplexMovement) complexMovement = new ComplexMovement(this);
-        position = new Position(this);
 
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
@@ -67,7 +68,7 @@ public class Robot
         this.gamepad2 = opMode.gamepad2;
 
         initHardware();
-        if(useDrive || useComplexMovement) motorConfig.initDriveMotors();
+        if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
         if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
     }
@@ -90,7 +91,7 @@ public class Robot
 
         while (!opMode.isStopRequested() && !imu.isGyroCalibrated())
         {
-            sleep(50);
+            delay(50);
             opMode.idle();
         }
 
@@ -174,37 +175,15 @@ public class Robot
         return XY;
     }
 
-    boolean allSameValues(double[] values)
-    {
-        double lastValueSign = Math.signum(values[0]);
-        for(double value:values){if(lastValueSign != Math.signum(value)) return false;}
-        return true;
-    }
-
-    double maxAbsoluteValue(double[] values)
-    {
-        double max = 0;
-        for(double value:values)if(Math.abs(value) > max) max = Math.abs(value);
-        return max;
-    }
-
-    double[] addDoubleArrays(double[] main, double[] second)
-    {
-        if(main.length == second.length) { for(int i = 0; i < main.length; i++) main[i] += second[i]; }
-        return main;
-    }
-
-    boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
-
-    void delay(long ms)
-    {
+    void delay(long ms){
         long last = System.currentTimeMillis();
         while(System.currentTimeMillis() - last < ms)
         {
-            sleep(1);
             if(stop())break;
         }
     }
+
+    boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
 }
 
 enum GamepadButtons
@@ -234,7 +213,9 @@ enum GamepadButtons
     rightJoyStickBUTTON,
     rightTRIGGER;
 
-    boolean getButtonPressed(Gamepad gamepad)
+    boolean wasButtonPressed = false;
+
+    boolean getButtonHeld(Gamepad gamepad)
     {
         if(this == GamepadButtons.A) return gamepad.a;
         if(this == GamepadButtons.B) return gamepad.a;
@@ -254,6 +235,20 @@ enum GamepadButtons
         if(this == GamepadButtons.START) return gamepad.start;
         if(this == GamepadButtons.BACK) return gamepad.back;
 
+        return false;
+    }
+
+    boolean getButtonPressed(Gamepad gamepad)
+    {
+        if(getButtonHeld(gamepad))
+        {
+            if(!wasButtonPressed)
+            {
+                wasButtonPressed = true;
+                return true;
+            }
+        }
+        else wasButtonPressed = false;
         return false;
     }
 

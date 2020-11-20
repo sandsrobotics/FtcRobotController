@@ -34,10 +34,17 @@ public class Position extends Thread
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
+    //other
+    boolean usePositionTracking;
+
     //other class
     Robot robot;
 
-    Position(Robot robot){this.robot = robot;}
+    Position(Robot robot, boolean usePositionTracking)
+    {
+        this.robot = robot;
+        this.usePositionTracking = usePositionTracking;
+    }
 
     //////////
     //angles//
@@ -90,18 +97,17 @@ public class Position extends Thread
         currentAngularVelocity = robot.imu.getAngularVelocity();
         currentAllAxisRotations = updateAngles();
         currentRotation = currentAllAxisRotations.thirdAngle;
-        getPosFromEncoder();
     }
 
     @Override
     public void run()
     {
         initialize();
-        while (!Thread.currentThread().isInterrupted() && robot.opMode.opModeIsActive())
+        while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
             updateAll();
-
+            if(usePositionTracking) getPosFromEncoder();
         }
     }
 
@@ -110,6 +116,6 @@ public class Position extends Thread
     ///////////////
     void stopPosition()
     {
-        Thread.currentThread().interrupt();
+        this.interrupt();
     }
 }
