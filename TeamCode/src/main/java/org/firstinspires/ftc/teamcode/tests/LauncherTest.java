@@ -25,8 +25,8 @@ public class LauncherTest extends LinearOpMode {
     protected boolean fliplauncherLifterMotor = true;
     protected boolean fliplauncherservo = false;
     //servo
-    protected double servoRestAngle = .65;
-    protected double servoLaunchAngle = .25;
+    protected double servoRestAngle = .34;
+    protected double servoLaunchAngle = .46;
     //wheel
     protected double gearRatio = 5;
     protected double ticksPerRev = 145.6;
@@ -126,7 +126,7 @@ public class LauncherTest extends LinearOpMode {
     }
 
     void setLauncherSevo() {
-        if (gamepad1.right_bumper) launcherServo.setPosition(servoLaunchAngle);
+        if (gamepad1.right_trigger > 0) launcherServo.setPosition(servoLaunchAngle);
         else launcherServo.setPosition(servoRestAngle);
     }
 

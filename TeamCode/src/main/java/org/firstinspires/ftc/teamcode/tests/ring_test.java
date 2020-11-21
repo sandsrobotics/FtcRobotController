@@ -72,8 +72,8 @@ public class ring_test extends LinearOpMode {
      * Describe this function...
      */
     private void standard_drive() {
-        motor0.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x);
-        motor1.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x);
+        motor0.setPower(-gamepad1.left_stick_y - gamepad1.left_stick_x);
+        motor1.setPower(-gamepad1.left_stick_y + gamepad1.left_stick_x);
     }
 
     /**
@@ -185,9 +185,9 @@ public class ring_test extends LinearOpMode {
         launch45 = -600;
         launcherPos = 0;
         spin_power2 = 0;
-        all_the_way_down = -1000;
-        my_90_degrees = -800;
-        straight_up = -420;
+        //all_the_way_down = -1000;
+        //my_90_degrees = -800;
+        //straight_up = -420;
         launcherHome = 0;
         servoneutral = 0.55;
         servolaunch = 0.25;
