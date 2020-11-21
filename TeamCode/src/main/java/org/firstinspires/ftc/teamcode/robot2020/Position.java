@@ -76,7 +76,7 @@ public class Position extends Thread
 
         //get movement
         double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/Movement.ticksPerInchForward;
-        double XMove = (.5 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
+        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
 
         //rotate and add to robot position
         currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);

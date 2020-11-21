@@ -57,6 +57,12 @@ public class Robot
 
     Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
+        this.opMode = opMode;
+        this.hardwareMap = opMode.hardwareMap;
+        this.telemetry = opMode.telemetry;
+        this.gamepad1 = opMode.gamepad1;
+        this.gamepad2 = opMode.gamepad2;
+
         this.useOpenCV = useOpenCV;
         this.useVuforia = useVuforia;
 
@@ -67,12 +73,6 @@ public class Robot
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
         if(useComplexMovement) complexMovement = new ComplexMovement(this);
-
-        this.opMode = opMode;
-        this.hardwareMap = opMode.hardwareMap;
-        this.telemetry = opMode.telemetry;
-        this.gamepad1 = opMode.gamepad1;
-        this.gamepad2 = opMode.gamepad2;
 
         initHardware();
         if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
@@ -221,11 +221,12 @@ enum GamepadButtons
     rightTRIGGER;
 
     boolean wasButtonPressed = false;
+    long lastButtonRelease = System.currentTimeMillis();
 
     boolean getButtonHeld(Gamepad gamepad)
     {
         if(this == GamepadButtons.A) return gamepad.a;
-        if(this == GamepadButtons.B) return gamepad.a;
+        if(this == GamepadButtons.B) return gamepad.b;
         if(this == GamepadButtons.X) return gamepad.x;
         if(this == GamepadButtons.Y) return gamepad.y;
 
@@ -242,6 +243,16 @@ enum GamepadButtons
         if(this == GamepadButtons.START) return gamepad.start;
         if(this == GamepadButtons.BACK) return gamepad.back;
 
+        return false;
+    }
+
+    boolean getButtonHeld(Gamepad gamepad, int time)
+    {
+        if(getButtonHeld(gamepad))
+        {
+            return System.currentTimeMillis() - lastButtonRelease > time;
+        }
+        else lastButtonRelease = System.currentTimeMillis();
         return false;
     }
 

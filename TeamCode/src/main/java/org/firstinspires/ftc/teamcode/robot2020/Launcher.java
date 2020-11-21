@@ -20,18 +20,20 @@ public class Launcher {
     //////////////////
     //controls
     int launcherGamepadNum = 1; //use 1 for gamepad1 and 2 for gamepad2
-    GamepadButtons revIncreaseButton = GamepadButtons.X;
+    GamepadButtons revIncreaseButton = GamepadButtons.B;
     GamepadButtons revDecreaseButton = GamepadButtons.X;
     GamepadButtons revPowerSlide = GamepadButtons.leftTRIGGER;
-    GamepadButtons revModeButton = GamepadButtons.X;
+    GamepadButtons revModeButton = GamepadButtons.Y;
     GamepadButtons launchButton = GamepadButtons.A;
+    int buttonHoldTime = 500;
 
     //servo and motor config
-    double ticksPerRev = 10;
+    double ticksPerRev = 28;
     double gearRatio = 1;
     double maxRPM = 6000;
-    double servoRestAngle = 15;
-    double servoLaunchAngle = 30;
+    double servoRestAngle = .34;
+    double servoLaunchAngle = .46;
+    int servoMoveTime = 250;
 
     //calibration data
     protected String calibrationFileDir = "assets";
@@ -43,7 +45,7 @@ public class Launcher {
 
     //other
     double RPMIncrements = 50;
-    double RPMTolerance = 10;
+    double RPMTolerance = 100;
     double maxRPMAcceleration = 10; // acceleration measured in RPM/s
     double minLaunchDistance = 60; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
@@ -146,7 +148,7 @@ public class Launcher {
     ///////////////////////////
     //launcher opmode control//
     ///////////////////////////
-    void initStuff()
+    void init()
     {
         // zero motors
         robot.motorConfig.launcherServo.setPosition(servoRestAngle);
@@ -154,6 +156,8 @@ public class Launcher {
 
     void telemetryDataOut()
     {
+        if(runWheelOnTrigger) robot.addTelemetry("Mode: ", "Run on trigger");
+        else robot.addTelemetry("Mode: ", "Run using RPM");
         robot.addTelemetry("RPM", getPRM());
         robot.addTelemetry("Set RPM", targetWheelRpm);
         robot.sendTelemetry();
@@ -161,20 +165,22 @@ public class Launcher {
 
     void setLauncherServo()
     {
-        if (launchButton.getButtonHeld(launcherGamepad)) robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
+        //if(launchButton.getButtonHeld(launcherGamepad, buttonHoldTime)) autoLaunch();
+        if (launchButton.getButtonHeld(launcherGamepad)) autoLaunch();
+            //robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
         else robot.motorConfig.launcherServo.setPosition(servoRestAngle);
     }
 
     void setLauncherWheelMotor()
     {
         //inputs
-        if(revDecreaseButton.getButtonPressed(launcherGamepad))
+        if(revDecreaseButton.getButtonPressed(launcherGamepad) || revDecreaseButton.getButtonHeld(launcherGamepad, buttonHoldTime))
         {
             targetWheelRpm -= RPMIncrements;
             if(targetWheelRpm < 0) targetWheelRpm = 0;
         }
 
-        if(revIncreaseButton.getButtonPressed(launcherGamepad))
+        if(revIncreaseButton.getButtonPressed(launcherGamepad) || revIncreaseButton.getButtonHeld(launcherGamepad, buttonHoldTime))
         {
             targetWheelRpm += RPMIncrements;
             if(targetWheelRpm > maxRPM) targetWheelRpm = maxRPM;
@@ -187,7 +193,7 @@ public class Launcher {
         else setRPM();
     }
 
-    void telemetryRun(boolean telemetry)
+    void opModeRun(boolean telemetry)
     {
         setLauncherServo();
         setLauncherWheelMotor();
@@ -198,7 +204,7 @@ public class Launcher {
     ///////////////////////////////
     //autonomous launcher control//
     ///////////////////////////////
-    void autoLaunchDisk()
+    void autonomousLaunchDisk()
     {
 
     }
@@ -226,9 +232,9 @@ public class Launcher {
     boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance, double maxRPMAcceleration)
     {
         double lastRPM = getPRM();
-        robot.delay(20);
+        robot.delay(10);
         double RPM = getPRM();
-        return Math.abs(RPM - targetWheelRpm) <= RPMTolerance && Math.abs(lastRPM - RPM) * 50 <= maxRPMAcceleration;
+        return Math.abs(RPM - targetWheelRpm) <= RPMTolerance && Math.abs(lastRPM - RPM) * 100 <= maxRPMAcceleration;
     }
 
     boolean isRPMInTolerance()
@@ -255,5 +261,19 @@ public class Launcher {
         robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
         robot.delay(actuatorTime);
         robot.motorConfig.launcherServo.setPosition(servoRestAngle);
+    }
+
+    void moveLaunchServo()
+    {
+        moveLaunchServo(servoMoveTime);
+    }
+
+    void autoLaunch()
+    {
+        if(isRPMInTolerance())
+        {
+            moveLaunchServo();
+            robot.delay(servoMoveTime);
+        }
     }
 }// class end

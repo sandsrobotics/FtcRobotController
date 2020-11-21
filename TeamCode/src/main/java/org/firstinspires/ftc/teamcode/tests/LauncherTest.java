@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.tests;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,7 +11,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "test launcher v1.1")
+@TeleOp(name = "test launcher")
+@Disabled
 public class LauncherTest extends LinearOpMode {
 
     //////////////////
@@ -22,7 +24,7 @@ public class LauncherTest extends LinearOpMode {
     protected int launcherservoNum = 0;
     //flip
     protected boolean fliplauncherWheelMotor = false;
-    protected boolean fliplauncherLifterMotor = true;
+    protected boolean fliplauncherLifterMotor = false;
     protected boolean fliplauncherservo = false;
     //servo
     protected double servoRestAngle = .25;
@@ -53,6 +55,9 @@ public class LauncherTest extends LinearOpMode {
     Double spinMultiplier;
     Double spinVelocity;
     boolean b_pressed, x_pressed, y_pressed, dl_pressed, dr_pressed = false;
+    int numOfTimeBPressed = 0;
+    int numOfTimeXPressed = 0;
+
     TelemetryPacket packet;
 
     DcMotorEx launcherWheelMotor;
@@ -88,9 +93,9 @@ public class LauncherTest extends LinearOpMode {
 
         // reverse
         if (fliplauncherWheelMotor)
-            launcherWheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         if (fliplauncherLifterMotor)
-            launcherWheelMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+            launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         if (fliplauncherservo) launcherServo.setDirection(Servo.Direction.REVERSE);
 
         // zero motors
@@ -150,18 +155,32 @@ public class LauncherTest extends LinearOpMode {
         } else y_pressed = false;
 
         if (gamepad1.b) {
+            numOfTimeBPressed++;
             if (!b_pressed) {
                 setWheelRpm += rpmIncrements;
                 b_pressed = true;
             }
-        } else b_pressed = false;
+            else if(numOfTimeBPressed > 20) setWheelRpm += rpmIncrements;
+        }
+        else
+        {
+            b_pressed = false;
+            numOfTimeBPressed = 0;
+        }
 
         if (gamepad1.x) {
+            numOfTimeXPressed ++;
             if (!x_pressed) {
                 x_pressed = true;
                 setWheelRpm -= rpmIncrements;
             }
-        } else x_pressed = false;
+            else if(numOfTimeXPressed > 20) setWheelRpm -= rpmIncrements;
+        }
+        else
+        {
+            x_pressed = false;
+            numOfTimeXPressed = 0;
+        }
 
         if (setWheelRpm > maxRpm) setWheelRpm = maxRpm;
         if (setWheelRpm < 0) setWheelRpm = 0;
