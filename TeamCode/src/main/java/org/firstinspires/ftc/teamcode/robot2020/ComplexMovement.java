@@ -54,12 +54,12 @@ public class ComplexMovement {
 
     void recorder(boolean stopAtMaxTime)
     {
-        if (measureDelay > maxTime && stopAtMaxTime && robot.debug_methods) robot.addTelemetryString("error in ComplexMovement.recorder: ", "measure delay is more than max length so can not record");
+        if (measureDelay > maxTime && stopAtMaxTime && robot.debug_methods) robot.addTelemetry("error in ComplexMovement.recorder: ", "measure delay is more than max length so can not record");
         if(isRecording)
         {
             if(curRecordingLength + measureDelay > maxTime && stopAtMaxTime)
             {
-                if(robot.debug_methods)robot.addTelemetryString("ComplexMovement.recorder has stopped recording: ", "this recording has stopped at time " + curRecordingLength + " ms: stop recording to make file");
+                if(robot.debug_methods)robot.addTelemetry("ComplexMovement.recorder has stopped recording: ", "this recording has stopped at time " + curRecordingLength + " ms: stop recording to make file");
                 isRecording = false;
             }
             else
@@ -258,7 +258,7 @@ public class ComplexMovement {
                 }
                 if (curInstruction == loaded_Positions.size() || robot.stop()) break;
                 if (stopIfTimeIsMoreThanMoveTime && System.currentTimeMillis() - startMs >= loaded_TotalTime) {
-                    if (robot.debug_methods) robot.addTelemetryString("error in ComplexMovement.runLoadedMoveV2: ", "this move took longer than expected to run. Ending move...");
+                    if (robot.debug_methods) robot.addTelemetry("error in ComplexMovement.runLoadedMoveV2: ", "this move took longer than expected to run. Ending move...");
                     break;
                 }
             }
@@ -267,7 +267,7 @@ public class ComplexMovement {
             robot.motorConfig.setMotorsToRunWithEncodersList(robot.motorConfig.driveMotors);
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
-        else if(robot.debug_methods) robot.addTelemetryString("warning in ComplexMovement.RunMoveV2: ", "no loaded move!");
+        else if(robot.debug_methods) robot.addTelemetry("warning in ComplexMovement.RunMoveV2: ", "no loaded move!");
     }
 
     void clearDatabase()

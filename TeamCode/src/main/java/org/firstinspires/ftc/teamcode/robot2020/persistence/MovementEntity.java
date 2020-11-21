@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.robot2020.persistence;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "Movement")
@@ -17,8 +18,9 @@ public class MovementEntity {
     @ColumnInfo(name = "motor_tick")
     public float motor_tick;
 
-    public MovementEntity() {
-    }
+    @Ignore
+    public MovementEntity() { }
+
     public MovementEntity(String name, int motor_id, float motor_tick) {
         this.name = name;
         this.motor_id = motor_id;

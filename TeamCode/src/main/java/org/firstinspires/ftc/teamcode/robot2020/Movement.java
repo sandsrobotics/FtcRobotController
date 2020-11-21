@@ -14,14 +14,17 @@ public class Movement
     public static double ticksPerInchForward = 44;
     public static double ticksPerInchSideways = 88;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
+    public static PIDCoefficients movePID = new PIDCoefficients(.05,0,0);
 
+    protected double speedMultiplier = 1;
+    protected final double speedMultiplierMin = .2;
+    protected final double speedMultiplierMax = 2;
 
     ///////////////////
     //other variables//
     ///////////////////
-    protected double speedMultiplier = 1;
-    protected double speedMultiplierMin = .2;
-    protected double speedMultiplierMax = 2;
+    //for move robot
+    protected double[] lastMovePowers = new double[]{0,0,0};
 
     //other class
     Robot robot;
@@ -34,91 +37,39 @@ public class Movement
     ////////////////
     //turn methods//
     ////////////////
-    void turnToAngPID(double targetAngle, double tolerance, int numOfTimesToStayInTolerance, int maxRuntime)
+
+    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime)
     {
-        double I = 0;
-        double currentAngle = robot.getAngles().thirdAngle;
-        double error = robot.findAngleError(currentAngle, targetAngle);
-        double lastError;
-        double pow;
-        int numOfTimesInTolerance = 0;
-        int numOfTimesRun = 0;
+        double error = robot.findAngleError(robot.position.currentRotation, targetAngle);
 
-        while(numOfTimesInTolerance < numOfTimesToStayInTolerance)
-        {
-            lastError = error;
-            currentAngle = robot.getAngles().thirdAngle;
-            error = robot.findAngleError(currentAngle, targetAngle);
-            pow = robot.getCorrectionFromPID(error, lastError,0,.1);
+        if(Math.abs(error) > tolerance) {
 
-            if(Math.abs(error) < tolerance)
-            {
-                numOfTimesInTolerance ++;
-                //I = 0;
-                pow = 0;
-            }
-            else numOfTimesInTolerance = 0;
-
-            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,pow));
-
-            numOfTimesRun ++;
-            if(numOfTimesRun > maxRuntime || robot.stop()) break;
-        }
-        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-    }
-
-    void turnToAngleSimple(double targetAngle, double tolerance, double numberOfTimesToStayInTolerance, double maxRuntime)
-    {
-        double currentAngle = robot.getAngles().thirdAngle;
-        double error = robot.findAngleError(currentAngle, targetAngle);
-
-        if(Math.abs(error) > tolerance)
-        {
             int numberOfTimesInTolerance = 0;
             int numberOfTimesRun = 0;
+            double power;
+            PID pid = new PID(turnPID, -1, 1);
 
-            //I = 0;
-            //robot.motorConfig.setMotorsToRunWithEncoders();
-            //robot.motorConfig.setMotorsToBrake();
-
-            while(numberOfTimesInTolerance < numberOfTimesToStayInTolerance)
+            while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && numberOfTimesRun < maxRuntime && !robot.stop())
             {
-                currentAngle = robot.getAngles().thirdAngle;
-                error = robot.findAngleError(currentAngle, targetAngle);
-                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,error * turnPID.p));
+                error = robot.findAngleError(robot.position.currentRotation, targetAngle);
+                power = pid.updatePIDAndReturnValue(error);
 
-                if(Math.abs(error) < tolerance)
-                {
-                    robot.I = 0;
-                    numberOfTimesInTolerance++;
-                }
-                else {
-                    numberOfTimesInTolerance = 0;
-                }
+                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0, 0, power));
+
+                if (Math.abs(error) < tolerance) numberOfTimesInTolerance++;
+                else numberOfTimesInTolerance = 0;
+
                 numberOfTimesRun++;
 
-                if(numberOfTimesRun > maxRuntime || robot.stop()) break;
-
-                if(robot.debug_methods)
-                {
-                    if(robot.debug_telemetry)
-                    {
-                        robot.telemetry.addData("angle error: ", error);
-                        robot.telemetry.addData("current power: ", error * turnPID.p);
-                        robot.telemetry.addData("number of times run: ", numberOfTimesRun);
-                        robot.telemetry.addData("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                    if(robot.debug_dashboard)
-                    {
-                        robot.packet.put("angle error: ", error);
-                        robot.packet.put("current power: ", error * turnPID.p);
-                        robot.packet.put("number of times run: ", numberOfTimesRun);
-                        robot.packet.put("number of times in tolerance: ", numberOfTimesInTolerance);
-                    }
-                }
-                robot.updateTelemetry();
+                robot.addTelemetry("angle error: ", error);
+                robot.addTelemetry("total angle error: ", pid.totalError);
+                robot.addTelemetry("angle error change: ", pid.currentError - pid.lastError);
+                robot.addTelemetry("current power: ", power);
+                robot.addTelemetry("number of times run: ", numberOfTimesRun);
+                robot.addTelemetry("number of times in tolerance: ", numberOfTimesInTolerance);
                 robot.sendTelemetry();
             }
+
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
     }
@@ -171,6 +122,48 @@ public class Movement
         robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
+    void moveToPosition(double[] targetPos, double[] tol, int maxLoops, int timesToStayInTolerance, PIDCoefficients movePID, PIDCoefficients turnPID, double maxSpeed)
+    {
+        PID xPID = new PID(movePID, -maxSpeed, maxSpeed);
+        PID yPID = new PID(movePID, -maxSpeed, maxSpeed);
+        PID rotPID = new PID(turnPID, -maxSpeed, maxSpeed);
+
+        double[] currentPos;
+        double[] powers = new double[3];
+
+        double errorVectorRot;
+        double errorVectorMag;
+
+        int numOfTimesInTolerance = 0;
+
+        while (!robot.stop() && maxLoops > 0 && numOfTimesInTolerance < timesToStayInTolerance)
+        {
+            currentPos = robot.position.currentRobotPosition;
+
+            //calculate the error vector
+            errorVectorMag = Math.sqrt(Math.pow((targetPos[0] - currentPos[0]), 2) + Math.pow((targetPos[1] - currentPos[1]), 2));
+            errorVectorRot = Math.atan2((targetPos[1] - currentPos[1]),(targetPos[0] - currentPos[0]));
+
+            //take out robot rotation
+            errorVectorRot -= currentPos[2];
+            errorVectorRot = robot.scaleAngle(errorVectorRot);
+
+            //get the errors comps
+            powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(errorVectorRot));
+            powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
+            powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
+
+            if(Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2])
+            {
+                numOfTimesInTolerance++;
+            }
+
+            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2]));
+            maxLoops--;
+        }
+        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+    }
+
     //////////
     //teleOp//
     //////////
@@ -179,12 +172,12 @@ public class Movement
     {
         if(amount > speedMultiplierMax)
         {
-            if (robot.debug_methods) robot.addTelemetryString("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
+            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
             amount = speedMultiplierMax;
         }
         else if(amount < speedMultiplierMin)
         {
-            if (robot.debug_methods) robot.addTelemetryString("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
+            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
             amount = speedMultiplierMin;
         }
         speedMultiplier = amount;
@@ -192,14 +185,21 @@ public class Movement
     void setSpeedMultiplierToMax() { speedMultiplier = speedMultiplierMax; }
     void setSpeedMultiplierToMin() { speedMultiplier = speedMultiplierMin; }
 
-    void moveForTeleOp(Gamepad gamepad1)
+    void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
     {
-        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x));
+        if(breakButton.getButtonHeld(gamepad1))
+        {
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
+
+        }
+        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, .05 , .05));
     }
 
-    void headlessMoveForTeleOp( Gamepad gamepad1, double offset)
+    void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
-        double curAngle = -robot.getAngles().thirdAngle;
+        double curAngle = -robot.position.currentRotation + offset;
+        curAngle = robot.scaleAngle(curAngle);
         double gamepadAngle = robot.getAngleFromXY(-gamepad1.left_stick_x, -gamepad1.left_stick_y);
         double error = -robot.findAngleError(curAngle,gamepadAngle);
         double power = Math.max(Math.abs(gamepad1.left_stick_x), Math.abs(gamepad1.left_stick_y));
@@ -226,44 +226,48 @@ public class Movement
 
         for(double val:arr) if(val > highestPower) highestPower = val;
         if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
+        for(int i = 0; i < 4; i++) arr[i] *= speedMultiplier;
         return (arr);
+    }
+
+    double[] moveRobotPowers(double X, double Y, double rotation, double moveSmoothingSteps, double rotationSmoothingSteps)
+    {
+        //smoothing for XYR
+        X = applySmoothing(X, lastMovePowers[0], moveSmoothingSteps);
+        Y = applySmoothing(Y, lastMovePowers[1], moveSmoothingSteps);
+        rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+
+        lastMovePowers[0] = X;
+        lastMovePowers[1] = Y;
+        lastMovePowers[2] = rotation;
+
+        return moveRobotPowers(X, Y, rotation);
     }
 
     double[] moveAtAnglePowers(double angle, double basePower)
     {
         double[] arr;
         arr = robot.getXYFromAngle(angle);
-        double x = arr[0];
-        double y = arr[1];
+        double x = arr[0] * basePower;
+        double y = arr[1] * basePower;
 
         return moveRobotPowers(x,y,0);
     }
 
-    void findBlueTowerGoal(double rotationRange, double rotationIncrements)
+    double[] moveAtAnglePowers(double angle, double basePower, double moveSmoothingSteps, double rotationSmoothingSteps)
     {
-        turnToAngleSimple(0,5,20,1000);
-        if(robot.vision.findTrackable(0,true))
-        {
-            turnToAngleSimple(robot.vision.lastRotation.thirdAngle, 1, 25,2000);
-            //strafeSidewaysInches((robot.vision.lastLocation.getTranslation().));
-        }
-        else
-        {
-            robot.movement.turnToAngleSimple(-rotationRange, 5,20,1000);
-            robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0,0,.1));
-            while(robot.getAngles().thirdAngle < rotationRange)
-            {
-                //robot.motorConfig.setMotorsToSeparatePowersArray(moveRobotPowers(0,0,.15));
-                if(robot.vision.findTrackable(0,true))
-                {
-                    turnToAngleSimple(robot.vision.lastRotation.thirdAngle , 1, 25,2000);
-                    break;
-                }
-                if(robot.stop()) break;
-            }
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-        }
+        double[] arr;
+        arr = robot.getXYFromAngle(angle);
+        double x = arr[0] * basePower;
+        double y = arr[1] * basePower;
+
+        return moveRobotPowers(x,y,0, moveSmoothingSteps, rotationSmoothingSteps);
     }
 
-
+    double applySmoothing(double currentVal, double lastVal, double smoothingSteps)
+    {
+        if(currentVal - lastVal > smoothingSteps) { currentVal = lastVal + smoothingSteps; }
+        else if(currentVal - lastVal < -smoothingSteps) { currentVal = lastVal - smoothingSteps; }
+        return currentVal;
+    }
 }

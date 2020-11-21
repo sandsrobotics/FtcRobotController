@@ -1,36 +1,17 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import android.os.Build;
-
-import androidx.annotation.RequiresApi;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.matrices.GeneralMatrixF;
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.opMode;
 
 @Config
 public class Robot
@@ -41,65 +22,53 @@ public class Robot
     //debug
     protected boolean debug_telemetry = true;
     protected boolean debug_dashboard = true; // turn this to false during competition
-
     protected boolean debug_methods = true;
-    protected boolean debug_imu = true;
-    protected boolean debug_motors = true;
 
-    //user dashboard variables
+    //user dashboard variable
     public static boolean emergencyStop = false;
-
-    //position start
-    double startPositionX = 5; // in inches
-    double startPositionY = 5; // in inches
-    double startRotation = 5; //in degrees from goal
-    public static double wheelDistanceFromCenter = 9.6; //in inches
 
     ///////////////////
     //other variables//
     ///////////////////
-    //robot position
-    double[] position = new double[]{startPositionX, startPositionY, startRotation};
-    double ticksPerRotation = (2 * wheelDistanceFromCenter * Math.PI) * ((Movement.ticksPerInchForward + Movement.ticksPerInchSideways) / 2);
-    double lastAngle = 0;
-    List<double[]> recordedMotorsAndAngles = new ArrayList<>();
-    double[] lastMotorsAndAngles;
-
     //other classes
     public MotorConfig motorConfig;
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
     public ComplexMovement complexMovement;
+    public Position position;
 
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
-    protected BNO055IMU imu;
     protected FtcDashboard dashboard;
+    protected BNO055IMU imu;
+    protected LinearOpMode opMode;
 
     //other
-    protected double I = 0;
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
-    protected double rotationOffset = -startRotation;
     TelemetryPacket packet;
 
-    Robot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2, boolean useDrive, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+
+    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         motorConfig = new MotorConfig(this);
+        position = new Position(this, usePositionTracking);
+
         if(useDrive)movement = new Movement(this);
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
         if(useComplexMovement) complexMovement = new ComplexMovement(this);
 
-        this.hardwareMap = hardwareMap;
-        this.telemetry = telemetry;
-        this.gamepad1 = gamepad1;
-        this.gamepad2 = gamepad2;
+        this.opMode = opMode;
+        this.hardwareMap = opMode.hardwareMap;
+        this.telemetry = opMode.telemetry;
+        this.gamepad1 = opMode.gamepad1;
+        this.gamepad2 = opMode.gamepad2;
 
         initHardware();
-        if(useDrive || useComplexMovement) motorConfig.initDriveMotors();
+        if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
         if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
     }
@@ -110,52 +79,35 @@ public class Robot
         //imu//
         ///////
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
+        parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
         parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        parameters.calibrationDataFile = "BNO055IMUCalibration.json";
         parameters.loggingEnabled = false;
         parameters.loggingTag = "IMU";
-        parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
+
+        while (!opMode.isStopRequested() && !imu.isGyroCalibrated())
+        {
+            delay(50);
+            opMode.idle();
+        }
+
+        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 50);
 
         /////////////
         //dashboard//
         /////////////
         if(debug_dashboard) dashboard = FtcDashboard.getInstance();
+        startTelemetry();
     }
 
     //------------------My Methods------------------//
     /////////////
     //telemetry//
     /////////////
-    Orientation getAngles()
-    {
-        Orientation angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.XYZ, AngleUnit.DEGREES);
-        angles.thirdAngle *= -1;
-        angles.thirdAngle -= rotationOffset;
-        if(angles.thirdAngle < -180) {angles.thirdAngle = 360 + angles.thirdAngle;}
-        else if(angles.thirdAngle > 180){angles.thirdAngle = angles.thirdAngle - 360;}
-        return angles;
-    }
-
-    Velocity getVelocity()
-    {
-        return imu.getVelocity();
-    }
-
-    AngularVelocity getAngularVelocity()
-    {
-        return imu.getAngularVelocity();
-    }
-
-    Acceleration getAcceleration()
-    {
-        return imu.getAcceleration();
-    }
-    
-    void resetZaxis(){rotationOffset = -imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle;}
 
     void startTelemetry()
     {
@@ -165,48 +117,7 @@ public class Robot
         }
     }
 
-    void updateTelemetry()
-    {
-            if(debug_imu) {
-                if(debug_telemetry)
-                {
-                    telemetry.addData("rotation: ", getAngles().thirdAngle);
-                    telemetry.addData("velocity: ", getVelocity());
-                    telemetry.addData("angular velocity: ", getAngularVelocity());
-                    telemetry.addData("acceleration", getAcceleration());
-                }
-                if(debug_dashboard)
-                {
-                    packet.put("rotation: ", getAngles().thirdAngle);
-                    packet.put("velocity: ", getVelocity());
-                    packet.put("angular velocity: ", getAngularVelocity());
-                    packet.put("acceleration", getAcceleration());
-                }
-            }
-            if(debug_motors)
-            {
-                if(debug_telemetry)
-                {
-                telemetry.addData("motor powers: ", motorConfig.getMotorPowersList(motorConfig.driveMotors));
-                telemetry.addData("motor positions:", motorConfig.getMotorPositionsList(motorConfig.driveMotors));
-                }
-                if(debug_dashboard)
-                {
-                    packet.put("motor powers: ", motorConfig.getMotorPowersList(motorConfig.driveMotors));
-                    packet.put("motor positions:", motorConfig.getMotorPositionsList(motorConfig.driveMotors));
-                }
-            }
-
-
-    }
-
-    void addTelemetryDouble(String cap, double val)
-    {
-        if(debug_dashboard) packet.put(cap,val);
-        if(debug_telemetry) telemetry.addData(cap,val);
-    }
-
-    void addTelemetryString(String cap, String val)
+    void addTelemetry(String cap, Object val)
     {
         if(debug_dashboard) packet.put(cap, val);
         if(debug_telemetry) telemetry.addData(cap, val);
@@ -223,11 +134,7 @@ public class Robot
     ////////////////
     double findAngleError(double currentAngle, double targetAngle)
     {
-        if (targetAngle > 180) {
-            targetAngle = targetAngle - 360;
-        } else if (targetAngle < -180) {
-            targetAngle = targetAngle + 360;
-        }
+        targetAngle = scaleAngle(targetAngle);
         double angleError = currentAngle - targetAngle;
         if (angleError > 180) {
             angleError = angleError - 360;
@@ -237,17 +144,14 @@ public class Robot
         return -angleError;
     }
 
-    double getCorrectionFromPID(double error, double lastError, double bias,  double IntegralRange) // this method takes values from -180 to 180 and returns a value from -1 to 1
+    double scaleAngle(double angle)// scales an angle to fit in -180 to 180
     {
-        if(Math.abs(error) <= IntegralRange)
-        {
-            I += error * Movement.turnPID.i;
-            I = Math.max(Math.min(I, 1), -1);
+        if (angle > 180) {
+            angle = angle - 360;
+        } else if (angle < -180) {
+            angle = angle + 360;
         }
-
-        double D = (error - lastError);
-        double output = (Movement.turnPID.p * error) + I + (Movement.turnPID.d * D) + bias;
-        return Math.max(Math.min(output, 1), -1);
+        return angle;
     }
 
     double getAngleFromXY(double X, double Y)
@@ -271,99 +175,141 @@ public class Robot
         return XY;
     }
 
-    void updatePosWithEncoders()
-    {
-        addPositionDataPoint();
-
-        double[] totalMovement = new double[]{0,0,0};
-        double[] movementPerDataPoint;
-
-        addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
-
-        for(int i = 1; i < recordedMotorsAndAngles.size(); i++)
+    void delay(long ms){
+        long last = System.currentTimeMillis();
+        while(System.currentTimeMillis() - last < ms)
         {
-            addDoubleArrays(totalMovement, getMovementFromMotorAndAngle(recordedMotorsAndAngles.get(0), lastMotorsAndAngles));
+            if(stop())break;
         }
-
-        addPositionDataPoint();
-        lastMotorsAndAngles = recordedMotorsAndAngles.get(-1);
-
-        recordedMotorsAndAngles.clear();
-
-        addDoubleArrays(position, totalMovement);
     }
 
-    boolean allSameValues(double[] values)
+    boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
+}
+
+enum GamepadButtons
+{
+    dpadUP,
+    dpadDOWN,
+    dpadLEFT,
+    dpadRIGHT,
+
+    A,
+    B,
+    X,
+    Y,
+
+    START,
+    BACK,
+    leftBUMPER,
+    rightBUMPER,
+
+    leftJoyStickX,
+    leftJoyStickY,
+    leftJoyStickBUTTON,
+    leftTRIGGER,
+
+    rightJoyStickX,
+    rightJoyStickY,
+    rightJoyStickBUTTON,
+    rightTRIGGER;
+
+    boolean wasButtonPressed = false;
+
+    boolean getButtonHeld(Gamepad gamepad)
     {
-        double lastValueSign = Math.signum(values[0]);
-        for(double value:values){if(lastValueSign != Math.signum(value)) return false;}
-        return true;
+        if(this == GamepadButtons.A) return gamepad.a;
+        if(this == GamepadButtons.B) return gamepad.a;
+        if(this == GamepadButtons.X) return gamepad.x;
+        if(this == GamepadButtons.Y) return gamepad.y;
+
+        if(this == GamepadButtons.dpadUP) return gamepad.dpad_up;
+        if(this == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
+        if(this == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
+        if(this == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
+
+        if(this == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
+        if(this == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
+        if(this == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
+        if(this == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
+
+        if(this == GamepadButtons.START) return gamepad.start;
+        if(this == GamepadButtons.BACK) return gamepad.back;
+
+        return false;
     }
 
-    double maxAbsoluteValue(double[] values)
+    boolean getButtonPressed(Gamepad gamepad)
     {
-        double max = 0;
-        for(double value:values)if(Math.abs(value) > max) max = Math.abs(value);
-        return max;
-    }
-
-    void addDoubleArrays(double[] main, double[] second)
-    {
-        if(main.length == second.length) { for(int i = 0; i < main.length; i++) main[i] += second[i]; }
-    }
-
-    double[] getMovementFromMotorAndAngle(double[] curMotorPosAndAngles, double[] lastMotorPosAndAngles)
-    {
-        double[] moved = new double[3];
-
-        double[] motorDifference = new double[curMotorPosAndAngles.length - 1];
-        for(int i = 0; i < motorDifference.length; i++) motorDifference[i] = (curMotorPosAndAngles[i + 1] - lastMotorPosAndAngles[i + 1]);
-
-        //set and take rotation out of motor movement
-        moved[2] = findAngleError(curMotorPosAndAngles[0], lastMotorPosAndAngles[0]);
-        int ticksRotated = (int)((moved[2] / 360) * ticksPerRotation);
-        motorDifference[0] -= ticksRotated;
-        motorDifference[1] -= ticksRotated;
-        motorDifference[2] += ticksRotated;
-        motorDifference[3] += ticksRotated;
-
-        //get the difference amount moved sideways
-        double diff1To4 = motorDifference[0] - motorDifference[3];
-        double diff2to3 = motorDifference[1] - motorDifference[2];
-
-        //get the amount moved forward
-        if(allSameValues(motorDifference))
+        if(getButtonHeld(gamepad))
         {
-            moved[0] = (maxAbsoluteValue(motorDifference) * Math.signum(motorDifference[0]) * getXYFromAngle(getAngles().thirdAngle)[1]) / Movement.ticksPerInchForward;
+            if(!wasButtonPressed)
+            {
+                wasButtonPressed = true;
+                return true;
+            }
         }
-        else moved[0] = 0;
-
-        //get amount strafed sideways
-
-        return moved;
+        else wasButtonPressed = false;
+        return false;
     }
 
-    void addPositionDataPoint()
+    float getSliderValue(Gamepad gamepad)
     {
-        int[] positions = motorConfig.getMotorPositionsList(motorConfig.driveMotors);
-        double[] out = new double[positions.length + 1];
-        for(int i = 1; i < out.length; i++) out[i] = positions[i-1];
-        out[0] = getAngles().thirdAngle;
-        recordedMotorsAndAngles.add(out);
+        if(this == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
+        if(this == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
+        if(this == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
+        if(this == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
+
+        if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
+        if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+
+        return 0;
     }
+}
 
-/*
-    void updateTotalDegrees()
+class PID
+{
+    PIDCoefficients PIDs;
+    double maxClamp;
+    double minClamp;
+    
+    double totalError;
+    double lastError;
+    double currentError;
+    
+    PID(PIDCoefficients PIDs, double minClamp, double maxClamp)
     {
-        double angle = getAngles().thirdAngle;
-        totalDegrees -= findAngleError(angle, lastAngle);
-        lastAngle = angle;
+        this.PIDs = PIDs;
+        this.minClamp = minClamp;
+        this.maxClamp = maxClamp;
     }
-
- */
-
-    boolean stop()
+    
+    void updatePID(double error)
     {
-        return emergencyStop || gamepad1.back || gamepad2.back;
+        lastError = currentError;
+        currentError = error;
+        totalError += error;
+        
+        double value = (error * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+
+        if((value > maxClamp || value < minClamp) && Math.signum(error) != Math.signum(totalError))
+        {
+            totalError = 0;
+        }
+    }
+    
+    double updatePIDAndReturnValue(double error)
+    {
+        updatePID(error);
+        return returnValue();
+    }
+    
+    double returnValue()
+    {
+        return Math.max(Math.min((currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d), maxClamp), minClamp);
+    }
+    
+    double returnUncappedValue()
+    {
+        return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
     }
 }

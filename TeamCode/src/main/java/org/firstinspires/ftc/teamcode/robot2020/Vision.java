@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.vuforia.CameraDevice;
+import com.vuforia.Trackable;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -40,7 +41,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 @Config
-public class Vision
+public class Vision extends Thread
 {
     //////////////////
     //user variables//
@@ -60,39 +61,49 @@ public class Vision
     float[] phonePosition = {0,0,0};
     float[] phoneRotation = {0,0,0};
 
+    //to see where goal is
+    int goalPictureNum = 3;
+
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    public static boolean usingWebcam = false;
+    public static boolean usingWebcam = true;
 
     ////////////////////
     // other variables//
     ////////////////////
     //converting inch to mm
     private static final float mmPerInch = 25.4f;
+
+    // object location
+    protected volatile OpenGLMatrix[] lastTrackablesLocations = new OpenGLMatrix[5];
+    protected volatile OpenGLMatrix[] currentTrackablesLocations = new OpenGLMatrix[5];
+    protected volatile OpenGLMatrix lastCalculatedRobotLocation;
+    protected volatile OpenGLMatrix currentCalculatedRobotLocation;
+
     // some vuforia stuff
-    protected OpenGLMatrix lastLocation = null;
-    protected Orientation lastRotation = null;
-    protected Position lastPosition = null;
     protected VuforiaLocalizer vuforia = null;
     protected VuforiaTrackables trackables;
     protected VuforiaLocalizer.Parameters parameters;
+
     //some openCV stuff
     OpenCvWebcam webcam;
     OpenCvCamera phoneCam;
     Vision.SkystoneDeterminationPipeline pipeline;
+
     //other
-    protected boolean targetVisible = false;
     protected boolean useVuforia = false;
     protected boolean useOpenCV = false;
     protected int cameraMonitorViewId;
+
     //other class
     Robot robot;
 
-    Vision(Robot robot) { this.robot = robot; }
 
     //////////////////
     //Vision Methods//
     //////////////////
+    Vision(Robot robot) { this.robot = robot; }
+
     void initAll(boolean useVuforia, boolean useOpenCV)
     {
         this.useVuforia = useVuforia;
@@ -119,41 +130,6 @@ public class Vision
     {
         cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
     }
-
-    void printTelemetry()
-{
-    if(robot.debug_methods){
-        if(targetVisible)
-        {
-            robot.addTelemetryString("target visible: ", "true");
-            if(robot.debug_dashboard)
-            {
-                robot.packet.put("position: ", lastLocation.getTranslation());
-                robot.packet.put("rotation: ", lastRotation);
-            }
-            if(robot.debug_telemetry)
-            {
-
-                robot.telemetry.addData("position: ", lastLocation.getTranslation());
-                robot.telemetry.addData("rotation: ", lastLocation);
-            }
-        }
-        else
-        {
-            robot.addTelemetryString("target visible: ", "false");
-            if(robot.debug_dashboard)
-            {
-                robot.packet.put("position: ", null);
-                robot.packet.put("rotation: ", null);
-            }
-            if(robot.debug_telemetry)
-            {
-                robot.packet.put("position: ", null);
-                robot.packet.put("rotation: ", null);
-            }
-        }
-    }
-}
 
     ///////////////////
     //Vuforia Methods//
@@ -248,50 +224,32 @@ public class Vision
     void activateVuforia(){trackables.activate();}
     void deactivateVuforia(){trackables.deactivate();}
 
-    boolean findTrackable(int trackableNum, boolean logPosition)
+    void findAllTrackables()
     {
-        if (((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).isVisible())
+        int i = 0;
+        for(VuforiaTrackable t:trackables)
         {
-            targetVisible = true;
-            if(logPosition) {
+            currentTrackablesLocations[i] = ((VuforiaTrackableDefaultListener) t.getListener()).getFtcCameraFromTarget();
+            currentCalculatedRobotLocation = ((VuforiaTrackableDefaultListener) t.getListener()).getUpdatedRobotLocation();
 
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener) trackables.get(trackableNum).getListener()).getUpdatedRobotLocation();
-
-                if (robotLocationTransform != null)
-                {
-                    lastLocation = robotLocationTransform;
-                    lastRotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-                    //lastPosition = lastLocation.;
-                }
+            if (currentTrackablesLocations[i] != null)
+            {
+                lastTrackablesLocations[i] = currentTrackablesLocations[i];
+                lastCalculatedRobotLocation = currentCalculatedRobotLocation;
             }
-            return true;
-        }
-        else
-        {
-            targetVisible = false;
-            return false;
+            i++;
         }
     }
 
-    boolean findTrackableDelay(int trackableNum, boolean logPosition, int maxTries)
+    OpenGLMatrix getCurrentGaolLocation()
     {
-        for(int i = 0; i < maxTries; i++)
-        {
-            if(findTrackable(trackableNum,logPosition)) return true;
-            if(robot.stop()) break;
-        }
-
-        return false;
+        return currentTrackablesLocations[goalPictureNum];
     }
 
-    boolean findAnyTrackable(boolean logPosition)
+    Orientation getTrackableAngles(OpenGLMatrix m)
     {
-        for(int i = 0; i < trackables.size(); i++)
-        {
-            findTrackable(i,logPosition);
-           if(targetVisible) return true;
-        }
-        return false;
+        if(m != null) return Orientation.getOrientation(m, EXTRINSIC, XYZ, DEGREES);
+        return null;
     }
 
     //////////////////
@@ -468,11 +426,6 @@ public class Vision
             return input;
         }
 
-        public int getAnalysis()
-        {
-            return avg1;
-        }
-
         public List<MatOfPoint> getColorRangeContoursFromImage(Mat input, int[] lower, int[] upper, Point upperLeftPoint, Point lowerRightPoint)
         {
             //prepossessing
@@ -490,5 +443,25 @@ public class Vision
             Imgproc.findContours(process, out, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
             return out;
         }
+    }
+
+    /////////////////
+    //vision thread//
+    /////////////////
+    public void run()
+    {
+        activateVuforia();
+
+        while(!this.isInterrupted() && robot.opMode.opModeIsActive())
+        {
+            findAllTrackables();
+        }
+
+        deactivateVuforia();
+    }
+
+    public void stopThread()
+    {
+        this.interrupt();
     }
 }

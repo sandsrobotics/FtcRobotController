@@ -4,8 +4,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -62,7 +60,7 @@ public class MotorConfig
             i++;
         }
 
-        resetDriveEncodersList(driveMotors);
+        resetMotorEncodersList(driveMotors);
         setMotorsToBrakeList(driveMotors);
         setMotorsToRunWithEncodersList(driveMotors);
     }
@@ -74,9 +72,20 @@ public class MotorConfig
         launcherServo = robot.hardwareMap.servo.get("servo" + launcherServoNum);
         launcherMotors = Arrays.asList(launcherWheelMotor, launcherHolderMotor);
 
+        int i = 0;
+        for(DcMotor motor:launcherMotors)
+        {
+            if(flipLauncherMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            i++;
+        }
+        if(flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
+
+        resetMotorEncodersList(driveMotors);
+        setMotorsToCoastList(driveMotors);
+        setMotorsToRunWithEncodersList(driveMotors);
     }
 
-    public void resetDriveEncodersList(List<DcMotorEx> motors)
+    public void resetMotorEncodersList(List<DcMotorEx> motors)
     {
         for(DcMotorEx motor: motors)
         {
