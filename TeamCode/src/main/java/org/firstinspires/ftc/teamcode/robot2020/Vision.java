@@ -91,8 +91,6 @@ public class Vision extends Thread
     Vision.SkystoneDeterminationPipeline pipeline;
 
     //other
-    protected boolean useVuforia = false;
-    protected boolean useOpenCV = false;
     protected int cameraMonitorViewId;
 
     //other class
@@ -106,9 +104,6 @@ public class Vision extends Thread
 
     void initAll(boolean useVuforia, boolean useOpenCV)
     {
-        this.useVuforia = useVuforia;
-        this.useOpenCV = useOpenCV;
-
         initCamera();
 
         if(useVuforia)
@@ -124,6 +119,11 @@ public class Vision extends Thread
         {
             initOpenCV();
         }
+    }
+
+    void initAll()
+    {
+        initAll(robot.useVuforia, robot.useOpenCV);
     }
 
     void initCamera()

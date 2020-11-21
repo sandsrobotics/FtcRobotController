@@ -44,7 +44,8 @@ public class Launcher {
     //other
     double RPMIncrements = 50;
     double RPMTolerance = 10;
-    double maxRPMVelocity = 10;
+    double maxRPMAcceleration = 10; // acceleration measured in RPM/s
+    double minLaunchDistance = 60; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
 
     ///////////////////
@@ -179,7 +180,6 @@ public class Launcher {
             if(targetWheelRpm > maxRPM) targetWheelRpm = maxRPM;
         }
 
-
         if(revModeButton.getButtonPressed(launcherGamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
@@ -198,7 +198,7 @@ public class Launcher {
     ///////////////////////////////
     //autonomous launcher control//
     ///////////////////////////////
-    void launchDisk()
+    void autoLaunchDisk()
     {
 
     }
@@ -223,17 +223,17 @@ public class Launcher {
         setRPM(targetWheelRpm);
     }
 
-    boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance, double maxRPMVelocity)
+    boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance, double maxRPMAcceleration)
     {
         double lastRPM = getPRM();
-        robot.delay(10);
+        robot.delay(20);
         double RPM = getPRM();
-        return Math.abs(RPM - targetWheelRpm) <= RPMTolerance && Math.abs(lastRPM - RPM) <= maxRPMVelocity;
+        return Math.abs(RPM - targetWheelRpm) <= RPMTolerance && Math.abs(lastRPM - RPM) * 50 <= maxRPMAcceleration;
     }
 
     boolean isRPMInTolerance()
     {
-        return isRPMInTolerance(targetWheelRpm, RPMTolerance, maxRPMVelocity);
+        return isRPMInTolerance(targetWheelRpm, RPMTolerance, maxRPMAcceleration);
     }
 
     void waitForRPMInTolerance(long maxMs, double targetWheelRpm, double RPMTolerance, double maxRPMVelocity)
@@ -247,6 +247,13 @@ public class Launcher {
 
     void waitForRPMInTolerance(long maxMs)
     {
-        waitForRPMInTolerance(maxMs, targetWheelRpm, RPMTolerance, maxRPMVelocity);
+        waitForRPMInTolerance(maxMs, targetWheelRpm, RPMTolerance, maxRPMAcceleration);
+    }
+
+    void moveLaunchServo(long actuatorTime)
+    {
+        robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
+        robot.delay(actuatorTime);
+        robot.motorConfig.launcherServo.setPosition(servoRestAngle);
     }
 }// class end

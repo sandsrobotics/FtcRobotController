@@ -45,6 +45,10 @@ public class Robot
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
 
+    //running robot parts
+    protected boolean useVuforia;
+    protected boolean useOpenCV;
+
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
@@ -53,6 +57,9 @@ public class Robot
 
     Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
+        this.useOpenCV = useOpenCV;
+        this.useVuforia = useVuforia;
+
         motorConfig = new MotorConfig(this);
         position = new Position(this, usePositionTracking);
 
@@ -70,7 +77,7 @@ public class Robot
         initHardware();
         if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
         if(useLauncher) motorConfig.initLauncherMotors();
-        if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
+        if(useOpenCV || useVuforia) vision.initAll();
     }
 
     void initHardware()
