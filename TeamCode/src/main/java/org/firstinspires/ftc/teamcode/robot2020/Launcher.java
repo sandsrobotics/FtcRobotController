@@ -209,6 +209,33 @@ public class Launcher {
 
     }
 
+    double getAngleToPointToPosition(double xPos, double yPos, double angleOffset)
+    {
+        double XDiff = xPos - robot.position.currentRobotPosition[0];
+        double YDiff = yPos - robot.position.currentRobotPosition[1];
+
+        return robot.scaleAngle(Math.toDegrees(Math.atan(YDiff/XDiff)) + angleOffset - robot.position.currentRotation);
+    }
+
+    double getAngleToPointToPosition()
+    {
+        return getAngleToPointToPosition(0,0,0);
+    }
+
+    void goToShootingPos()
+    {
+        if(robot.useMovement)
+        {
+            if (robot.position.currentRobotPosition[1] < minLaunchDistance) {
+
+            }
+            else { robot.movement.turnToAngle(getAngleToPointToPosition(), 1,10,2000); }
+        }
+        else if(robot.debug_methods)
+        {
+            robot.addTelemetry("warning in Launcher.goToShootingPos: ", "the movement object has not been initialized so robot can not move");
+        }
+    }
 
     /////////
     //other//

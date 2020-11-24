@@ -48,6 +48,7 @@ public class Robot
     //running robot parts
     protected boolean useVuforia;
     protected boolean useOpenCV;
+    protected boolean useMovement;
 
     //other
     protected Gamepad gamepad1;
@@ -65,11 +66,12 @@ public class Robot
 
         this.useOpenCV = useOpenCV;
         this.useVuforia = useVuforia;
+        this.useMovement = useDrive;
 
         motorConfig = new MotorConfig(this);
         position = new Position(this, usePositionTracking);
 
-        if(useDrive)movement = new Movement(this);
+        if(useDrive) movement = new Movement(this);
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
         if(useComplexMovement) complexMovement = new ComplexMovement(this);
@@ -153,11 +155,8 @@ public class Robot
 
     double scaleAngle(double angle)// scales an angle to fit in -180 to 180
     {
-        if (angle > 180) {
-            angle = angle - 360;
-        } else if (angle < -180) {
-            angle = angle + 360;
-        }
+        if (angle > 180) { return angle - 360; }
+        if (angle < -180) { return angle + 360; }
         return angle;
     }
 

@@ -84,26 +84,23 @@ public class Position extends Thread
         currentRobotPosition[2] = currentRotation;
     }
 
-    void updatePositionFromCurrentVuforia()
+    void updatePositionFromVuforia(boolean useCurrentPos)
     {
         if(robot.useVuforia)
         {
-            if(robot.vision.currentCalculatedRobotLocation != null)
+            if(useCurrentPos)
             {
-                currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0);
-                currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
+                if (robot.vision.currentCalculatedRobotLocation != null) {
+                    currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0);
+                    currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
+                }
             }
-        }
-    }
-
-    void updatePositionFromLastVuforia()
-    {
-        if(robot.useVuforia)
-        {
-            if(robot.vision.lastCalculatedRobotLocation != null)
+            else
             {
-                currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0);
-                currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
+                if (robot.vision.lastCalculatedRobotLocation != null) {
+                    currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0);
+                    currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
+                }
             }
         }
     }
