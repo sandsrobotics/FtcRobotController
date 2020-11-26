@@ -33,19 +33,23 @@ public class SandsRobot {
         motorRightFront = hardwareMap.get(DcMotorEx.class, "motor1");
         motorLeftRear = hardwareMap.get(DcMotorEx.class, "motor2");
         motorRightRear = hardwareMap.get(DcMotorEx.class, "motor3");
+        motorLauncherWheel = hardwareMap.get(DcMotorEx.class, "motor0b");
 
-        motors = Arrays.asList(motorLeftFront, motorLeftRear, motorRightRear, motorRightFront);
+        motors = Arrays.asList(motorLeftFront, motorLeftRear, motorRightRear, motorRightFront,motorLauncherWheel);
 
         motorLeftFront.setDirection(REVERSE);
         motorRightFront.setDirection(FORWARD);
         motorLeftRear.setDirection(REVERSE);
         motorRightRear.setDirection(FORWARD);
+        motorLauncherWheel.setDirection(REVERSE);
 
         for (DcMotorEx motor : motors) {
             motor.setMode(STOP_AND_RESET_ENCODER);
             motor.setMode(RUN_USING_ENCODER);
             motor.setZeroPowerBehavior(BRAKE);
         }
+
+        motorLauncherWheel.setZeroPowerBehavior(FLOAT);
     }
 
     // Initialize the imu within the expansion hub
@@ -130,7 +134,7 @@ public class SandsRobot {
         rightRearPower *= driveSpeedLimit;
 
         //set motor powers
-        setPowerAll(rightFrontPower,rightRearPower,leftFrontPower,leftRearPower );
+        setPowerAll(rightFrontPower,rightRearPower,leftFrontPower,leftRearPower);
     }
 
     /**
@@ -147,7 +151,7 @@ public class SandsRobot {
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     protected Thread positionThread;
-    protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront;
+    protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel;
     //protected DcMotorEx verticalLeft, verticalRight, horizontal;
     private List<DcMotorEx> motors;
     private BNO055IMU imu;
