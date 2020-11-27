@@ -38,10 +38,6 @@ public class Launcher {
     //calibration data
     protected String calibrationFileDir = "assets";
     protected String calibrationFileName =  "Launcher Config - Test.csv";
-    protected boolean useRPM = true;
-    protected int powerColumn = 0;
-    protected int rpmColumn = 1;
-    protected int distanceColumn = 2;
 
     //other
     double RPMIncrements = 50;
@@ -82,9 +78,6 @@ public class Launcher {
             InputStream is = getClass().getClassLoader().getResourceAsStream(calibrationFileDir + "/" + calibrationFileName);
             if(is == null) throw new Exception("file directory or name are incorrect");
             calibrationValues = readFile(is);
-            formattedCalibrationValues = removeDataWithYZeros(calibrationValues,distanceColumn);
-            if(useRPM && powerColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues,powerColumn);
-            else if(rpmColumn != 0) formattedCalibrationValues = removeColumn(formattedCalibrationValues, rpmColumn);
         }
         catch (Exception e) {robot.addTelemetry("error", e.toString());}
     }
@@ -116,44 +109,38 @@ public class Launcher {
         return out;
     }
 
-    List<Double> getColumn(ArrayList<List<Double>> data, int column)
+    double getRPMFromCalibration(int goalNum, double distance)
     {
-        List<Double> out = new ArrayList<>();
-        for(List<Double> line: data) out.add(line.get(column - 1));
-        return out;
+        if(calibrationValues.size() == 0) robot.addTelemetry("error in Launcher.getRPMFromCalibration: ", "calibration values have not been loaded");
+        else if(goalNum < 1 || goalNum >  3) robot.addTelemetry("error in Launcher.getRPMFromCalibration: ", "goalNum has not been set correctly");
+        else
+        {
+            int row = 0;
+            for(int i = 0; i < calibrationValues.size(); i++)
+            {
+                if(calibrationValues.get(i).get(0) == distance) return calibrationValues.get(i).get(goalNum);
+                else if(calibrationValues.get(i).get(0) > distance) row = i;
+            }
+
+            double RPMPerInch;
+            if(row == 0)
+            {
+                RPMPerInch = calibrationValues.get(0).get(goalNum) / calibrationValues.get(0).get(0);
+            }
+            else
+            {
+                RPMPerInch = (calibrationValues.get(row).get(goalNum) - calibrationValues.get(row - 1).get(goalNum)) / (calibrationValues.get(row).get(0) - calibrationValues.get(row - 1).get(0));
+            }
+
+            return RPMPerInch*distance;
+        }
+
+        return -1;
     }
-
-    ArrayList<List<Double>> removeColumn(ArrayList<List<Double>> data, int column)
-    {
-        for(int i = 0; i < data.size(); i++) data.get(i).remove(column);
-        return data;
-    }
-
-    ArrayList<List<Double>> removeDataWithYZeros(ArrayList<List<Double>> data, int yPos)
-    {
-        ArrayList<List<Double>> out = new ArrayList<>();
-        for(List<Double> line: data) if(line.get(yPos) != 0) out.add(line);
-        return out;
-    }
-
-    List<Double> getEquation(List<Double> x, List<Double> y)//will return m,x,b
-    {
-        List<Double> out = new ArrayList<>();
-
-
-        return out;
-    }
-
 
     ///////////////////////////
     //launcher opmode control//
     ///////////////////////////
-    void init()
-    {
-        // zero motors
-        robot.motorConfig.launcherServo.setPosition(servoRestAngle);
-    }
-
     void telemetryDataOut()
     {
         if(runWheelOnTrigger) robot.addTelemetry("Mode: ", "Run on trigger");
@@ -165,10 +152,8 @@ public class Launcher {
 
     void setLauncherServo()
     {
-        //if(launchButton.getButtonHeld(launcherGamepad, buttonHoldTime)) autoLaunch();
-        if (launchButton.getButtonHeld(launcherGamepad)) autoLaunch();
-            //robot.motorConfig.launcherServo.setPosition(servoLaunchAngle);
-        else robot.motorConfig.launcherServo.setPosition(servoRestAngle);
+        if(launchButton.getButtonHeld(launcherGamepad,buttonHoldTime)) autoLaunch();
+        else if(launchButton.getButtonReleased(launcherGamepad)) moveLaunchServo();
     }
 
     void setLauncherWheelMotor()
@@ -200,60 +185,48 @@ public class Launcher {
         if(telemetry)telemetryDataOut();
     }
 
-
     ///////////////////////////////
     //autonomous launcher control//
     ///////////////////////////////
     void autonomousLaunchDisk()
     {
-
+        double RPM = getRPMFromCalibration(3, getDistanceToGoal(true));
+        if(RPM == -1) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "unable to get RPM");
+        else if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
+        else
+        {
+            setRPM(RPM);
+            goToShootingPos();
+            waitForRPMInTolerance(1000);
+            autoLaunch();
+        }
     }
 
-    double getAngleToPointToPosition(double xPos, double yPos, double angleOffset)
+    void goToShootingPos()
+    {
+        if (robot.position.currentRobotPosition[1] < minLaunchDistance)
+        {
+            robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5,.5,.5},10,2000);
+        }
+        else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5,10,2000); }
+    }
+
+    ////////////////
+    //calculations//
+    ////////////////
+    double getAngleToPointToPosition(double xPos, double yPos, double angleOffset, boolean useMinLaunchDis)
     {
         double XDiff = xPos - robot.position.currentRobotPosition[0];
-        double YDiff = yPos - robot.position.currentRobotPosition[1];
+        double YDiff;
+        if(useMinLaunchDis && robot.position.currentRobotPosition[1] < minLaunchDistance) YDiff = yPos - minLaunchDistance;
+        else YDiff = yPos - robot.position.currentRobotPosition[1];
 
         return robot.scaleAngle(Math.toDegrees(Math.atan(YDiff/XDiff)) + angleOffset - robot.position.currentRotation);
     }
 
     double getAngleToPointToPosition()
     {
-        return getAngleToPointToPosition(0,0,0);
-    }
-
-    void goToShootingPos()
-    {
-        if(robot.useMovement)
-        {
-            if (robot.position.currentRobotPosition[1] < minLaunchDistance) {
-
-            }
-            else { robot.movement.turnToAngle(getAngleToPointToPosition(), 1,10,2000); }
-        }
-        else if(robot.debug_methods)
-        {
-            robot.addTelemetry("warning in Launcher.goToShootingPos: ", "the movement object has not been initialized so robot can not move");
-        }
-    }
-
-    /////////
-    //other//
-    /////////
-    double getPRM()
-    {
-        return  robot.motorConfig.launcherWheelMotor.getVelocity() * spinMultiplier;
-    }
-
-    void setRPM(double RPM)
-    {
-        targetWheelRpm = RPM;
-        robot.motorConfig.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
-    }
-
-    void setRPM()
-    {
-        setRPM(targetWheelRpm);
+        return getAngleToPointToPosition(0,0,0, true);
     }
 
     boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance, double maxRPMAcceleration)
@@ -267,6 +240,31 @@ public class Launcher {
     boolean isRPMInTolerance()
     {
         return isRPMInTolerance(targetWheelRpm, RPMTolerance, maxRPMAcceleration);
+    }
+
+    double getPRM()
+    {
+        return  robot.motorConfig.launcherWheelMotor.getVelocity() * spinMultiplier;
+    }
+
+    double getDistanceToGoal(boolean useMinLaunchDistance)
+    {
+        if(robot.position.currentRobotPosition[1] > minLaunchDistance || !useMinLaunchDistance) return Math.sqrt(Math.pow(robot.position.currentRobotPosition[0], 2) + Math.pow(robot.position.currentRobotPosition[1], 2));
+        return Math.sqrt(Math.pow(robot.position.currentRobotPosition[0], 2) + Math.pow(minLaunchDistance, 2));
+    }
+
+    /////////
+    //other//
+    /////////
+    void setRPM(double RPM)
+    {
+        targetWheelRpm = RPM;
+        robot.motorConfig.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
+    }
+
+    void setRPM()
+    {
+        setRPM(targetWheelRpm);
     }
 
     void waitForRPMInTolerance(long maxMs, double targetWheelRpm, double RPMTolerance, double maxRPMVelocity)

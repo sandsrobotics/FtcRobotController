@@ -48,7 +48,6 @@ public class Robot
     //running robot parts
     protected boolean useVuforia;
     protected boolean useOpenCV;
-    protected boolean useMovement;
 
     //other
     protected Gamepad gamepad1;
@@ -66,7 +65,6 @@ public class Robot
 
         this.useOpenCV = useOpenCV;
         this.useVuforia = useVuforia;
-        this.useMovement = useDrive;
 
         motorConfig = new MotorConfig(this);
         position = new Position(this, usePositionTracking);
@@ -266,6 +264,16 @@ enum GamepadButtons
             }
         }
         else wasButtonPressed = false;
+        return false;
+    }
+
+    boolean getButtonReleased(Gamepad gamepad)
+    {
+        if(wasButtonPressed && !getButtonHeld(gamepad))
+        {
+            wasButtonPressed = false;
+            return true;
+        }
         return false;
     }
 
