@@ -56,6 +56,7 @@ public class Vision extends Thread
     private static final float trackablesHeight = 6;
     private static final float halfField = 72;
     private static final float quadField  = 36;
+    protected final float halfFieldWidth = 48;
 
     //to know where the phone or camera is IN INCHES!!! and degrees
     float[] phonePosition = {0,0,0};
@@ -227,18 +228,21 @@ public class Vision extends Thread
     void findAllTrackables()
     {
         int i = 0;
+        boolean found = false;
         for(VuforiaTrackable t:trackables)
         {
             currentTrackablesLocations[i] = ((VuforiaTrackableDefaultListener) t.getListener()).getFtcCameraFromTarget();
-            currentCalculatedRobotLocation = ((VuforiaTrackableDefaultListener) t.getListener()).getUpdatedRobotLocation();
 
             if (currentTrackablesLocations[i] != null)
             {
+                found = true;
+                currentCalculatedRobotLocation = ((VuforiaTrackableDefaultListener) t.getListener()).getUpdatedRobotLocation();
                 lastTrackablesLocations[i] = currentTrackablesLocations[i];
                 lastCalculatedRobotLocation = currentCalculatedRobotLocation;
             }
             i++;
         }
+        //if(!found) currentCalculatedRobotLocation = null;
     }
 
     OpenGLMatrix getCurrentGaolLocation()

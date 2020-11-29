@@ -114,6 +114,14 @@ public class Robot
     }
 
     //------------------My Methods------------------//
+
+    void start()
+    {
+        startTelemetry();
+        position.start();
+        if(useVuforia) vision.start();
+    }
+
     /////////////
     //telemetry//
     /////////////

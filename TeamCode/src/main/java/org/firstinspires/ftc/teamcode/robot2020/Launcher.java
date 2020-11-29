@@ -43,7 +43,7 @@ public class Launcher {
     double RPMIncrements = 50;
     double RPMTolerance = 100;
     double maxRPMAcceleration = 10; // acceleration measured in RPM/s
-    double minLaunchDistance = 12; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
 
     ///////////////////
@@ -207,7 +207,7 @@ public class Launcher {
     {
         if(robot.usePositionTracking && robot.movement != null)
         {
-            if (robot.position.currentRobotPosition[1] < minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000); }
+            if (robot.position.currentRobotPosition[1] > minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .25); }
             else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000); }
         }
     }
@@ -221,11 +221,11 @@ public class Launcher {
         {
             double XDiff = xPos - robot.position.currentRobotPosition[0];
             double YDiff;
-            if (useMinLaunchDis && robot.position.currentRobotPosition[1] < minLaunchDistance)
-                YDiff = yPos - minLaunchDistance;
+            if (useMinLaunchDis && robot.position.currentRobotPosition[1] > minLaunchDistance)
+                YDiff = -minLaunchDistance;
             else YDiff = yPos - robot.position.currentRobotPosition[1];
 
-            return robot.scaleAngle(Math.toDegrees(Math.atan(YDiff / XDiff)) + angleOffset);
+            return robot.scaleAngle(Math.toDegrees(Math.atan(XDiff / YDiff)) + angleOffset);
         }
         return 0;
     }

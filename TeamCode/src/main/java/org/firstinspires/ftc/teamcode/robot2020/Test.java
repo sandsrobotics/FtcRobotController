@@ -23,7 +23,7 @@ public class Test extends LinearOpMode {
 
         waitForStart();
 
-        robot.startTelemetry();
+        robot.start();
 
         while(opModeIsActive())
         {
@@ -35,7 +35,10 @@ public class Test extends LinearOpMode {
             */
 
             if(gamepad1.a) robot.launcher.goToShootingPos();
-            robot.addTelemetry("ang: ", robot.launcher.getAngleToPointToPosition());
+            robot.addTelemetry("point to goal ang: ", robot.launcher.getAngleToPointToPosition());
+            robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
+            robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
+            robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
             robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
             robot.sendTelemetry();
         }

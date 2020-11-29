@@ -12,7 +12,7 @@ public class Movement
     //user variables//
     //////////////////
     public static double ticksPerInchForward = 44;
-    public static double ticksPerInchSideways = 88;
+    public static double ticksPerInchSideways = 50;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
     public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
     public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
@@ -111,15 +111,15 @@ public class Movement
 
                     //calculate the error vector
                     errorVectorMag = Math.sqrt(Math.pow((targetPos[0] - currentPos[0]), 2) + Math.pow((targetPos[1] - currentPos[1]), 2));
-                    errorVectorRot = Math.atan2((targetPos[1] - currentPos[1]), (targetPos[0] - currentPos[0]));
+                    errorVectorRot = Math.toDegrees(Math.atan2((targetPos[0] - currentPos[0]), (targetPos[1] - currentPos[1])));
 
                     //take out robot rotation
                     errorVectorRot -= currentPos[2];
                     errorVectorRot = robot.scaleAngle(errorVectorRot);
 
                     //get the errors comps
-                    powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(errorVectorRot));
-                    powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
+                    powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(Math.toRadians(errorVectorRot)));
+                    powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(Math.toRadians(errorVectorRot)));
                     powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
 
                     if (Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2])
@@ -128,6 +128,12 @@ public class Movement
 
                     robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false));
                     maxLoops--;
+                    robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
+                    robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
+                    robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
+                    robot.addTelemetry("error mag: ", errorVectorMag);
+                    robot.addTelemetry("error rot: ", errorVectorRot);
+                    robot.sendTelemetry();
                 }
             }
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
@@ -135,7 +141,7 @@ public class Movement
         else if(robot.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
 
-    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID,1); }
+    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID, maxSpeed); }
 
     //////////
     //teleOp//
@@ -165,7 +171,7 @@ public class Movement
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
-        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, .05 , .05, true));
+        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, .025 , .025, true));
     }
 
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)

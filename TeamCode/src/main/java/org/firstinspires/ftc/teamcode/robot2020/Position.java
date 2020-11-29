@@ -22,7 +22,7 @@ public class Position extends Thread
     //other variables//
     ///////////////////
     //robot position
-    protected double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
+    protected volatile double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
 
@@ -87,14 +87,14 @@ public class Position extends Thread
             if(useCurrentPos)
             {
                 if (robot.vision.currentCalculatedRobotLocation != null) {
-                    currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0);
+                    currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
                     currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
                 }
             }
             else
             {
                 if (robot.vision.lastCalculatedRobotLocation != null) {
-                    currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0);
+                    currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
                     currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
                 }
             }
