@@ -1,10 +1,15 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -15,6 +20,7 @@ import static com.qualcomm.robotcore.hardware.DcMotor.RunMode.*;
 import static com.qualcomm.robotcore.hardware.DcMotor.ZeroPowerBehavior.*;
 import static com.qualcomm.robotcore.hardware.DcMotorSimple.Direction.*;
 
+@Config
 public class SandsRobot {
     // Robot constructor creates robot object and sets up all the actuators and sensors
     SandsRobot(HardwareMap hardwareMap, Telemetry telemetry, Gamepad gamepad1, Gamepad gamepad2) {
@@ -22,10 +28,11 @@ public class SandsRobot {
         this.telemetry = telemetry;
         this.gamepad1 = gamepad1;
         this.gamepad2 = gamepad2;
+        initTelemetry();
         initMotors();
         initImu();
         readSensors();
-        sendTelemetry();
+        //sendTelemetry();
     }
 
     private void initMotors() {
@@ -34,6 +41,7 @@ public class SandsRobot {
         motorLeftRear = hardwareMap.get(DcMotorEx.class, "motor2");
         motorRightRear = hardwareMap.get(DcMotorEx.class, "motor3");
         motorLauncherWheel = hardwareMap.get(DcMotorEx.class, "motor0b");
+        servo0 = hardwareMap.get(Servo.class, "servo0b");
 
         motors = Arrays.asList(motorLeftFront, motorLeftRear, motorRightRear, motorRightFront,motorLauncherWheel);
 
@@ -64,6 +72,24 @@ public class SandsRobot {
         imuParameters.loggingEnabled = false;
         // Initialize IMU.
         imu.initialize(imuParameters);
+    }
+
+    protected void setPIDFCoefficients() {
+        // change coefficients using methods included with DcMotorEx class.
+        motorLauncherWheel.setVelocityPIDFCoefficients(P, I, D, F);
+    }
+
+    protected void getPIDFCoefficients() {
+        PIDFCoefficients pidf = motorLauncherWheel.getPIDFCoefficients(RUN_USING_ENCODER);
+        P = pidf.p;
+        I = pidf.i;
+        D = pidf.d;
+        F = pidf.f;
+    }
+
+    private void initTelemetry() {
+        dashboard = FtcDashboard.getInstance();
+        packet = new TelemetryPacket();
     }
 
     /** **********************************************************
@@ -148,12 +174,20 @@ public class SandsRobot {
     // Variable Definitions for Robot
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
+    protected FtcDashboard dashboard;
+    protected TelemetryPacket packet;
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     protected Thread positionThread;
     protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel;
+    protected Servo servo0;
     //protected DcMotorEx verticalLeft, verticalRight, horizontal;
     private List<DcMotorEx> motors;
     private BNO055IMU imu;
     private double driveSpeedLimit = 1.0;
+    public static double P;
+    public static double I;
+    public static double D;
+    public static double F;
+
 }

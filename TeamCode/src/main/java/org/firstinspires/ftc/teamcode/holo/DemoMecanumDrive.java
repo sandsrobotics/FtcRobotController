@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@Disabled
 @TeleOp(name = "Demo Mecanum Drive")
 public class DemoMecanumDrive extends LinearOpMode {
     SandsRobot robot;
