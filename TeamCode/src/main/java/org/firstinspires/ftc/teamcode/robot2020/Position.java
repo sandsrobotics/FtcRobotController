@@ -34,16 +34,12 @@ public class Position extends Thread
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
-    //other
-    boolean usePositionTracking;
-
     //other class
     Robot robot;
 
-    Position(Robot robot, boolean usePositionTracking)
+    Position(Robot robot)
     {
         this.robot = robot;
-        this.usePositionTracking = usePositionTracking;
     }
 
     //////////
@@ -128,7 +124,7 @@ public class Position extends Thread
         {
             //put run stuff in here
             updateAll();
-            if(usePositionTracking) getPosFromEncoder();
+            if(robot.usePositionTracking) getPosFromEncoder();
         }
     }
 

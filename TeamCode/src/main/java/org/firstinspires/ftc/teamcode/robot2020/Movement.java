@@ -90,46 +90,49 @@ public class Movement
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
     {
-        double[] currentPos = robot.position.currentRobotPosition;
-
-        if(Math.abs(targetPos[0] - currentPos[0]) > tol[0] || Math.abs(targetPos[1] - currentPos[1]) > tol[1] || Math.abs(targetPos[2] - currentPos[2]) > tol[2])
+        if(robot.usePositionTracking)
         {
-            PID xPID = new PID(moveXPID, -maxSpeed, maxSpeed);
-            PID yPID = new PID(moveYPID, -maxSpeed, maxSpeed);
-            PID rotPID = new PID(turnPID, -maxSpeed, maxSpeed);
+            double[] currentPos = robot.position.currentRobotPosition;
 
-            double[] powers = new double[3];
+            if (Math.abs(targetPos[0] - currentPos[0]) > tol[0] || Math.abs(targetPos[1] - currentPos[1]) > tol[1] || Math.abs(targetPos[2] - currentPos[2]) > tol[2]) {
+                PID xPID = new PID(moveXPID, -maxSpeed, maxSpeed);
+                PID yPID = new PID(moveYPID, -maxSpeed, maxSpeed);
+                PID rotPID = new PID(turnPID, -maxSpeed, maxSpeed);
 
-            double errorVectorRot;
-            double errorVectorMag;
+                double[] powers = new double[3];
 
-            int numOfTimesInTolerance = 0;
+                double errorVectorRot;
+                double errorVectorMag;
 
-            while (!robot.stop() && (maxLoops > 0) && (numOfTimesInTolerance < timesToStayInTolerance))
-            {
-                currentPos = robot.position.currentRobotPosition;
+                int numOfTimesInTolerance = 0;
 
-                //calculate the error vector
-                errorVectorMag = Math.sqrt(Math.pow((targetPos[0] - currentPos[0]), 2) + Math.pow((targetPos[1] - currentPos[1]), 2));
-                errorVectorRot = Math.atan2((targetPos[1] - currentPos[1]), (targetPos[0] - currentPos[0]));
+                while (!robot.stop() && (maxLoops > 0) && (numOfTimesInTolerance < timesToStayInTolerance)) {
+                    currentPos = robot.position.currentRobotPosition;
 
-                //take out robot rotation
-                errorVectorRot -= currentPos[2];
-                errorVectorRot = robot.scaleAngle(errorVectorRot);
+                    //calculate the error vector
+                    errorVectorMag = Math.sqrt(Math.pow((targetPos[0] - currentPos[0]), 2) + Math.pow((targetPos[1] - currentPos[1]), 2));
+                    errorVectorRot = Math.atan2((targetPos[1] - currentPos[1]), (targetPos[0] - currentPos[0]));
 
-                //get the errors comps
-                powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(errorVectorRot));
-                powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
-                powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
+                    //take out robot rotation
+                    errorVectorRot -= currentPos[2];
+                    errorVectorRot = robot.scaleAngle(errorVectorRot);
 
-                if (Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2]) numOfTimesInTolerance++;
-                else numOfTimesInTolerance = 0;
+                    //get the errors comps
+                    powers[0] = xPID.updatePIDAndReturnValue(errorVectorMag * Math.sin(errorVectorRot));
+                    powers[1] = yPID.updatePIDAndReturnValue(errorVectorMag * Math.cos(errorVectorRot));
+                    powers[2] = rotPID.updatePIDAndReturnValue(robot.findAngleError(currentPos[2], targetPos[2]));
 
-                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false));
-                maxLoops--;
+                    if (Math.abs(targetPos[0] - currentPos[0]) < tol[0] && Math.abs(targetPos[1] - currentPos[1]) < tol[1] && Math.abs(targetPos[2] - currentPos[2]) < tol[2])
+                        numOfTimesInTolerance++;
+                    else numOfTimesInTolerance = 0;
+
+                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false));
+                    maxLoops--;
+                }
             }
+            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
-        robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+        else if(robot.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID,1); }

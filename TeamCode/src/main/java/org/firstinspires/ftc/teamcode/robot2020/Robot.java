@@ -48,6 +48,7 @@ public class Robot
     //running robot parts
     protected boolean useVuforia;
     protected boolean useOpenCV;
+    protected boolean usePositionTracking;
 
     //other
     protected Gamepad gamepad1;
@@ -65,9 +66,10 @@ public class Robot
 
         this.useOpenCV = useOpenCV;
         this.useVuforia = useVuforia;
+        this.usePositionTracking = usePositionTracking;
 
         motorConfig = new MotorConfig(this);
-        position = new Position(this, usePositionTracking);
+        position = new Position(this);
 
         if(useDrive) movement = new Movement(this);
         if(useOpenCV || useVuforia) vision = new Vision(this);
@@ -76,7 +78,7 @@ public class Robot
 
         initHardware();
         if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
-        if(useLauncher) motorConfig.initLauncherMotors();
+        //if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll();
     }
 
