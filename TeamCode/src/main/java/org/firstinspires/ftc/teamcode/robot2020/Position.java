@@ -1,12 +1,10 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
 
 public class Position extends Thread
 {
@@ -33,6 +31,9 @@ public class Position extends Thread
 
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
+
+    //other
+    volatile boolean PositionCalibrated = false;
 
     //other class
     Robot robot;
@@ -87,6 +88,7 @@ public class Position extends Thread
             if(useCurrentPos)
             {
                 if (robot.vision.currentCalculatedRobotLocation != null) {
+                    if(!PositionCalibrated) PositionCalibrated = true;
                     currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
                     currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
                 }
@@ -94,6 +96,7 @@ public class Position extends Thread
             else
             {
                 if (robot.vision.lastCalculatedRobotLocation != null) {
+                    if(!PositionCalibrated) PositionCalibrated = true;
                     currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
                     currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
                 }

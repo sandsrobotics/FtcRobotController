@@ -53,7 +53,7 @@ public class Robot
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
-    TelemetryPacket packet;
+    TelemetryPacket packet = new TelemetryPacket();
 
 
     Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
@@ -103,8 +103,6 @@ public class Robot
             delay(50);
             opMode.idle();
         }
-
-        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 50);
 
         /////////////
         //dashboard//

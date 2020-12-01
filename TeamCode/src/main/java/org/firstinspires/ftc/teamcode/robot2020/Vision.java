@@ -78,8 +78,9 @@ public class Vision extends Thread
     // object location
     protected volatile OpenGLMatrix[] lastTrackablesLocations = new OpenGLMatrix[5];
     protected volatile OpenGLMatrix[] currentTrackablesLocations = new OpenGLMatrix[5];
-    protected volatile OpenGLMatrix lastCalculatedRobotLocation;
-    protected volatile OpenGLMatrix currentCalculatedRobotLocation;
+    protected volatile OpenGLMatrix lastCalculatedRobotLocation = new OpenGLMatrix();
+    protected volatile OpenGLMatrix currentCalculatedRobotLocation = new OpenGLMatrix();
+    protected volatile boolean anyTrackableFound = false;
 
     // some vuforia stuff
     protected VuforiaLocalizer vuforia = null;
@@ -154,7 +155,7 @@ public class Vision extends Thread
 
     void loadAsset(String assetName)
     {
-        trackables = this.vuforia.loadTrackablesFromAsset(assetName);
+        trackables = vuforia.loadTrackablesFromAsset(assetName);
     }
 
     void setAllTrackablesNames()
@@ -168,11 +169,11 @@ public class Vision extends Thread
 
     void setAllTrackablesPosition()
     {
-        setTrackableTransform(2,new float[]{0, -halfField, trackablesHeight}, new float[]{90, 0, 180});
-        setTrackableTransform(3,new float[]{0, halfField, trackablesHeight}, new float[]{90, 0, 0});
-        setTrackableTransform(4,new float[]{-halfField, 0, trackablesHeight}, new float[]{90, 0, 90});
-        setTrackableTransform(0,new float[]{halfField, quadField, trackablesHeight}, new float[]{90, 0, -90});
-        setTrackableTransform(1,new float[]{halfField, -quadField, trackablesHeight}, new float[]{90, 0, -90});
+        setTrackableTransform(2,new float[]{0,          -halfField, trackablesHeight}, new float[]{90, 0, 180});
+        setTrackableTransform(3,new float[]{0,          halfField,  trackablesHeight}, new float[]{90, 0, 0});
+        setTrackableTransform(4,new float[]{-halfField, 0,          trackablesHeight}, new float[]{90, 0, 90});
+        setTrackableTransform(0,new float[]{halfField,  quadField,  trackablesHeight}, new float[]{90, 0, -90});
+        setTrackableTransform(1,new float[]{halfField,  -quadField, trackablesHeight}, new float[]{90, 0, -90});
     }
 
     void setTrackableName(int posInTrackables, String name)
@@ -228,21 +229,30 @@ public class Vision extends Thread
     void findAllTrackables()
     {
         int i = 0;
-        boolean found = false;
+        anyTrackableFound = false;
+
         for(VuforiaTrackable t:trackables)
         {
-            currentTrackablesLocations[i] = ((VuforiaTrackableDefaultListener) t.getListener()).getFtcCameraFromTarget();
-
-            if (currentTrackablesLocations[i] != null)
+            if (((VuforiaTrackableDefaultListener) t.getListener()).isVisible())
             {
-                found = true;
-                currentCalculatedRobotLocation = ((VuforiaTrackableDefaultListener) t.getListener()).getUpdatedRobotLocation();
+                anyTrackableFound = true;
+
+                currentTrackablesLocations[i] = ((VuforiaTrackableDefaultListener) t.getListener()).getFtcCameraFromTarget();
                 lastTrackablesLocations[i] = currentTrackablesLocations[i];
-                lastCalculatedRobotLocation = currentCalculatedRobotLocation;
+
+                OpenGLMatrix robotPos = ((VuforiaTrackableDefaultListener) t.getListener()).getUpdatedRobotLocation();
+
+                if (robotPos != null)
+                {
+                    currentCalculatedRobotLocation = robotPos;
+                    lastCalculatedRobotLocation = currentCalculatedRobotLocation;
+                }
             }
+            else currentTrackablesLocations[i] = null;
             i++;
         }
-        //if(!found) currentCalculatedRobotLocation = null;
+
+        if(!anyTrackableFound) currentCalculatedRobotLocation = null;
     }
 
     OpenGLMatrix getCurrentGaolLocation()

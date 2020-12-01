@@ -65,8 +65,8 @@ public class MotorConfig
         }
 
         resetMotorEncodersList(driveMotors);
-        setMotorsToBrakeList(driveMotors);
         setMotorsToRunWithEncodersList(driveMotors);
+        setMotorsToBrakeList(driveMotors);
     }
 
     public void initLauncherMotors()
