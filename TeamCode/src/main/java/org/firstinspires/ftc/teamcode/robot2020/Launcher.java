@@ -207,8 +207,8 @@ public class Launcher {
     {
         if(robot.usePositionTracking && robot.movement != null)
         {
-            if (robot.position.currentRobotPosition[1] > minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .25); }
-            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000); }
+            if (robot.position.currentRobotPosition[1] > minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .75); }
+            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000, .75); }
         }
     }
 

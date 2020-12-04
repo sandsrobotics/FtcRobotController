@@ -5,6 +5,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.robot2020.persistence.Position.RobotPositionEntity;
 
 public class Position extends Thread
 {
@@ -33,7 +34,8 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //other
-    volatile boolean PositionCalibrated = false;
+    volatile double positionAccuracy = 0;
+    int currentRun = 0;
 
     //other class
     Robot robot;
@@ -55,7 +57,6 @@ public class Position extends Thread
         return angles;
     }
 
-    void resetZAxisRotation() { rotationOffset = -robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZXY, AngleUnit.DEGREES).thirdAngle - startRotation;}
 
     ////////////////////
     //position finding//
@@ -81,28 +82,50 @@ public class Position extends Thread
         currentRobotPosition[2] = currentRotation;
     }
 
-    void updatePositionFromVuforia(boolean useCurrentPos)
+    void updatePositionFromVuforia()
     {
         if(robot.useVuforia)
         {
-            if(useCurrentPos)
+            if (robot.vision.currentCalculatedRobotLocation != null)
             {
-                if (robot.vision.currentCalculatedRobotLocation != null) {
-                    if(!PositionCalibrated) PositionCalibrated = true;
-                    currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
-                    currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
-                }
-            }
-            else
-            {
-                if (robot.vision.lastCalculatedRobotLocation != null) {
-                    if(!PositionCalibrated) PositionCalibrated = true;
-                    currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
-                    currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
-                }
+                positionAccuracy = 100;
+                currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
+                currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
             }
         }
     }
+
+    ////////////
+    //dataBase//
+    ////////////
+    void setCurrentRun(boolean addOne)
+    {
+        currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
+        if(addOne) currentRun ++;
+    }
+
+    void addCurrentPosition(boolean useCurrentRun)
+    {
+        RobotPositionEntity pos = new RobotPositionEntity(0, currentRobotPosition[0],currentRobotPosition[1],currentRotation, positionAccuracy);
+        if(useCurrentRun) pos.runNumber = currentRun;
+        robot.db.robotPositionEntityDAO().insertAll(pos);
+    }
+
+    void loadLastPos()
+    {
+        RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
+        if(last == null){ if(robot.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
+        else
+        {
+            positionAccuracy = last.accuracy;
+            currentRobotPosition[0] = last.posX;
+            currentRobotPosition[1] = last.posY;
+            currentRobotPosition[2] = last.rotation;
+            rotationOffset = -last.rotation;
+        }
+    }
+
+    void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
 
     //////////////////
     //runs in thread//
@@ -122,13 +145,24 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        initialize();
+        if(robot.usePositionTracking)
+        {
+            initialize();
+            setCurrentRun(true);
+            loadLastPos();
+        }
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
             updateAll();
-            if(robot.usePositionTracking) getPosFromEncoder();
+            if(robot.usePositionTracking)
+            {
+                getPosFromEncoder();
+                if(robot.logPositionTracking) addCurrentPosition(true);
+                updatePositionFromVuforia();
+            }
         }
+        if(robot.usePositionTracking) addCurrentPosition(true);
     }
 
     ///////////////

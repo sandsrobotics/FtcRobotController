@@ -4,8 +4,7 @@ import androidx.room.Room;
 import com.acmerobotics.dashboard.config.Config;
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.MovementEntity;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.MovementEntityDAO;
+import org.firstinspires.ftc.teamcode.robot2020.persistence.Movement.MovementEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,14 +17,12 @@ public class ComplexMovement {
     //////////////////
     //user variables//
     //////////////////
-    protected String dataBaseName = "FIRST_INSPIRE_2020";
     public static double measureDelay = 0; //in ms
     public static double maxTime = 6000; //in ms
 
     ///////////////////
     //other variables//
     ///////////////////
-    protected AppDatabase db;
     //make
     protected List<int[]> positions = new ArrayList<>();
     protected boolean isRecording = false;
@@ -44,12 +41,6 @@ public class ComplexMovement {
     ComplexMovement(Robot robot)
     {
         this.robot = robot;
-        initComplexMovement();
-    }
-
-    void initComplexMovement()
-    {
-        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
     }
 
     void recorder(boolean stopAtMaxTime)
@@ -108,21 +99,21 @@ public class ComplexMovement {
     {
         if (moveName == null || moveName.equals("")) moveName = "not named";
         MovementEntity entity = new MovementEntity(moveName, 0, (int) curRecordingLength);
-        db.movementEntityDAO().insertAll(entity);
+        robot.db.movementEntityDAO().insertAll(entity);
         entity = new MovementEntity(moveName, 0, (float)(curRecordingLength/positions.size()));
-        db.movementEntityDAO().insertAll(entity);
+        robot.db.movementEntityDAO().insertAll(entity);
         for (int i = 0; i < positions.size(); i++)
         {
             for (int m = 0; m < robot.motorConfig.driveMotors.size(); m++) {
                 MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m]);
-                db.movementEntityDAO().insertAll(entity1);
+                robot.db.movementEntityDAO().insertAll(entity1);
             }
         }
     }
 
     void loadMoveDB(String moveName)
     {
-        List<MovementEntity> data = db.movementEntityDAO().loadMovementByName(moveName);
+        List<MovementEntity> data = robot.db.movementEntityDAO().loadMovementByName(moveName);
         int[] currentLoadTick = new int[4];
         loaded_Positions.clear();
         int i = 0;
@@ -272,6 +263,6 @@ public class ComplexMovement {
 
     void clearDatabase()
     {
-        db.movementEntityDAO().deleteAll();
+        robot.db.movementEntityDAO().deleteAll();
     }
 }

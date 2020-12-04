@@ -244,6 +244,7 @@ public class Vision extends Thread
 
                 if (robotPos != null)
                 {
+                    robotPos.scale(1/mmPerInch);
                     currentCalculatedRobotLocation = robotPos;
                     lastCalculatedRobotLocation = currentCalculatedRobotLocation;
                 }

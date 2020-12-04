@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import androidx.room.Room;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -11,6 +13,8 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 
 
 @Config
@@ -26,6 +30,9 @@ public class Robot
 
     //user dashboard variable
     public static boolean emergencyStop = false;
+
+    //database
+    protected String dataBaseName = "FIRST_INSPIRE_2020";
 
     ///////////////////
     //other variables//
@@ -44,11 +51,13 @@ public class Robot
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
+    protected AppDatabase db;
 
     //running robot parts
     protected boolean useVuforia;
     protected boolean useOpenCV;
     protected boolean usePositionTracking;
+    protected boolean logPositionTracking;
 
     //other
     protected Gamepad gamepad1;
@@ -56,7 +65,7 @@ public class Robot
     TelemetryPacket packet = new TelemetryPacket();
 
 
-    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
@@ -67,6 +76,7 @@ public class Robot
         this.useOpenCV = useOpenCV;
         this.useVuforia = useVuforia;
         this.usePositionTracking = usePositionTracking;
+        this.logPositionTracking = logPositionTracking;
 
         motorConfig = new MotorConfig(this);
         position = new Position(this);
@@ -109,6 +119,11 @@ public class Robot
         /////////////
         if(debug_dashboard) dashboard = FtcDashboard.getInstance();
         startTelemetry();
+
+        /////////////
+        //data base//
+        /////////////
+        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
     }
 
     //------------------My Methods------------------//
