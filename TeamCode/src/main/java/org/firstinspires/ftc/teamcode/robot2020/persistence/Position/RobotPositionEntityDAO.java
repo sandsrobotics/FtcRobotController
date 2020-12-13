@@ -27,11 +27,11 @@ public interface RobotPositionEntityDAO
     @Query("SELECT * FROM Position WHERE `time of entry` = (select max(`time of entry`) from Position)")
     RobotPositionEntity getLastByTime();
 
-    @Query("SELECT * FROM Position WHERE `run number` = getLastRunNum()")
-    List<RobotPositionEntity> getLastRun();
-
     @Query("Select max(`run number`) from Position")
     int getLastRunNum();
+
+    @Query("SELECT * FROM Position WHERE `run number` = (Select max(`run number`) from Position)")
+    List<RobotPositionEntity> getLastRun();
 
     @Query("DELETE FROM Position")
     void deleteAll();

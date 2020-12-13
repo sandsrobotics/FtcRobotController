@@ -54,9 +54,12 @@ public class Vision extends Thread
 
     //set some measurements of the field(for position tracking) IN INCHES!!!
     private static final float trackablesHeight = 6;
-    private static final float halfField = 72;
-    private static final float quadField  = 36;
-    protected final float halfFieldWidth = 48;
+    private static final float halfFieldLength = 72;
+    private static final float halfFieldWidth  = 48;
+    private static final float goalDistanceFromMiddle = 12;
+    static final Field fieldType = Field.BlueHalf;
+
+
 
     //to know where the phone or camera is IN INCHES!!! and degrees
     float[] phonePosition = {0,0,0};
@@ -97,6 +100,7 @@ public class Vision extends Thread
 
     //other class
     Robot robot;
+    private Field dkjnx;
 
 
     //////////////////
@@ -160,20 +164,31 @@ public class Vision extends Thread
 
     void setAllTrackablesNames()
     {
+        if(fieldType == Field.BlueFull || fieldType == Field.RedFull)
+        {
+            setTrackableName(1,"Red Tower Goal Target");
+            setTrackableName(2,"Red Alliance Target");
+        }
         setTrackableName(0,"Blue Tower Goal Target");
-        setTrackableName(1,"Red Tower Goal Target");
-        setTrackableName(2,"Red Alliance Target");
         setTrackableName(3,"Blue Alliance Target");
         setTrackableName(4,"Front Wall Target");
     }
 
     void setAllTrackablesPosition()
     {
-        setTrackableTransform(2,new float[]{0,          -halfField, trackablesHeight}, new float[]{90, 0, 180});
-        setTrackableTransform(3,new float[]{0,          halfField,  trackablesHeight}, new float[]{90, 0, 0});
-        setTrackableTransform(4,new float[]{-halfField, 0,          trackablesHeight}, new float[]{90, 0, 90});
-        setTrackableTransform(0,new float[]{halfField,  quadField,  trackablesHeight}, new float[]{90, 0, -90});
-        setTrackableTransform(1,new float[]{halfField,  -quadField, trackablesHeight}, new float[]{90, 0, -90});
+        if(fieldType == Field.RedFull || fieldType == Field.BlueFull) {
+            setTrackableTransform(2, new float[]{0, -halfFieldLength, trackablesHeight}, new float[]{90, 0, 180});
+            setTrackableTransform(3, new float[]{0, halfFieldLength, trackablesHeight}, new float[]{90, 0, 0});
+            setTrackableTransform(4, new float[]{-halfFieldLength, 0, trackablesHeight}, new float[]{90, 0, 90});
+            setTrackableTransform(0, new float[]{halfFieldLength, halfFieldLength / 2, trackablesHeight}, new float[]{90, 0, -90});
+            setTrackableTransform(1, new float[]{halfFieldLength, -halfFieldLength / 2, trackablesHeight}, new float[]{90, 0, -90});
+        }
+        else if(fieldType == Field.BlueHalf)
+        {
+            setTrackableTransform(3, new float[]{0, -halfFieldWidth, trackablesHeight}, new float[]{90, 0, 0});
+            setTrackableTransform(4, new float[]{-halfFieldLength, 0, trackablesHeight}, new float[]{90, 0, 90});
+            setTrackableTransform(0, new float[]{halfFieldLength, -goalDistanceFromMiddle, trackablesHeight}, new float[]{90, 0, -90});
+        }
     }
 
     void setTrackableName(int posInTrackables, String name)
@@ -244,7 +259,6 @@ public class Vision extends Thread
 
                 if (robotPos != null)
                 {
-                    robotPos.scale(1/mmPerInch);
                     currentCalculatedRobotLocation = robotPos;
                     lastCalculatedRobotLocation = currentCalculatedRobotLocation;
                 }
@@ -479,4 +493,12 @@ public class Vision extends Thread
     {
         this.interrupt();
     }
+}
+
+enum Field
+{
+    RedHalf,
+    BlueHalf,
+    RedFull,
+    BlueFull
 }

@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 @TeleOp(name = "test vision")
 public class Test2 extends LinearOpMode
@@ -14,11 +15,12 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this,true, true,false, false, false, true, false);
+        robot = new Robot(this,true, true,false, false, false,true, true, false);
 
         robot.startTelemetry();
         robot.addTelemetry("Robot: ", "ready :)");
         robot.sendTelemetry();
+        robot.grabber.init();
 
         waitForStart();
 
@@ -28,7 +30,8 @@ public class Test2 extends LinearOpMode
 
         while(opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
+            robot.grabber.runForTeleop(gamepad1);
+            //robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
             robot.startTelemetry();
             if(robot.vision.anyTrackableFound)
             {

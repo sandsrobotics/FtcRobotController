@@ -6,7 +6,9 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
@@ -34,6 +36,11 @@ public class Robot
     //database
     protected String dataBaseName = "FIRST_INSPIRE_2020";
 
+    //sensor
+    protected String sensor1Name = "sensor3";
+    protected String sensor2Name = "sensor2";
+
+
     ///////////////////
     //other variables//
     ///////////////////
@@ -44,12 +51,15 @@ public class Robot
     public Launcher launcher;
     public ComplexMovement complexMovement;
     public Position position;
+    public Grabber grabber;
 
     //objects
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
+    protected Rev2mDistanceSensor sensor1;
+    protected Rev2mDistanceSensor sensor2;
     protected LinearOpMode opMode;
     protected AppDatabase db;
 
@@ -65,7 +75,7 @@ public class Robot
     TelemetryPacket packet = new TelemetryPacket();
 
 
-    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
     {
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
@@ -85,11 +95,13 @@ public class Robot
         if(useOpenCV || useVuforia) vision = new Vision(this);
         if(useLauncher) launcher = new Launcher(this);
         if(useComplexMovement) complexMovement = new ComplexMovement(this);
+        if(useGrabber) grabber = new Grabber(this);
 
         initHardware();
         if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
-        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(useLauncher) motorConfig.initLauncherMotors();
         if(useOpenCV || useVuforia) vision.initAll();
+        if(useGrabber) motorConfig.initGrabberMotors();
     }
 
     void initHardware()
@@ -108,11 +120,16 @@ public class Robot
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
+        sensor1 = (Rev2mDistanceSensor)hardwareMap.get(DistanceSensor.class, sensor1Name);
+        sensor2 = (Rev2mDistanceSensor)hardwareMap.get(DistanceSensor.class, sensor2Name);
+
+
         while (!opMode.isStopRequested() && !imu.isGyroCalibrated())
         {
             delay(50);
             opMode.idle();
         }
+
 
         /////////////
         //dashboard//

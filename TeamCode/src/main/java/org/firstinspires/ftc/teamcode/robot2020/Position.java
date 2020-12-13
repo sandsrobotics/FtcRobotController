@@ -89,7 +89,7 @@ public class Position extends Thread
             if (robot.vision.currentCalculatedRobotLocation != null)
             {
                 positionAccuracy = 100;
-                currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
+                //currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
                 currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
             }
         }
@@ -113,7 +113,7 @@ public class Position extends Thread
 
     void loadLastPos()
     {
-        RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
+        RobotPositionEntity last = null;// = robot.db.robotPositionEntityDAO().getLastByTime();
         if(last == null){ if(robot.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
         {
@@ -148,8 +148,8 @@ public class Position extends Thread
         if(robot.usePositionTracking)
         {
             initialize();
-            setCurrentRun(true);
-            loadLastPos();
+            //setCurrentRun(true);
+            //loadLastPos();
         }
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
@@ -158,11 +158,11 @@ public class Position extends Thread
             if(robot.usePositionTracking)
             {
                 getPosFromEncoder();
-                if(robot.logPositionTracking) addCurrentPosition(true);
+                //if(robot.logPositionTracking) addCurrentPosition(true);
                 updatePositionFromVuforia();
             }
         }
-        if(robot.usePositionTracking) addCurrentPosition(true);
+        //if(robot.usePositionTracking) addCurrentPosition(true);
     }
 
     ///////////////
