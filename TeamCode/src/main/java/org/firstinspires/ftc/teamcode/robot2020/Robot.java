@@ -45,6 +45,11 @@ public class Robot
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
 
+    //running robot parts
+    protected boolean useVuforia;
+    protected boolean useOpenCV;
+    protected boolean usePositionTracking;
+
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
@@ -53,24 +58,28 @@ public class Robot
 
     Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
     {
-        motorConfig = new MotorConfig(this);
-        position = new Position(this, usePositionTracking);
-
-        if(useDrive)movement = new Movement(this);
-        if(useOpenCV || useVuforia) vision = new Vision(this);
-        if(useLauncher) launcher = new Launcher(this);
-        if(useComplexMovement) complexMovement = new ComplexMovement(this);
-
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
+        this.useOpenCV = useOpenCV;
+        this.useVuforia = useVuforia;
+        this.usePositionTracking = usePositionTracking;
+
+        motorConfig = new MotorConfig(this);
+        position = new Position(this);
+
+        if(useDrive) movement = new Movement(this);
+        if(useOpenCV || useVuforia) vision = new Vision(this);
+        if(useLauncher) launcher = new Launcher(this);
+        if(useComplexMovement) complexMovement = new ComplexMovement(this);
+
         initHardware();
         if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
-        if(useLauncher) motorConfig.initLauncherMotors();
-        if(useOpenCV || useVuforia) vision.initAll(useVuforia, useOpenCV);
+        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(useOpenCV || useVuforia) vision.initAll();
     }
 
     void initHardware()
@@ -105,6 +114,14 @@ public class Robot
     }
 
     //------------------My Methods------------------//
+
+    void start()
+    {
+        startTelemetry();
+        position.start();
+        if(useVuforia) vision.start();
+    }
+
     /////////////
     //telemetry//
     /////////////
@@ -146,11 +163,8 @@ public class Robot
 
     double scaleAngle(double angle)// scales an angle to fit in -180 to 180
     {
-        if (angle > 180) {
-            angle = angle - 360;
-        } else if (angle < -180) {
-            angle = angle + 360;
-        }
+        if (angle > 180) { return angle - 360; }
+        if (angle < -180) { return angle + 360; }
         return angle;
     }
 
@@ -214,11 +228,12 @@ enum GamepadButtons
     rightTRIGGER;
 
     boolean wasButtonPressed = false;
+    long lastButtonRelease = System.currentTimeMillis();
 
     boolean getButtonHeld(Gamepad gamepad)
     {
         if(this == GamepadButtons.A) return gamepad.a;
-        if(this == GamepadButtons.B) return gamepad.a;
+        if(this == GamepadButtons.B) return gamepad.b;
         if(this == GamepadButtons.X) return gamepad.x;
         if(this == GamepadButtons.Y) return gamepad.y;
 
@@ -238,6 +253,16 @@ enum GamepadButtons
         return false;
     }
 
+    boolean getButtonHeld(Gamepad gamepad, int time)
+    {
+        if(getButtonHeld(gamepad))
+        {
+            return System.currentTimeMillis() - lastButtonRelease > time;
+        }
+        else lastButtonRelease = System.currentTimeMillis();
+        return false;
+    }
+
     boolean getButtonPressed(Gamepad gamepad)
     {
         if(getButtonHeld(gamepad))
@@ -249,6 +274,16 @@ enum GamepadButtons
             }
         }
         else wasButtonPressed = false;
+        return false;
+    }
+
+    boolean getButtonReleased(Gamepad gamepad)
+    {
+        if(wasButtonPressed && !getButtonHeld(gamepad))
+        {
+            wasButtonPressed = false;
+            return true;
+        }
         return false;
     }
 

@@ -1,12 +1,17 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Config
 public class MotorConfig
 {
     //////////////////
@@ -19,10 +24,10 @@ public class MotorConfig
     protected String rightTopMotorNum = "1";
     protected String rightBottomMotorNum = "3";
     //launcher motors
-    protected boolean[] flipLauncherMotorDir = {false, false, false};
-    protected String launcherWheelMotorNum = "0B";
-    protected String launcherHolderMotorNum = "1B";
-    protected String launcherServoNum = "4";
+    protected boolean[] flipLauncherMotorDir = {true, false};
+    protected String launcherWheelMotorNum = "3";
+    public static PIDFCoefficients launcherMotorPID = new PIDFCoefficients(10,3,0,0);
+    protected String launcherServoNum = "0";
 
     /////////
     //other//
@@ -31,9 +36,8 @@ public class MotorConfig
     protected DcMotorEx leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     protected List<DcMotorEx> driveMotors;
     //launcher
-    DcMotorEx launcherWheelMotor, launcherHolderMotor;
+    DcMotorEx launcherWheelMotor;
     Servo launcherServo;
-    protected List<DcMotorEx> launcherMotors;
     //other class
     Robot robot;
 
@@ -68,21 +72,16 @@ public class MotorConfig
     public void initLauncherMotors()
     {
         launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + launcherWheelMotorNum);
-        launcherHolderMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + launcherHolderMotorNum);
+        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, launcherMotorPID);
+
         launcherServo = robot.hardwareMap.servo.get("servo" + launcherServoNum);
-        launcherMotors = Arrays.asList(launcherWheelMotor, launcherHolderMotor);
 
-        int i = 0;
-        for(DcMotor motor:launcherMotors)
-        {
-            if(flipLauncherMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
-            i++;
-        }
-        if(flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
+        if(flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
+        if(flipLauncherMotorDir[1]) launcherServo.setDirection(Servo.Direction.REVERSE);
 
-        resetMotorEncodersList(driveMotors);
-        setMotorsToCoastList(driveMotors);
-        setMotorsToRunWithEncodersList(driveMotors);
+        launcherWheelMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        launcherWheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        launcherWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void resetMotorEncodersList(List<DcMotorEx> motors)

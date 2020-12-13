@@ -22,7 +22,7 @@ public class Position extends Thread
     //other variables//
     ///////////////////
     //robot position
-    protected double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
+    protected volatile double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
 
@@ -34,16 +34,12 @@ public class Position extends Thread
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
-    //other
-    boolean usePositionTracking;
-
     //other class
     Robot robot;
 
-    Position(Robot robot, boolean usePositionTracking)
+    Position(Robot robot)
     {
         this.robot = robot;
-        this.usePositionTracking = usePositionTracking;
     }
 
     //////////
@@ -76,12 +72,33 @@ public class Position extends Thread
 
         //get movement
         double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/Movement.ticksPerInchForward;
-        double XMove = (.5 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
+        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
 
         //rotate and add to robot position
         currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
         currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
         currentRobotPosition[2] = currentRotation;
+    }
+
+    void updatePositionFromVuforia(boolean useCurrentPos)
+    {
+        if(robot.useVuforia)
+        {
+            if(useCurrentPos)
+            {
+                if (robot.vision.currentCalculatedRobotLocation != null) {
+                    currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
+                    currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
+                }
+            }
+            else
+            {
+                if (robot.vision.lastCalculatedRobotLocation != null) {
+                    currentRobotPosition[0] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
+                    currentRobotPosition[1] = robot.vision.lastCalculatedRobotLocation.getTranslation().get(1);
+                }
+            }
+        }
     }
 
     //////////////////
@@ -107,7 +124,7 @@ public class Position extends Thread
         {
             //put run stuff in here
             updateAll();
-            if(usePositionTracking) getPosFromEncoder();
+            if(robot.usePositionTracking) getPosFromEncoder();
         }
     }
 

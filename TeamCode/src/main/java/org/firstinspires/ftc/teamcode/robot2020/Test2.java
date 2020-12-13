@@ -4,9 +4,11 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
+
 // test
 @Config
-@TeleOp(name = "test complex movement")
+@TeleOp(name = "test vision")
 public class Test2 extends LinearOpMode
 {
 
@@ -16,7 +18,7 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this,false, true, false, false, false, false);
+        robot = new Robot(this,true, true, false, false, true, false);
         robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
 
         robot.startTelemetry();
@@ -25,52 +27,16 @@ public class Test2 extends LinearOpMode
 
         waitForStart();
 
+        robot.start();
+
         while(!robot.stop() && opModeIsActive())
         {
-            robot.startTelemetry();
-
-            if(robot.complexMovement.isRecording)
-            {
-                robot.addTelemetry("Robot: ", "recording");
-                robot.sendTelemetry();
-                while (robot.complexMovement.isRecording && !robot.stop()) { robot.complexMovement.recorder(true); }
-                robot.addTelemetry("Robot: ", "done recording");
-                robot.sendTelemetry();
-                robot.complexMovement.stopRecording(true, "test");
-                robot.addTelemetry("Robot: ", "ready to move");
-                robot.sendTelemetry();
-            }
-
-            if(gamepad1.a)
-            {
-                robot.startTelemetry();
-                robot.complexMovement.loadMoveDB("test");
-                robot.complexMovement.runLoadedMoveV2(1,false, proportional);
-                robot.addTelemetry("Robot: ", "done with move");
-                robot.sendTelemetry();
-            }
-            else if(gamepad1.b && gamepad1.x)
-            {
-                robot.startTelemetry();
-                robot.addTelemetry("database clear activated: ", "hold B for 2 second to clear");
-                robot.sendTelemetry();
-                sleep(2000);
-                if(gamepad1.b)
-                {
-                    robot.complexMovement.clearDatabase();
-                    robot.startTelemetry();
-                    robot.addTelemetry("database cleared", "");
-                    robot.sendTelemetry();
-                    sleep(1000);
-                }
-                else
-                {
-                    robot.startTelemetry();
-                    robot.addTelemetry("database clear deactivated: ", "");
-                    robot.sendTelemetry();
-                }
-            }
-            else if(gamepad1.y) robot.complexMovement.startRecording();
+            robot.addTelemetry("img 1: ", robot.vision.currentTrackablesLocations[0]);
+            robot.addTelemetry("img 2: ", robot.vision.currentTrackablesLocations[1]);
+            robot.addTelemetry("img 3: ", robot.vision.currentTrackablesLocations[2]);
+            robot.addTelemetry("img 4: ", robot.vision.currentTrackablesLocations[3]);
+            robot.addTelemetry("img 5: ", robot.vision.lastTrackablesLocations[4]);
+            robot.sendTelemetry();
         }
     }
 }
