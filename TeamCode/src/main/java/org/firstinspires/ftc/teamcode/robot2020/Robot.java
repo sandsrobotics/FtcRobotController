@@ -245,7 +245,8 @@ enum GamepadButtons
     rightJoyStickX,
     rightJoyStickY,
     rightJoyStickBUTTON,
-    rightTRIGGER;
+    rightTRIGGER,
+    combinedTRIGGERS;
 
     boolean wasButtonPressed = false;
     long lastButtonRelease = System.currentTimeMillis();
@@ -316,6 +317,7 @@ enum GamepadButtons
 
         if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
         if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+        if(this == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
 
         return 0;
     }

@@ -23,7 +23,7 @@ public class Grabber {
 
 
     //controls
-    GamepadButtons moveGrabberStick = GamepadButtons.leftJoyStickY;
+    GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
     double stickTolerance = .03;
     double stickToTicksMultiplier = 5;
     GamepadButtons captureButton = GamepadButtons.A;
