@@ -5,12 +5,13 @@ import android.util.Log;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
-public class SandsLauncher {
+public class SandsManipulators {
     // Robot constructor creates robot object and sets up all the actuators and sensors
-    SandsLauncher(SandsRobot robot) {
+    SandsManipulators(SandsRobot robot) {
         this.gamepad1 = robot.gamepad1;
         this.gamepad2 = robot.gamepad2;
         this.robot = robot;
+        this.claw = new Claw(robot);
         this.motorLauncherWheel = robot.motorLauncherWheel;
     }
 
@@ -62,14 +63,21 @@ public class SandsLauncher {
             }
         } else dl_pressed = false;
 
-        if (setLifterAngle < 0) setLifterAngle = 0;
-        else if (setLifterAngle > maxAngle) setLifterAngle = maxAngle;
+        if (gamepad1.right_bumper) {
+            if (!rb_pressed) {
+                rb_pressed = true;
+                claw.swap();
+            }
+        } else rb_pressed = false;
 
-        if (gamepad1.right_trigger > 0) {
-            launchAngle = servoLaunchAngle;
+        /*
+        if (gamepad1.right_trigger == 0) {
+            if (!rb_pressed) claw.open();
         } else {
-            launchAngle = servoRestAngle;
+            claw.close();
         }
+        */
+        robot.motorLiftArm.setPower(gamepad1.right_stick_y / -2);
     }
 
     void data_out() {
@@ -84,6 +92,7 @@ public class SandsLauncher {
     }
 
     protected SandsRobot robot;
+    protected Claw claw;
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     //servo
@@ -107,6 +116,34 @@ public class SandsLauncher {
     protected double setWheelRpm = 2000;
     protected Boolean runWheelOnTrigger = true;
     Double spinMultiplier = 60 / ticksPerRev * gearRatio;
-    boolean b_pressed, x_pressed, y_pressed, dl_pressed, dr_pressed = false;
+    boolean b_pressed, x_pressed, y_pressed, dl_pressed, dr_pressed = false, rb_pressed = false;
     DcMotorEx motorLauncherWheel;
+}
+
+class Claw {
+    SandsRobot robot;
+    boolean is_closed;
+    public Claw(SandsRobot robot) {
+        this.robot = robot;
+        open();
+    }
+
+    public void swap() {
+        if (is_closed) open();
+        else close();
+    }
+    public void close() {
+        robot.servoClawLeft.setPosition(0.1);
+        robot.servoClawRight.setPosition(0.9);
+        is_closed = true;
+    }
+
+    public void open(){
+        robot.servoClawLeft.setPosition(0.6);
+        robot.servoClawRight.setPosition(0.2);
+        is_closed=false;
+    }
+
+
+
 }

@@ -5,22 +5,22 @@ package org.firstinspires.ftc.teamcode.holo;
 @TeleOp(name = "Demo Mobile Launch")
 public class DemoMobileLaunchMech extends LinearOpMode {
     SandsRobot robot;
-    SandsLauncher launcher;
+    SandsManipulators manipulators;
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot = new SandsRobot(hardwareMap, telemetry, gamepad1, gamepad2);
-        launcher = new SandsLauncher(robot);
+        manipulators = new SandsManipulators(robot);
         robot.getPIDFCoefficients();
         waitForStart();
 
         while(opModeIsActive()){
             robot.setPIDFCoefficients();
             robot.controlDrivetrain();
-            launcher.getInputs();
-            launcher.setLauncherWheelMotor();
-            launcher.launch();
-            launcher.data_out();
+            manipulators.getInputs();
+            manipulators.setLauncherWheelMotor();
+            manipulators.launch();
+            manipulators.data_out();
         }
         robot.stop();
     }

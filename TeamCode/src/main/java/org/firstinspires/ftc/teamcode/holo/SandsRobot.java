@@ -40,16 +40,25 @@ public class SandsRobot {
         motorRightFront = hardwareMap.get(DcMotorEx.class, "motor1");
         motorLeftRear = hardwareMap.get(DcMotorEx.class, "motor2");
         motorRightRear = hardwareMap.get(DcMotorEx.class, "motor3");
-        motorLauncherWheel = hardwareMap.get(DcMotorEx.class, "motor0b");
-        servo0 = hardwareMap.get(Servo.class, "servo0b");
+        motorLauncherWheel = hardwareMap.get(DcMotorEx.class, "motor0B");
+        servo0 = hardwareMap.get(Servo.class, "servo0B");
+        motorLiftArm = hardwareMap.get(DcMotorEx.class, "motor1B");
+        servoClawLeft = hardwareMap.get(Servo.class, "servo1B");
+        servoClawRight = hardwareMap.get(Servo.class, "servo2B");
 
-        motors = Arrays.asList(motorLeftFront, motorLeftRear, motorRightRear, motorRightFront,motorLauncherWheel);
+        motors = Arrays.asList(motorLeftFront, motorLeftRear, motorRightRear, motorRightFront,motorLauncherWheel,motorLiftArm);
 
         motorLeftFront.setDirection(REVERSE);
         motorRightFront.setDirection(FORWARD);
         motorLeftRear.setDirection(REVERSE);
         motorRightRear.setDirection(FORWARD);
         motorLauncherWheel.setDirection(REVERSE);
+        motorLiftArm.setDirection(FORWARD);
+
+        servoClawLeft.setPosition(0.9);
+        servoClawRight.setPosition(0.1);
+
+        released = 0;
 
         for (DcMotorEx motor : motors) {
             motor.setMode(STOP_AND_RESET_ENCODER);
@@ -179,8 +188,8 @@ public class SandsRobot {
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     protected Thread positionThread;
-    protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel;
-    protected Servo servo0;
+    protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel, motorLiftArm;
+    protected Servo servo0, servoClawLeft, servoClawRight;
     //protected DcMotorEx verticalLeft, verticalRight, horizontal;
     private List<DcMotorEx> motors;
     private BNO055IMU imu;
@@ -189,5 +198,6 @@ public class SandsRobot {
     public static double I;
     public static double D;
     public static double F;
+    double released; // Claw released
 
 }
