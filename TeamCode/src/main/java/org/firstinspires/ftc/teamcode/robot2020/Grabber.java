@@ -18,8 +18,8 @@ public class Grabber {
     protected int putOverPos = 450;
 
     //servo pos
-    protected double[] servoRestPositions = {.5, .5};
-    protected double[] servoGrabPositions = {.5, .5};
+    protected double[] servoRestPositions = {.9, .1};
+    protected double[] servoGrabPositions = {.2, .6};
 
 
     //controls
@@ -66,12 +66,12 @@ public class Grabber {
         if(grabButton.getButtonHeld(gamepad))
         {
             setServoPositions[0] = servoGrabPositions[0];
-            setServoPositions[0] = servoGrabPositions[0];
+            setServoPositions[1] = servoGrabPositions[1];
         }
         else
         {
             setServoPositions[0] = servoRestPositions[0];
-            setServoPositions[0] = servoRestPositions[0];
+            setServoPositions[1] = servoRestPositions[1];
         }
     }
 

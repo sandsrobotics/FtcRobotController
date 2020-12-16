@@ -31,9 +31,9 @@ public class MotorConfig
     protected String launcherServoNum = "0";
     //grabber motors
     protected boolean[] flipGrabberMotorDir = {false, false, false};
-    protected String grabberLifterMotorNum = "0";
-    protected String grabberLeftServoNum = "0";
-    protected String grabberRightServoNum = "0";
+    protected String grabberLifterMotorNum = "1B";
+    protected String grabberLeftServoNum = "1B";
+    protected String grabberRightServoNum = "2B";
 
     /////////
     //other//
