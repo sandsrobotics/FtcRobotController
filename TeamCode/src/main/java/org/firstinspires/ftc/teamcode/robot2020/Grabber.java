@@ -21,7 +21,6 @@ public class Grabber {
     protected double[] servoRestPositions = {.9, .1};
     protected double[] servoGrabPositions = {.2, .6};
 
-
     //controls
     GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
     double stickTolerance = .03;
@@ -36,6 +35,7 @@ public class Grabber {
     /////////////
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
+    protected boolean clawClosed = false;
 
     Grabber(Robot robot){this.robot = robot;}
 
@@ -63,7 +63,8 @@ public class Grabber {
         else if(setEncoderPos < 0) setEncoderPos = 0;
 
         //set servo
-        if(grabButton.getButtonHeld(gamepad))
+        if(grabButton.getButtonPressed(gamepad)) { clawClosed = !clawClosed; }
+        if(clawClosed)
         {
             setServoPositions[0] = servoGrabPositions[0];
             setServoPositions[1] = servoGrabPositions[1];
