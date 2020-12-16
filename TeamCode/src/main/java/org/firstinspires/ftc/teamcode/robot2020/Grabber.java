@@ -18,8 +18,8 @@ public class Grabber {
     protected int putOverPos = 450;
 
     //servo pos
-    protected double[] servoRestPositions = {.9, .1};
-    protected double[] servoGrabPositions = {.2, .6};
+    protected double[] servoRestPositions = {0.6, 0.2}; // open
+    protected double[] servoGrabPositions = {0.1, 0.9}; // closed
 
     //controls
     GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
