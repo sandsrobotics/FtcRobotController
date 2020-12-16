@@ -193,7 +193,7 @@ public class Launcher {
         double RPM = getRPMFromCalibration(3, getDistanceToGoal(true));
         if(RPM == -1) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "unable to get RPM");
         else if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
-        else if(!robot.usePositionTracking) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else if(!robot.robotUsage.usePositionTracking) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
         else
         {
             setRPM(RPM);
@@ -205,10 +205,10 @@ public class Launcher {
 
     void goToShootingPos()
     {
-        if(robot.usePositionTracking && robot.movement != null)
+        if(robot.robotUsage.usePositionTracking && robot.movement != null)
         {
-            if (robot.position.currentRobotPosition[1] > minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .25); }
-            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000); }
+            if (robot.position.currentRobotPosition[1] > minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .75); }
+            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000, .75); }
         }
     }
 
@@ -217,7 +217,7 @@ public class Launcher {
     ////////////////
     double getAngleToPointToPosition(double xPos, double yPos, double angleOffset, boolean useMinLaunchDis)
     {
-        if(robot.usePositionTracking)
+        if(robot.robotUsage.usePositionTracking)
         {
             double XDiff = xPos - robot.position.currentRobotPosition[0];
             double YDiff;
@@ -255,7 +255,7 @@ public class Launcher {
 
     double getDistanceToGoal(boolean useMinLaunchDistance)
     {
-        if(robot.usePositionTracking)
+        if(robot.robotUsage.usePositionTracking)
         {
             if (robot.position.currentRobotPosition[1] > minLaunchDistance || !useMinLaunchDistance)
                 return Math.sqrt(Math.pow(robot.position.currentRobotPosition[0], 2) + Math.pow(robot.position.currentRobotPosition[1], 2));

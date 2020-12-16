@@ -19,7 +19,7 @@ public class Test extends LinearOpMode {
     public void runOpMode()
     {
 
-        robot = new Robot(this,true, true, false, true, false, false);
+        robot = new Robot(this,true, true,false, false, true,false, false, false);
 
         waitForStart();
 

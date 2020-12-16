@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import androidx.room.Room;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -11,6 +13,8 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 
 
 @Config
@@ -27,6 +31,11 @@ public class Robot
     //user dashboard variable
     public static boolean emergencyStop = false;
 
+    //database
+    protected String dataBaseName = "FIRST_INSPIRE_2020";
+
+    //sensor
+
     ///////////////////
     //other variables//
     ///////////////////
@@ -37,6 +46,7 @@ public class Robot
     public Launcher launcher;
     public ComplexMovement complexMovement;
     public Position position;
+    public Grabber grabber;
 
     //objects
     protected HardwareMap hardwareMap;
@@ -44,49 +54,55 @@ public class Robot
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
-
-    //running robot parts
-    protected boolean useVuforia;
-    protected boolean useOpenCV;
-    protected boolean usePositionTracking;
+    protected AppDatabase db;
+    protected RobotUsage robotUsage;
 
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
-    TelemetryPacket packet;
+    TelemetryPacket packet = new TelemetryPacket();
 
-
-    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useVuforia, boolean useOpenCV)
+    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
     {
+        robotUsage = new RobotUsage(useDrive,usePositionTracking,logPositionTracking,useComplexMovement,useLauncher, useGrabber, useVuforia, useOpenCV);
+        init(opMode, robotUsage);
+    }
+
+    Robot(LinearOpMode opMode, RobotUsage robotUsage)
+    {
+        init(opMode, robotUsage);
+    }
+
+    private void init(LinearOpMode opMode, RobotUsage robotUsage)
+    {
+        this.robotUsage = robotUsage;
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        this.useOpenCV = useOpenCV;
-        this.useVuforia = useVuforia;
-        this.usePositionTracking = usePositionTracking;
-
         motorConfig = new MotorConfig(this);
         position = new Position(this);
 
-        if(useDrive) movement = new Movement(this);
-        if(useOpenCV || useVuforia) vision = new Vision(this);
-        if(useLauncher) launcher = new Launcher(this);
-        if(useComplexMovement) complexMovement = new ComplexMovement(this);
+        if(robotUsage.useDrive) movement = new Movement(this);
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this);
+        if(robotUsage.useLauncher) launcher = new Launcher(this);
+        if(robotUsage.useComplexMovement) complexMovement = new ComplexMovement(this);
+        if(robotUsage.useGrabber) grabber = new Grabber(this);
 
         initHardware();
-        if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
+        if(robotUsage.useDrive || robotUsage.usePositionTracking) motorConfig.initDriveMotors();
         //if(useLauncher) motorConfig.initLauncherMotors();
-        if(useOpenCV || useVuforia) vision.initAll();
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
+        if(robotUsage.useGrabber) motorConfig.initGrabberMotors();
     }
 
     void initHardware()
     {
-        ///////
-        //imu//
-        ///////
+        ///////////
+        //sensors//
+        ///////////
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -98,19 +114,23 @@ public class Robot
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
+
         while (!opMode.isStopRequested() && !imu.isGyroCalibrated())
         {
             delay(50);
             opMode.idle();
         }
 
-        imu.startAccelerationIntegration(new org.firstinspires.ftc.robotcore.external.navigation.Position(), new Velocity(), 50);
-
         /////////////
         //dashboard//
         /////////////
         if(debug_dashboard) dashboard = FtcDashboard.getInstance();
         startTelemetry();
+
+        /////////////
+        //data base//
+        /////////////
+        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
     }
 
     //------------------My Methods------------------//
@@ -119,7 +139,7 @@ public class Robot
     {
         startTelemetry();
         position.start();
-        if(useVuforia) vision.start();
+        if(robotUsage.useVuforia) vision.start();
     }
 
     /////////////
@@ -225,7 +245,8 @@ enum GamepadButtons
     rightJoyStickX,
     rightJoyStickY,
     rightJoyStickBUTTON,
-    rightTRIGGER;
+    rightTRIGGER,
+    combinedTRIGGERS;
 
     boolean wasButtonPressed = false;
     long lastButtonRelease = System.currentTimeMillis();
@@ -296,6 +317,7 @@ enum GamepadButtons
 
         if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
         if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+        if(this == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
 
         return 0;
     }
@@ -346,5 +368,35 @@ class PID
     double returnUncappedValue()
     {
         return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+    }
+}
+
+class RobotUsage
+{
+    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV = true;
+
+    RobotUsage(){}
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
+    {
+        this.useDrive = useDrive;
+        this.usePositionTracking = usePositionTracking;
+        this.logPositionTracking = logPositionTracking;
+        this.useComplexMovement = useComplexMovement;
+        this.useLauncher = useLauncher;
+        this.useGrabber = useGrabber;
+        this.useVuforia = useVuforia;
+        this.useOpenCV = useOpenCV;
+    }
+
+    void setAllToValue(boolean value)
+    {
+        this.useDrive = value;
+        this.usePositionTracking = value;
+        this.logPositionTracking = value;
+        this.useComplexMovement = value;
+        this.useLauncher = value;
+        this.useGrabber = value;
+        this.useVuforia = value;
+        this.useOpenCV = value;
     }
 }

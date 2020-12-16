@@ -16,6 +16,9 @@ public class Movement
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
     public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
     public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
+    public static double moveXSmoothingSteps = .05;
+    public static double moveYSmoothingSteps = .05;
+    public static double rotationSmoothingSteps = .05;
 
     protected double speedMultiplier = 1;
     protected final double speedMultiplierMin = .2;
@@ -39,21 +42,21 @@ public class Movement
     //turn methods//
     ////////////////
 
-    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime)
+    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime, double maxSpeed)
     {
         double error = robot.findAngleError(robot.position.currentRotation, targetAngle);
 
         if(Math.abs(error) > tolerance) {
 
             int numberOfTimesInTolerance = 0;
-            PID pid = new PID(turnPID, -1, 1);
+            PID pid = new PID(turnPID, -maxSpeed, maxSpeed);
 
             while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && maxRuntime > 0 && !robot.stop())
             {
                 error = robot.findAngleError(robot.position.currentRotation, targetAngle);
                 pid.updatePID(error);
 
-                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0, 0, pid.returnValue(), false));
+                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0, 0, pid.returnValue(),false,true));
 
                 if (Math.abs(error) < tolerance) numberOfTimesInTolerance++;
                 else numberOfTimesInTolerance = 0;
@@ -90,7 +93,7 @@ public class Movement
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
     {
-        if(robot.usePositionTracking)
+        if(robot.robotUsage.usePositionTracking)
         {
             double[] currentPos = robot.position.currentRobotPosition;
 
@@ -126,14 +129,17 @@ public class Movement
                         numOfTimesInTolerance++;
                     else numOfTimesInTolerance = 0;
 
-                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false));
+                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
                     maxLoops--;
-                    robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
-                    robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
-                    robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
-                    robot.addTelemetry("error mag: ", errorVectorMag);
-                    robot.addTelemetry("error rot: ", errorVectorRot);
-                    robot.sendTelemetry();
+                    if(robot.debug_methods)
+                    {
+                        robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
+                        robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
+                        robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
+                        robot.addTelemetry("error mag: ", errorVectorMag);
+                        robot.addTelemetry("error rot: ", errorVectorRot);
+                        robot.sendTelemetry();
+                    }
                 }
             }
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
@@ -171,7 +177,7 @@ public class Movement
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
-        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, .025 , .025, true));
+        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, true,true));
     }
 
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
@@ -184,15 +190,27 @@ public class Movement
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;
         XY[1] *= power;
-        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true));
+        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
     }
 
     /////////
     //other//
     /////////
 
-    double[] moveRobotPowers(double X, double Y, double rotation, boolean applySpeedMultiplier)
+    double[] moveRobotPowers(double X, double Y, double rotation, boolean applySpeedMultiplier, boolean applyMoveSmoothing)
     {
+        if(applyMoveSmoothing)
+        {
+            //smoothing for XYR
+            X = applySmoothing(X, lastMovePowers[0], moveXSmoothingSteps);
+            Y = applySmoothing(Y, lastMovePowers[1], moveYSmoothingSteps);
+            rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+
+            lastMovePowers[0] = X;
+            lastMovePowers[1] = Y;
+            lastMovePowers[2] = rotation;
+        }
+
         double[] arr =
         {
             (Y + X + rotation),
@@ -208,38 +226,14 @@ public class Movement
         return (arr);
     }
 
-    double[] moveRobotPowers(double X, double Y, double rotation, double moveSmoothingSteps, double rotationSmoothingSteps, boolean applySpeedMultiplier)
-    {
-        //smoothing for XYR
-        X = applySmoothing(X, lastMovePowers[0], moveSmoothingSteps);
-        Y = applySmoothing(Y, lastMovePowers[1], moveSmoothingSteps);
-        rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
-
-        lastMovePowers[0] = X;
-        lastMovePowers[1] = Y;
-        lastMovePowers[2] = rotation;
-
-        return moveRobotPowers(X, Y, rotation, applySpeedMultiplier);
-    }
-
-    double[] moveAtAnglePowers(double angle, double basePower)
+    double[] moveAtAnglePowers(double angle, double basePower, boolean applySmoothing)
     {
         double[] arr;
         arr = robot.getXYFromAngle(angle);
         double x = arr[0] * basePower;
         double y = arr[1] * basePower;
 
-        return moveRobotPowers(x,y,0, false);
-    }
-
-    double[] moveAtAnglePowers(double angle, double basePower, double moveSmoothingSteps, double rotationSmoothingSteps)
-    {
-        double[] arr;
-        arr = robot.getXYFromAngle(angle);
-        double x = arr[0] * basePower;
-        double y = arr[1] * basePower;
-
-        return moveRobotPowers(x,y,0, moveSmoothingSteps, rotationSmoothingSteps, false);
+        return moveRobotPowers(x,y,0, false,applySmoothing);
     }
 
     double applySmoothing(double currentVal, double lastVal, double smoothingSteps)
