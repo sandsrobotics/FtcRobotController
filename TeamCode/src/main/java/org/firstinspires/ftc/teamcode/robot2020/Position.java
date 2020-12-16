@@ -84,7 +84,7 @@ public class Position extends Thread
 
     void updatePositionFromVuforia()
     {
-        if(robot.useVuforia)
+        if(robot.robotUsage.useVuforia)
         {
             if (robot.vision.currentCalculatedRobotLocation != null)
             {
@@ -113,7 +113,7 @@ public class Position extends Thread
 
     void loadLastPos()
     {
-        RobotPositionEntity last = null;// = robot.db.robotPositionEntityDAO().getLastByTime();
+        RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
         if(last == null){ if(robot.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
         {
@@ -145,24 +145,24 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        if(robot.usePositionTracking)
+        if(robot.robotUsage.usePositionTracking)
         {
             initialize();
-            //setCurrentRun(true);
-            //loadLastPos();
+            setCurrentRun(true);
+            loadLastPos();
         }
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
             updateAll();
-            if(robot.usePositionTracking)
+            if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                //if(robot.logPositionTracking) addCurrentPosition(true);
+                if(robot.robotUsage.logPositionTracking) addCurrentPosition(true);
                 updatePositionFromVuforia();
             }
         }
-        //if(robot.usePositionTracking) addCurrentPosition(true);
+        if(robot.robotUsage.usePositionTracking) addCurrentPosition(true);
     }
 
     ///////////////

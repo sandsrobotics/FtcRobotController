@@ -6,9 +6,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
@@ -37,9 +35,6 @@ public class Robot
     protected String dataBaseName = "FIRST_INSPIRE_2020";
 
     //sensor
-    protected String sensor1Name = "sensor3";
-    protected String sensor2Name = "sensor2";
-
 
     ///////////////////
     //other variables//
@@ -58,57 +53,56 @@ public class Robot
     protected Telemetry telemetry;
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
-    protected Rev2mDistanceSensor sensor1;
-    protected Rev2mDistanceSensor sensor2;
     protected LinearOpMode opMode;
     protected AppDatabase db;
-
-    //running robot parts
-    protected boolean useVuforia;
-    protected boolean useOpenCV;
-    protected boolean usePositionTracking;
-    protected boolean logPositionTracking;
+    protected RobotUsage robotUsage;
 
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     TelemetryPacket packet = new TelemetryPacket();
 
-
     Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
     {
+        robotUsage = new RobotUsage(useDrive,usePositionTracking,logPositionTracking,useComplexMovement,useLauncher, useGrabber, useVuforia, useOpenCV);
+        init(opMode, robotUsage);
+    }
+
+    Robot(LinearOpMode opMode, RobotUsage robotUsage)
+    {
+        init(opMode, robotUsage);
+    }
+
+    private void init(LinearOpMode opMode, RobotUsage robotUsage)
+    {
+        this.robotUsage = robotUsage;
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        this.useOpenCV = useOpenCV;
-        this.useVuforia = useVuforia;
-        this.usePositionTracking = usePositionTracking;
-        this.logPositionTracking = logPositionTracking;
-
         motorConfig = new MotorConfig(this);
         position = new Position(this);
 
-        if(useDrive) movement = new Movement(this);
-        if(useOpenCV || useVuforia) vision = new Vision(this);
-        if(useLauncher) launcher = new Launcher(this);
-        if(useComplexMovement) complexMovement = new ComplexMovement(this);
-        if(useGrabber) grabber = new Grabber(this);
+        if(robotUsage.useDrive) movement = new Movement(this);
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this);
+        if(robotUsage.useLauncher) launcher = new Launcher(this);
+        if(robotUsage.useComplexMovement) complexMovement = new ComplexMovement(this);
+        if(robotUsage.useGrabber) grabber = new Grabber(this);
 
         initHardware();
-        if(useDrive || usePositionTracking) motorConfig.initDriveMotors();
-        if(useLauncher) motorConfig.initLauncherMotors();
-        if(useOpenCV || useVuforia) vision.initAll();
-        if(useGrabber) motorConfig.initGrabberMotors();
+        if(robotUsage.useDrive || robotUsage.usePositionTracking) motorConfig.initDriveMotors();
+        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
+        if(robotUsage.useGrabber) motorConfig.initGrabberMotors();
     }
 
     void initHardware()
     {
-        ///////
-        //imu//
-        ///////
+        ///////////
+        //sensors//
+        ///////////
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.mode = BNO055IMU.SensorMode.IMU;
         parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
@@ -120,16 +114,12 @@ public class Robot
         imu = hardwareMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
-        sensor1 = (Rev2mDistanceSensor)hardwareMap.get(DistanceSensor.class, sensor1Name);
-        sensor2 = (Rev2mDistanceSensor)hardwareMap.get(DistanceSensor.class, sensor2Name);
-
 
         while (!opMode.isStopRequested() && !imu.isGyroCalibrated())
         {
             delay(50);
             opMode.idle();
         }
-
 
         /////////////
         //dashboard//
@@ -149,7 +139,7 @@ public class Robot
     {
         startTelemetry();
         position.start();
-        if(useVuforia) vision.start();
+        if(robotUsage.useVuforia) vision.start();
     }
 
     /////////////
@@ -376,5 +366,35 @@ class PID
     double returnUncappedValue()
     {
         return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+    }
+}
+
+class RobotUsage
+{
+    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV = true;
+
+    RobotUsage(){}
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
+    {
+        this.useDrive = useDrive;
+        this.usePositionTracking = usePositionTracking;
+        this.logPositionTracking = logPositionTracking;
+        this.useComplexMovement = useComplexMovement;
+        this.useLauncher = useLauncher;
+        this.useGrabber = useGrabber;
+        this.useVuforia = useVuforia;
+        this.useOpenCV = useOpenCV;
+    }
+
+    void setAllToValue(boolean value)
+    {
+        this.useDrive = value;
+        this.usePositionTracking = value;
+        this.logPositionTracking = value;
+        this.useComplexMovement = value;
+        this.useLauncher = value;
+        this.useGrabber = value;
+        this.useVuforia = value;
+        this.useOpenCV = value;
     }
 }

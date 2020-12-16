@@ -15,7 +15,7 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this,true, true,false, false, false,true, true, false);
+        robot = new Robot(this,true, true,false, false, false,true, false, false);
 
         robot.startTelemetry();
         robot.addTelemetry("Robot: ", "ready :)");
@@ -25,13 +25,14 @@ public class Test2 extends LinearOpMode
         waitForStart();
 
         robot.start();
-        robot.vision.startDashboardCameraStream(24);
+        //robot.vision.startDashboardCameraStream(24);
         robot.movement.setSpeedMultiplier(.75);
 
         while(opModeIsActive())
         {
             robot.grabber.runForTeleop(gamepad1);
-            //robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
+            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
+            /*
             robot.startTelemetry();
             if(robot.vision.anyTrackableFound)
             {
@@ -50,8 +51,10 @@ public class Test2 extends LinearOpMode
                     robot.addTelemetry("robot rotation: ", robot.vision.getTrackableAngles(robot.vision.currentCalculatedRobotLocation));
                 }
             }
-            else robot.addTelemetry("no trackables found", ":(");
+            else robot.addTelemetry("no trackables found ", "(");
             robot.sendTelemetry();
+            
+             */
         }
     }
 }

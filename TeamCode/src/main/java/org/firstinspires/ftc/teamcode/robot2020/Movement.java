@@ -93,7 +93,7 @@ public class Movement
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
     {
-        if(robot.usePositionTracking)
+        if(robot.robotUsage.usePositionTracking)
         {
             double[] currentPos = robot.position.currentRobotPosition;
 

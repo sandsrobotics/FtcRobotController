@@ -129,7 +129,7 @@ public class Vision extends Thread
 
     void initAll()
     {
-        initAll(robot.useVuforia, robot.useOpenCV);
+        initAll(robot.robotUsage.useVuforia, robot.robotUsage.useOpenCV);
     }
 
     void initCamera()
