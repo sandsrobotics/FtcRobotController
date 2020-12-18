@@ -20,22 +20,6 @@ import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 @Config
 public class Robot
 {
-    /////////////
-    //user data//
-    /////////////
-    //debug
-    protected boolean debug_telemetry = true;
-    protected boolean debug_dashboard = true; // turn this to false during competition
-    protected boolean debug_methods = true;
-
-    //user dashboard variable
-    public static boolean emergencyStop = false;
-
-    //database
-    protected String dataBaseName = "FIRST_INSPIRE_2020";
-
-    //sensor
-
     ///////////////////
     //other variables//
     ///////////////////
@@ -56,26 +40,30 @@ public class Robot
     protected LinearOpMode opMode;
     protected AppDatabase db;
     protected RobotUsage robotUsage;
+    protected RobotSettings robotSettings;
 
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     TelemetryPacket packet = new TelemetryPacket();
+    public static boolean emergencyStop = false;
 
-    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
+    Robot(LinearOpMode opMode, RobotSettings robotSettings, RobotUsage robotUsage)
     {
-        robotUsage = new RobotUsage(useDrive,usePositionTracking,logPositionTracking,useComplexMovement,useLauncher, useGrabber, useVuforia, useOpenCV);
-        init(opMode, robotUsage);
-    }
-
-    Robot(LinearOpMode opMode, RobotUsage robotUsage)
-    {
-        init(opMode, robotUsage);
-    }
-
-    private void init(LinearOpMode opMode, RobotUsage robotUsage)
-    {
+        this.robotSettings = robotSettings;
         this.robotUsage = robotUsage;
+        init(opMode);
+    }
+
+    Robot(LinearOpMode opMode)
+    {
+        this.robotSettings = new RobotSettings();
+        this.robotUsage = new RobotUsage();
+        init(opMode);
+    }
+
+    private void init(LinearOpMode opMode)
+    {
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
@@ -124,13 +112,13 @@ public class Robot
         /////////////
         //dashboard//
         /////////////
-        if(debug_dashboard) dashboard = FtcDashboard.getInstance();
+        if(robotSettings.debug_dashboard) dashboard = FtcDashboard.getInstance();
         startTelemetry();
 
         /////////////
         //data base//
         /////////////
-        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
+        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
     }
 
     //------------------My Methods------------------//
@@ -148,7 +136,7 @@ public class Robot
 
     void startTelemetry()
     {
-        if(debug_dashboard)
+        if(robotSettings.debug_dashboard)
         {
             packet = new TelemetryPacket();
         }
@@ -156,14 +144,14 @@ public class Robot
 
     void addTelemetry(String cap, Object val)
     {
-        if(debug_dashboard) packet.put(cap, val);
-        if(debug_telemetry) telemetry.addData(cap, val);
+        if(robotSettings.debug_dashboard) packet.put(cap, val);
+        if(robotSettings.debug_telemetry) telemetry.addData(cap, val);
     }
 
     void sendTelemetry()
     {
-        if(debug_dashboard) dashboard.sendTelemetryPacket(packet);
-        if(debug_telemetry) telemetry.update();
+        if(robotSettings.debug_dashboard) dashboard.sendTelemetryPacket(packet);
+        if(robotSettings.debug_telemetry) telemetry.update();
     }
 
     ////////////////
@@ -328,46 +316,59 @@ class PID
     PIDCoefficients PIDs;
     double maxClamp;
     double minClamp;
-    
+    double value;
+
     double totalError;
     double lastError;
     double currentError;
-    
+    long lastTime;
+
+    PID(){}
     PID(PIDCoefficients PIDs, double minClamp, double maxClamp)
     {
         this.PIDs = PIDs;
         this.minClamp = minClamp;
         this.maxClamp = maxClamp;
     }
-    
+
     void updatePID(double error)
     {
         lastError = currentError;
         currentError = error;
         totalError += error;
-        
-        double value = (error * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
 
-        if((value > maxClamp || value < minClamp) && Math.signum(error) != Math.signum(totalError))
-        {
-            totalError = 0;
-        }
+        double calculatedI = (totalError * PIDs.i);
+        if(calculatedI > maxClamp) calculatedI = maxClamp;
+        else if(calculatedI < minClamp) calculatedI = minClamp;
+
+        double calculatedD = ((currentError - lastError) * PIDs.d / (System.currentTimeMillis() - lastTime));
+
+        value = (error * PIDs.p) + calculatedI - calculatedD;
+
+        lastTime = System.currentTimeMillis();
     }
-    
+
+    void resetErrors()
+    {
+        totalError = 0;
+        lastError = 0;
+        currentError = 0;
+    }
+
     double updatePIDAndReturnValue(double error)
     {
         updatePID(error);
         return returnValue();
     }
-    
+
     double returnValue()
     {
-        return Math.max(Math.min((currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d), maxClamp), minClamp);
+        return Math.min(Math.max(value, minClamp), maxClamp);
     }
-    
+
     double returnUncappedValue()
     {
-        return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+        return value;
     }
 }
 
@@ -399,4 +400,21 @@ class RobotUsage
         this.useVuforia = value;
         this.useOpenCV = value;
     }
+}
+
+class RobotSettings
+{
+    /////////////
+    //user data//
+    /////////////
+    //debug
+    protected boolean debug_telemetry = true;
+    protected boolean debug_dashboard = true; // turn this to false during competition
+    protected boolean debug_methods = true;
+
+    //database
+    protected String dataBaseName = "FIRST_INSPIRE_2020";
+
+
+    RobotSettings(){}
 }

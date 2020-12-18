@@ -15,25 +15,6 @@ import java.util.List;
 @Config
 public class MotorConfig
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    //drive motors
-    protected boolean[] flipDriveMotorDir = {true, true, false, false};
-    protected String leftTopMotorNum = "0";
-    protected String leftBottomMotorNum = "2";
-    protected String rightTopMotorNum = "1";
-    protected String rightBottomMotorNum = "3";
-    //launcher motors
-    protected boolean[] flipLauncherMotorDir = {true, false};
-    protected String launcherWheelMotorNum = "3";
-    public static PIDFCoefficients launcherMotorPID = new PIDFCoefficients(10,3,0,0);
-    protected String launcherServoNum = "0";
-    //grabber motors
-    protected boolean[] flipGrabberMotorDir = {false, false, false};
-    protected String grabberLifterMotorNum = "1B";
-    protected String grabberLeftServoNum = "1B";
-    protected String grabberRightServoNum = "2B";
 
     /////////
     //other//
@@ -50,9 +31,16 @@ public class MotorConfig
     protected List<Servo> grabberServos;
     //other class
     Robot robot;
+    MotorConfigSettings motorConfigSettings;
 
     public MotorConfig(Robot robot)
     {
+        motorConfigSettings = new MotorConfigSettings();
+        this.robot = robot;
+    }
+    public MotorConfig(Robot robot, MotorConfigSettings motorConfigSettings)
+    {
+        this.motorConfigSettings = motorConfigSettings;
         this.robot = robot;
     }
 
@@ -328,4 +316,29 @@ public class MotorConfig
         for (DcMotorEx m:motors){if(Math.abs(m.getTargetPosition()-m.getCurrentPosition()) > tolerance) return false;}
         return true;
     }
+}
+
+class MotorConfigSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //drive motors
+    protected boolean[] flipDriveMotorDir = {true, true, false, false};
+    protected String leftTopMotorNum = "0";
+    protected String leftBottomMotorNum = "2";
+    protected String rightTopMotorNum = "1";
+    protected String rightBottomMotorNum = "3";
+    //launcher motors
+    protected boolean[] flipLauncherMotorDir = {true, false};
+    protected String launcherWheelMotorNum = "3";
+    public static PIDFCoefficients launcherMotorPID = new PIDFCoefficients(10,3,0,0);
+    protected String launcherServoNum = "0";
+    //grabber motors
+    protected boolean[] flipGrabberMotorDir = {false, false, false};
+    protected String grabberLifterMotorNum = "0";
+    protected String grabberLeftServoNum = "0";
+    protected String grabberRightServoNum = "0";
+
+    MotorConfigSettings(){}
 }

@@ -15,7 +15,7 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this,true, true,false, false, false,true, false, false);
+        robot = new Robot(this);
 
         robot.startTelemetry();
         robot.addTelemetry("Robot: ", "ready :)");

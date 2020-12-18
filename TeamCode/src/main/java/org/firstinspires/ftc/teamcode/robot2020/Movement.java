@@ -8,21 +8,6 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 @Config
 public class Movement
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    public static double ticksPerInchForward = 44;
-    public static double ticksPerInchSideways = 50;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
-    public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
-    public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
-    public static double moveXSmoothingSteps = .05;
-    public static double moveYSmoothingSteps = .05;
-    public static double rotationSmoothingSteps = .05;
-
-    protected double speedMultiplier = 1;
-    protected final double speedMultiplierMin = .2;
-    protected final double speedMultiplierMax = 2;
 
     ///////////////////
     //other variables//
@@ -32,9 +17,16 @@ public class Movement
 
     //other class
     Robot robot;
+    MovementSettings movementSettings;
 
     Movement(Robot robot)
     {
+        movementSettings = new MovementSettings();
+        this.robot = robot;
+    }
+    Movement(Robot robot, MovementSettings movementSettings)
+    {
+        this.movementSettings = movementSettings;
         this.robot = robot;
     }
 
@@ -131,7 +123,7 @@ public class Movement
 
                     robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
                     maxLoops--;
-                    if(robot.debug_methods)
+                    if(robot.robotSettings.debug_methods)
                     {
                         robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
                         robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
@@ -144,7 +136,7 @@ public class Movement
             }
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
         }
-        else if(robot.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
+        else if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID, maxSpeed); }
@@ -157,12 +149,12 @@ public class Movement
     {
         if(amount > speedMultiplierMax)
         {
-            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
+            if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
             amount = speedMultiplierMax;
         }
         else if(amount < speedMultiplierMin)
         {
-            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
+            if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
             amount = speedMultiplierMin;
         }
         speedMultiplier = amount;
@@ -242,4 +234,25 @@ public class Movement
         else if(currentVal - lastVal < -smoothingSteps) { currentVal = lastVal - smoothingSteps; }
         return currentVal;
     }
+}
+
+class MovementSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    public static double ticksPerInchForward = 44;
+    public static double ticksPerInchSideways = 50;
+    public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
+    public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
+    public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
+    public static double moveXSmoothingSteps = .05;
+    public static double moveYSmoothingSteps = .05;
+    public static double rotationSmoothingSteps = .05;
+
+    protected double speedMultiplier = 1;
+    protected final double speedMultiplierMin = .2;
+    protected final double speedMultiplierMax = 2;
+
+    MovementSettings(){}
 }

@@ -9,13 +9,6 @@ import org.firstinspires.ftc.teamcode.robot2020.persistence.Position.RobotPositi
 
 public class Position extends Thread
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    //position start
-    double startPositionX = 0; // in inches
-    double startPositionY = 0; // in inches
-    double startRotation = 0; //in degrees from goal
 
     ///////////////////
     //other variables//
@@ -39,9 +32,16 @@ public class Position extends Thread
 
     //other class
     Robot robot;
+    PositionSettings positionSettings;
 
     Position(Robot robot)
     {
+        positionSettings = new PositionSettings();
+        this.robot = robot;
+    }
+    Position(Robot robot, PositionSettings positionSettings)
+    {
+        this.positionSettings = positionSettings;
         this.robot = robot;
     }
 
@@ -114,7 +114,7 @@ public class Position extends Thread
     void loadLastPos()
     {
         RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
-        if(last == null){ if(robot.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
+        if(last == null){ if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
         {
             positionAccuracy = last.accuracy;
@@ -172,4 +172,18 @@ public class Position extends Thread
     {
         this.interrupt();
     }
+}
+
+class PositionSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //position start
+    boolean resetPos = true;
+    double startPositionX = 0; // in inches
+    double startPositionY = 0; // in inches
+    double startRotation = 0; //in degrees from goal
+
+    PositionSettings(){}
 }

@@ -43,35 +43,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocaliz
 @Config
 public class Vision extends Thread
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    //just some stuff to get a working vuforia object
-    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK;
-    protected final boolean PHONE_IS_PORTRAIT = false;
-    protected boolean useExtendedTracking = false;
-    protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
-
-    //set some measurements of the field(for position tracking) IN INCHES!!!
-    private static final float trackablesHeight = 6;
-    private static final float halfFieldLength = 72;
-    private static final float halfFieldWidth  = 48;
-    private static final float goalDistanceFromMiddle = 12;
-    static final Field fieldType = Field.BlueHalf;
-
-
-
-    //to know where the phone or camera is IN INCHES!!! and degrees
-    float[] phonePosition = {0,0,0};
-    float[] phoneRotation = {0,0,0};
-
-    //to see where goal is
-    int goalPictureNum = 3;
-
-    //to set up easy openCV camera
-    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    public static boolean usingWebcam = true;
-
     ////////////////////
     // other variables//
     ////////////////////
@@ -100,13 +71,22 @@ public class Vision extends Thread
 
     //other class
     Robot robot;
-    private Field dkjnx;
+    VisionSettings visionSettings;
 
 
     //////////////////
     //Vision Methods//
     //////////////////
-    Vision(Robot robot) { this.robot = robot; }
+    Vision(Robot robot)
+    {
+        visionSettings = new VisionSettings();
+        this.robot = robot;
+    }
+    Vision(Robot robot, VisionSettings visionSettings)
+    {
+        this.visionSettings = visionSettings;
+        this.robot = robot;
+    }
 
     void initAll(boolean useVuforia, boolean useOpenCV)
     {
@@ -501,4 +481,38 @@ enum Field
     BlueHalf,
     RedFull,
     BlueFull
+}
+
+class VisionSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //just some stuff to get a working vuforia object
+    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK;
+    protected final boolean PHONE_IS_PORTRAIT = false;
+    protected boolean useExtendedTracking = false;
+    protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
+
+    //set some measurements of the field(for position tracking) IN INCHES!!!
+    private static final float trackablesHeight = 6;
+    private static final float halfFieldLength = 72;
+    private static final float halfFieldWidth  = 48;
+    private static final float goalDistanceFromMiddle = 12;
+    static final Field fieldType = Field.BlueHalf;
+
+
+
+    //to know where the phone or camera is IN INCHES!!! and degrees
+    float[] phonePosition = {0,0,0};
+    float[] phoneRotation = {0,0,0};
+
+    //to see where goal is
+    int goalPictureNum = 3;
+
+    //to set up easy openCV camera
+    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
+    public static boolean usingWebcam = true;
+
+    VisionSettings(){}
 }

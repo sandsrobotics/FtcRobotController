@@ -13,44 +13,14 @@ import java.util.List;
 @Config
 public class Launcher {
 
-    Robot robot;
 
-    //////////////////
-    //user variables//
-    //////////////////
-    //controls
-    int launcherGamepadNum = 1; //use 1 for gamepad1 and 2 for gamepad2
-    GamepadButtons revIncreaseButton = GamepadButtons.B;
-    GamepadButtons revDecreaseButton = GamepadButtons.X;
-    GamepadButtons revPowerSlide = GamepadButtons.leftTRIGGER;
-    GamepadButtons revModeButton = GamepadButtons.Y;
-    GamepadButtons launchButton = GamepadButtons.A;
-    int buttonHoldTime = 500;
-
-    //servo and motor config
-    double ticksPerRev = 28;
-    double gearRatio = 1;
-    double maxRPM = 6000;
-    double servoRestAngle = .34;
-    double servoLaunchAngle = .46;
-    int servoMoveTime = 250;
-
-    //calibration data
-    protected String calibrationFileDir = "assets";
-    protected String calibrationFileName =  "Launcher Config - Test.csv";
-
-    //other
-    double RPMIncrements = 50;
-    double RPMTolerance = 100;
-    double maxRPMAcceleration = 10; // acceleration measured in RPM/s
-    double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
 
     ///////////////////
     //other variables//
     ///////////////////
     //servo and motor
-    double spinMultiplier = 60 / ticksPerRev * gearRatio;
+    double spinMultiplier;
 
     //calibration
     protected ArrayList<List<Double>> calibrationValues;
@@ -59,13 +29,21 @@ public class Launcher {
     //other
     boolean runWheelOnTrigger = false;
     double targetWheelRpm = 0;
-    Gamepad launcherGamepad;
+    Robot robot;
+    LauncherSettings launcherSettings;
 
     Launcher(Robot robot)
     {
+        launcherSettings = new LauncherSettings();
         this.robot = robot;
-        if(launcherGamepadNum == 1) launcherGamepad = robot.gamepad1;
-        else launcherGamepad = robot.gamepad2;
+        spinMultiplier = 60 / launcherSettings.ticksPerRev * launcherSettings.gearRatio;
+    }
+
+    Launcher(Robot robot, LauncherSettings launcherSettings)
+    {
+        this.launcherSettings = launcherSettings;
+        this.robot = robot;
+        spinMultiplier = 60 / launcherSettings.ticksPerRev * launcherSettings.gearRatio;
     }
 
     ///////////////
@@ -104,7 +82,7 @@ public class Launcher {
         }
         catch (IOException e)
         {
-            if(robot.debug_methods)robot.addTelemetry("error", e.toString());
+            if(robot.robotSettings.debug_methods)robot.addTelemetry("error", e.toString());
         }
         return out;
     }
@@ -150,38 +128,38 @@ public class Launcher {
         robot.sendTelemetry();
     }
 
-    void setLauncherServo()
+    void setLauncherServo(Gamepad gamepad)
     {
-        if(launchButton.getButtonHeld(launcherGamepad,buttonHoldTime)) autoLaunch();
-        else if(launchButton.getButtonReleased(launcherGamepad)) moveLaunchServo();
+        if(launchButton.getButtonHeld(gamepad,buttonHoldTime)) autoLaunch();
+        else if(launchButton.getButtonReleased(gamepad)) moveLaunchServo();
     }
 
-    void setLauncherWheelMotor()
+    void setLauncherWheelMotor(Gamepad gamepad)
     {
         //inputs
-        if(revDecreaseButton.getButtonPressed(launcherGamepad) || revDecreaseButton.getButtonHeld(launcherGamepad, buttonHoldTime))
+        if(revDecreaseButton.getButtonPressed(gamepad) || revDecreaseButton.getButtonHeld(gamepad, buttonHoldTime))
         {
             targetWheelRpm -= RPMIncrements;
             if(targetWheelRpm < 0) targetWheelRpm = 0;
         }
 
-        if(revIncreaseButton.getButtonPressed(launcherGamepad) || revIncreaseButton.getButtonHeld(launcherGamepad, buttonHoldTime))
+        if(revIncreaseButton.getButtonPressed(gamepad) || revIncreaseButton.getButtonHeld(gamepad, buttonHoldTime))
         {
             targetWheelRpm += RPMIncrements;
             if(targetWheelRpm > maxRPM) targetWheelRpm = maxRPM;
         }
 
-        if(revModeButton.getButtonPressed(launcherGamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
+        if(revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
-        if (runWheelOnTrigger) robot.motorConfig.launcherWheelMotor.setPower(revPowerSlide.getSliderValue(launcherGamepad));
+        if (runWheelOnTrigger) robot.motorConfig.launcherWheelMotor.setPower(revPowerSlide.getSliderValue(gamepad));
         else setRPM();
     }
 
-    void opModeRun(boolean telemetry)
+    void opModeRun(Gamepad gamepad, boolean telemetry)
     {
-        setLauncherServo();
-        setLauncherWheelMotor();
+        setLauncherServo(gamepad);
+        setLauncherWheelMotor(gamepad);
         if(telemetry)telemetryDataOut();
     }
 
@@ -261,7 +239,7 @@ public class Launcher {
                 return Math.sqrt(Math.pow(robot.position.currentRobotPosition[0], 2) + Math.pow(robot.position.currentRobotPosition[1], 2));
             return Math.sqrt(Math.pow(robot.position.currentRobotPosition[0], 2) + Math.pow(minLaunchDistance, 2));
         }
-        if(robot.debug_methods) robot.addTelemetry("error in Launcher.getDistanceToGoal: ", "robot cannot find distance because it does not know its position");
+        if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Launcher.getDistanceToGoal: ", "robot cannot find distance because it does not know its position");
         return -1;
     }
 
@@ -314,3 +292,37 @@ public class Launcher {
         }
     }
 }// class end
+
+class LauncherSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //controls
+    GamepadButtons revIncreaseButton = GamepadButtons.B;
+    GamepadButtons revDecreaseButton = GamepadButtons.X;
+    GamepadButtons revPowerSlide = GamepadButtons.leftTRIGGER;
+    GamepadButtons revModeButton = GamepadButtons.Y;
+    GamepadButtons launchButton = GamepadButtons.A;
+    int buttonHoldTime = 500;
+
+    //servo and motor config
+    double ticksPerRev = 28;
+    double gearRatio = 1;
+    double maxRPM = 6000;
+    double servoRestAngle = .34;
+    double servoLaunchAngle = .46;
+    int servoMoveTime = 250;
+
+    //calibration data
+    protected String calibrationFileDir = "assets";
+    protected String calibrationFileName =  "Launcher Config - Test.csv";
+
+    //other
+    double RPMIncrements = 50;
+    double RPMTolerance = 100;
+    double maxRPMAcceleration = 10; // acceleration measured in RPM/s
+    double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+
+    LauncherSettings(){};
+}
