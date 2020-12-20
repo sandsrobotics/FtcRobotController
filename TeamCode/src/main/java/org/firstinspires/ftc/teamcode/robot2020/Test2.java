@@ -15,18 +15,20 @@ public class Test2 extends LinearOpMode
     @Override
     public void runOpMode()
     {
-        robot = new Robot(this);
+        RobotUsage ru = new RobotUsage();
+        ru.setAllToValue(true);
+        ru.useVuforia = false;
+        robot = new Robot(this, ru);
 
         robot.startTelemetry();
         robot.addTelemetry("Robot: ", "ready :)");
         robot.sendTelemetry();
-        robot.grabber.init();
 
         waitForStart();
 
         robot.start();
         //robot.vision.startDashboardCameraStream(24);
-        robot.movement.setSpeedMultiplier(.75);
+        //robot.movement.setSpeedMultiplier(1);
 
         while(opModeIsActive())
         {

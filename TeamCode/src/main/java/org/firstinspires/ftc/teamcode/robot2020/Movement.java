@@ -41,7 +41,7 @@ public class Movement
         if(Math.abs(error) > tolerance) {
 
             int numberOfTimesInTolerance = 0;
-            PID pid = new PID(turnPID, -maxSpeed, maxSpeed);
+            PID pid = new PID(movementSettings.turnPID, -maxSpeed, maxSpeed);
 
             while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && maxRuntime > 0 && !robot.stop())
             {
@@ -71,7 +71,7 @@ public class Movement
 
     void strafeSidewaysInches(double inches, double power)
     {
-        strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
+        strafeSidewaysTicks((int)(movementSettings.ticksPerInchSideways * inches), power);
     }
 
     ////////////////
@@ -79,7 +79,7 @@ public class Movement
     ////////////////
     void moveForwardInches(double inches, double power)
     {
-        robot.motorConfig.moveMotorsForwardList(robot.motorConfig.driveMotors, (int)(ticksPerInchForward * inches), power);
+        robot.motorConfig.moveMotorsForwardList(robot.motorConfig.driveMotors, (int)(movementSettings.ticksPerInchForward * inches), power);
         robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
     }
 
@@ -139,7 +139,7 @@ public class Movement
         else if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
 
-    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID, maxSpeed); }
+    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, movementSettings.moveXPID, movementSettings.moveYPID, movementSettings.turnPID, maxSpeed); }
 
     //////////
     //teleOp//
@@ -147,20 +147,20 @@ public class Movement
 
     void setSpeedMultiplier(double amount)
     {
-        if(amount > speedMultiplierMax)
+        if(amount > movementSettings.speedMultiplierMax)
         {
             if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
-            amount = speedMultiplierMax;
+            amount = movementSettings.speedMultiplierMax;
         }
-        else if(amount < speedMultiplierMin)
+        else if(amount < movementSettings.speedMultiplierMin)
         {
             if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
-            amount = speedMultiplierMin;
+            amount = movementSettings.speedMultiplierMin;
         }
-        speedMultiplier = amount;
+        movementSettings.speedMultiplier = amount;
     }
-    void setSpeedMultiplierToMax() { speedMultiplier = speedMultiplierMax; }
-    void setSpeedMultiplierToMin() { speedMultiplier = speedMultiplierMin; }
+    void setSpeedMultiplierToMax() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMax; }
+    void setSpeedMultiplierToMin() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMin; }
 
     void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
     {
@@ -194,9 +194,9 @@ public class Movement
         if(applyMoveSmoothing)
         {
             //smoothing for XYR
-            X = applySmoothing(X, lastMovePowers[0], moveXSmoothingSteps);
-            Y = applySmoothing(Y, lastMovePowers[1], moveYSmoothingSteps);
-            rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+            X = applySmoothing(X, lastMovePowers[0], movementSettings.moveXSmoothingSteps);
+            Y = applySmoothing(Y, lastMovePowers[1], movementSettings.moveYSmoothingSteps);
+            rotation = applySmoothing(rotation, lastMovePowers[2], movementSettings.rotationSmoothingSteps);
 
             lastMovePowers[0] = X;
             lastMovePowers[1] = Y;
@@ -214,7 +214,7 @@ public class Movement
 
         for(double val:arr) if(val > highestPower) highestPower = val;
         if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
-        if(applySpeedMultiplier)for(int i = 0; i < 4; i++) arr[i] *= speedMultiplier;
+        if(applySpeedMultiplier)for(int i = 0; i < 4; i++) arr[i] *= movementSettings.speedMultiplier;
         return (arr);
     }
 
@@ -246,9 +246,9 @@ class MovementSettings
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
     public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
     public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
-    public static double moveXSmoothingSteps = .05;
-    public static double moveYSmoothingSteps = .05;
-    public static double rotationSmoothingSteps = .05;
+    public static double moveXSmoothingSteps = 1;
+    public static double moveYSmoothingSteps = 1;
+    public static double rotationSmoothingSteps = 1;
 
     protected double speedMultiplier = 1;
     protected final double speedMultiplierMin = .2;

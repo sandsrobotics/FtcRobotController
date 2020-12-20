@@ -98,7 +98,7 @@ public class Vision extends Thread
             loadAsset("UltimateGoal");
             setAllTrackablesNames();
             setAllTrackablesPosition();
-            setPhoneTransform(phonePosition, phoneRotation);
+            setPhoneTransform(visionSettings.phonePosition, visionSettings.phoneRotation);
         }
 
         if(useOpenCV)
@@ -126,9 +126,9 @@ public class Vision extends Thread
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
         //define the parameters object
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = CAMERA_CHOICE_V;
-        parameters.useExtendedTracking = useExtendedTracking;
+        parameters.vuforiaLicenseKey = visionSettings.VUFORIA_KEY;
+        parameters.cameraDirection = visionSettings.CAMERA_CHOICE_V;
+        parameters.useExtendedTracking = visionSettings.useExtendedTracking;
 
         //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -144,7 +144,7 @@ public class Vision extends Thread
 
     void setAllTrackablesNames()
     {
-        if(fieldType == Field.BlueFull || fieldType == Field.RedFull)
+        if(visionSettings.fieldType == Field.BlueFull || visionSettings.fieldType == Field.RedFull)
         {
             setTrackableName(1,"Red Tower Goal Target");
             setTrackableName(2,"Red Alliance Target");
@@ -156,18 +156,18 @@ public class Vision extends Thread
 
     void setAllTrackablesPosition()
     {
-        if(fieldType == Field.RedFull || fieldType == Field.BlueFull) {
-            setTrackableTransform(2, new float[]{0, -halfFieldLength, trackablesHeight}, new float[]{90, 0, 180});
-            setTrackableTransform(3, new float[]{0, halfFieldLength, trackablesHeight}, new float[]{90, 0, 0});
-            setTrackableTransform(4, new float[]{-halfFieldLength, 0, trackablesHeight}, new float[]{90, 0, 90});
-            setTrackableTransform(0, new float[]{halfFieldLength, halfFieldLength / 2, trackablesHeight}, new float[]{90, 0, -90});
-            setTrackableTransform(1, new float[]{halfFieldLength, -halfFieldLength / 2, trackablesHeight}, new float[]{90, 0, -90});
+        if(visionSettings.fieldType == Field.RedFull || visionSettings.fieldType == Field.BlueFull) {
+            setTrackableTransform(2, new float[]{0, -visionSettings.halfFieldLength, visionSettings.trackablesHeight}, new float[]{90, 0, 180});
+            setTrackableTransform(3, new float[]{0, visionSettings.halfFieldLength, visionSettings.trackablesHeight}, new float[]{90, 0, 0});
+            setTrackableTransform(4, new float[]{-visionSettings.halfFieldLength, 0, visionSettings.trackablesHeight}, new float[]{90, 0, 90});
+            setTrackableTransform(0, new float[]{visionSettings.halfFieldLength, visionSettings.halfFieldLength / 2, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
+            setTrackableTransform(1, new float[]{visionSettings.halfFieldLength, -visionSettings.halfFieldLength / 2, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
         }
-        else if(fieldType == Field.BlueHalf)
+        else if(visionSettings.fieldType == Field.BlueHalf)
         {
-            setTrackableTransform(3, new float[]{0, -halfFieldWidth, trackablesHeight}, new float[]{90, 0, 0});
-            setTrackableTransform(4, new float[]{-halfFieldLength, 0, trackablesHeight}, new float[]{90, 0, 90});
-            setTrackableTransform(0, new float[]{halfFieldLength, -goalDistanceFromMiddle, trackablesHeight}, new float[]{90, 0, -90});
+            setTrackableTransform(3, new float[]{0, -visionSettings.halfFieldWidth, visionSettings.trackablesHeight}, new float[]{90, 0, 0});
+            setTrackableTransform(4, new float[]{-visionSettings.halfFieldLength, 0, visionSettings.trackablesHeight}, new float[]{90, 0, 90});
+            setTrackableTransform(0, new float[]{visionSettings.halfFieldLength, -visionSettings.goalDistanceFromMiddle, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
         }
     }
 
@@ -189,7 +189,7 @@ public class Vision extends Thread
     {
         for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
 
-        if (CAMERA_CHOICE_V == BACK)
+        if (visionSettings.CAMERA_CHOICE_V == BACK)
         {
             angles[1] -= 90;
         }
@@ -198,7 +198,7 @@ public class Vision extends Thread
             angles[1] += 90;
         }
 
-        if (PHONE_IS_PORTRAIT)
+        if (visionSettings.PHONE_IS_PORTRAIT)
         {
             angles[0] += 90;
         }
@@ -252,7 +252,7 @@ public class Vision extends Thread
 
     OpenGLMatrix getCurrentGaolLocation()
     {
-        return currentTrackablesLocations[goalPictureNum];
+        return currentTrackablesLocations[visionSettings.goalPictureNum];
     }
 
     Orientation getTrackableAngles(OpenGLMatrix m)
@@ -266,7 +266,7 @@ public class Vision extends Thread
     //////////////////
     void initOpenCV()
     {
-        if(usingWebcam)
+        if(visionSettings.usingWebcam)
         {
             //creating a camera object
             webcam = OpenCvCameraFactory.getInstance().createWebcam(robot.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
@@ -290,7 +290,7 @@ public class Vision extends Thread
         else
         {
             //creating a camera object
-            phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(CAMERA_CHOICE_O, cameraMonitorViewId);
+            phoneCam = OpenCvCameraFactory.getInstance().createInternalCamera(visionSettings.CAMERA_CHOICE_O, cameraMonitorViewId);
 
             //creating a openCV pipeline
             pipeline = new Vision.SkystoneDeterminationPipeline();
@@ -495,10 +495,10 @@ class VisionSettings
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
     //set some measurements of the field(for position tracking) IN INCHES!!!
-    private static final float trackablesHeight = 6;
-    private static final float halfFieldLength = 72;
-    private static final float halfFieldWidth  = 48;
-    private static final float goalDistanceFromMiddle = 12;
+    protected static final float trackablesHeight = 6;
+    protected static final float halfFieldLength = 72;
+    protected static final float halfFieldWidth  = 48;
+    protected static final float goalDistanceFromMiddle = 12;
     static final Field fieldType = Field.BlueHalf;
 
 
@@ -512,7 +512,7 @@ class VisionSettings
 
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    public static boolean usingWebcam = true;
+    public static boolean usingWebcam = false;
 
     VisionSettings(){}
 }

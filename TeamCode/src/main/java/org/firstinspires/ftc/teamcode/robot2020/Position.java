@@ -14,14 +14,14 @@ public class Position extends Thread
     //other variables//
     ///////////////////
     //robot position
-    protected volatile double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
+    protected volatile double[] currentRobotPosition;
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
     volatile double currentRotation;
-    protected double rotationOffset = -startRotation;
+    protected double rotationOffset;
 
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
@@ -38,11 +38,19 @@ public class Position extends Thread
     {
         positionSettings = new PositionSettings();
         this.robot = robot;
+        initVals();
     }
     Position(Robot robot, PositionSettings positionSettings)
     {
         this.positionSettings = positionSettings;
         this.robot = robot;
+        initVals();
+    }
+
+    void initVals()
+    {
+        currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
+        rotationOffset = -positionSettings.startRotation;
     }
 
     //////////
@@ -73,8 +81,8 @@ public class Position extends Thread
         }
 
         //get movement
-        double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/Movement.ticksPerInchForward;
-        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
+        double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/MovementSettings.ticksPerInchForward;
+        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/MovementSettings.ticksPerInchSideways;
 
         //rotate and add to robot position
         currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
@@ -148,8 +156,6 @@ public class Position extends Thread
         if(robot.robotUsage.usePositionTracking)
         {
             initialize();
-            setCurrentRun(true);
-            loadLastPos();
         }
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
@@ -162,7 +168,6 @@ public class Position extends Thread
                 updatePositionFromVuforia();
             }
         }
-        if(robot.robotUsage.usePositionTracking) addCurrentPosition(true);
     }
 
     ///////////////

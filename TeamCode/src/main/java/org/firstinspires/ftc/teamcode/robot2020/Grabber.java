@@ -1,7 +1,9 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Grabber {
 
@@ -12,6 +14,8 @@ public class Grabber {
     /////////////
     Robot robot;
     GrabberSettings grabberSettings;
+    DigitalChannel limitSwitch;
+
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
     protected boolean clawClosed = false;
@@ -20,11 +24,13 @@ public class Grabber {
     {
         this.robot = robot;
         grabberSettings = new GrabberSettings();
+        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
     }
     Grabber(Robot robot, GrabberSettings grabberSettings)
     {
         this.robot = robot;
         this.grabberSettings = grabberSettings;
+        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
     }
 
     void init()
@@ -39,6 +45,20 @@ public class Grabber {
         }
     }
 
+    void initGrabberPos()
+    {
+        if(!limitSwitch.getState())
+        {
+            int pos = 0;
+            while(!limitSwitch.getState())
+            {
+                pos -= grabberSettings.homingSpeed;
+                robot.motorConfig.grabberLifterMotor.setTargetPosition(pos);
+                if(Math.abs(pos) > grabberSettings.maxMotorPos){break;}
+            }
+        }
+    }
+
     void setFromControls(Gamepad gamepad)
     {
         //set encoder
@@ -46,9 +66,11 @@ public class Grabber {
         else if(grabberSettings.horizontalButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.horizontalPos;
         else if(grabberSettings.putOverButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.putOverPos;
 
-        if(Math.abs(grabberSettings.moveGrabberStick.getSliderValue(gamepad)) >= grabberSettings.stickTolerance) setEncoderPos += grabberSettings.moveGrabberStick.getSliderValue(gamepad) * grabberSettings.stickToTicksMultiplier;
-        if(setEncoderPos > grabberSettings.maxMotorPos) setEncoderPos = grabberSettings.maxMotorPos;
-        else if(setEncoderPos < 0) setEncoderPos = 0;
+        if(Math.abs(grabberSettings.moveGrabberStick.getSliderValue(gamepad)) >= grabberSettings.stickTolerance) {
+            setEncoderPos += grabberSettings.moveGrabberStick.getSliderValue(gamepad) * grabberSettings.stickToTicksMultiplier;
+            if (setEncoderPos > grabberSettings.maxMotorPos) setEncoderPos = grabberSettings.maxMotorPos;
+            else if (setEncoderPos < grabberSettings.minMotorPos) setEncoderPos = grabberSettings.minMotorPos;
+        }
 
         //set servo
         if(grabberSettings.grabButton.getButtonPressed(gamepad)) { clawClosed = !clawClosed; }
@@ -83,6 +105,7 @@ class GrabberSettings
     //user defined//
     ////////////////
     protected int maxMotorPos = 1680*2;
+    protected int minMotorPos = 0;
     protected double motorPower = .5;
 
     //preset lifter functions
@@ -91,8 +114,8 @@ class GrabberSettings
     protected int putOverPos = 450;
 
     //servo pos
-    protected double[] servoRestPositions = {.5, .5};
-    protected double[] servoGrabPositions = {.5, .5};
+    protected double[] servoRestPositions = {.2, .6};
+    protected double[] servoGrabPositions = {.9, .1};
 
     //controls
     protected GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
@@ -102,6 +125,10 @@ class GrabberSettings
     protected GamepadButtons horizontalButton = GamepadButtons.B;
     protected GamepadButtons putOverButton = GamepadButtons.X;
     protected GamepadButtons grabButton = GamepadButtons.Y;
+
+    //homing
+    String limitSwitchName = "test";
+    int homingSpeed = 3;
 
 
     GrabberSettings(){}

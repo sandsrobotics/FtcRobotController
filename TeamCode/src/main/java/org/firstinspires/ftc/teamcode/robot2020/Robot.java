@@ -48,42 +48,39 @@ public class Robot
     TelemetryPacket packet = new TelemetryPacket();
     public static boolean emergencyStop = false;
 
-    Robot(LinearOpMode opMode, RobotSettings robotSettings, RobotUsage robotUsage)
+    Robot(LinearOpMode opMode, RobotUsage robotUsage, RobotSettingsMain robotSettingsMain) { init(opMode,robotUsage,robotSettingsMain); }
+    Robot(LinearOpMode opMode, RobotUsage robotUsage) { init(opMode, robotUsage, new RobotSettingsMain()); }
+    Robot(LinearOpMode opMode) { init(opMode, new RobotUsage(), new RobotSettingsMain()); }
+
+    private void init(LinearOpMode opMode, RobotUsage robotUsage, RobotSettingsMain robotSettingsMain)
     {
-        this.robotSettings = robotSettings;
         this.robotUsage = robotUsage;
-        init(opMode);
-    }
-
-    Robot(LinearOpMode opMode)
-    {
-        this.robotSettings = new RobotSettings();
-        this.robotUsage = new RobotUsage();
-        init(opMode);
-    }
-
-    private void init(LinearOpMode opMode)
-    {
+        this.robotSettings = robotSettingsMain.robotSettings;
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        motorConfig = new MotorConfig(this);
-        position = new Position(this);
+        motorConfig = new MotorConfig(this, robotSettingsMain.motorConfigSettings);
+        position = new Position(this, robotSettingsMain.positionSettings);
 
-        if(robotUsage.useDrive) movement = new Movement(this);
-        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this);
-        if(robotUsage.useLauncher) launcher = new Launcher(this);
+        if(robotUsage.useDrive) movement = new Movement(this, robotSettingsMain.movementSettings);
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this, robotSettingsMain.visionSettings);
+        if(robotUsage.useLauncher) launcher = new Launcher(this, robotSettingsMain.launcherSettings);
         if(robotUsage.useComplexMovement) complexMovement = new ComplexMovement(this);
-        if(robotUsage.useGrabber) grabber = new Grabber(this);
+        if(robotUsage.useGrabber){ grabber = new Grabber(this, robotSettingsMain.grabberSettings);
+        addTelemetry("grabber", " init");}
 
         initHardware();
         if(robotUsage.useDrive || robotUsage.usePositionTracking) motorConfig.initDriveMotors();
-        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(robotUsage.useLauncher) motorConfig.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
-        if(robotUsage.useGrabber) motorConfig.initGrabberMotors();
+        if(robotUsage.useGrabber)
+        {
+            motorConfig.initGrabberMotors();
+            grabber.init();
+        }
     }
 
     void initHardware()
@@ -417,4 +414,36 @@ class RobotSettings
 
 
     RobotSettings(){}
+}
+
+class RobotSettingsMain
+{
+    protected RobotSettings robotSettings;
+    protected GrabberSettings grabberSettings;
+    protected LauncherSettings launcherSettings;
+    protected MotorConfigSettings motorConfigSettings;
+    protected MovementSettings movementSettings;
+    protected PositionSettings positionSettings;
+    protected VisionSettings visionSettings;
+
+    RobotSettingsMain()
+    {
+        robotSettings = new RobotSettings();
+        grabberSettings = new GrabberSettings();
+        launcherSettings = new LauncherSettings();
+        motorConfigSettings = new MotorConfigSettings();
+        movementSettings = new MovementSettings();
+        positionSettings = new PositionSettings();
+        visionSettings = new VisionSettings();
+    }
+    RobotSettingsMain( RobotSettings robotSettings, GrabberSettings grabberSettings, LauncherSettings launcherSettings, MotorConfigSettings motorConfigSettings, MovementSettings movementSettings, PositionSettings positionSettings, VisionSettings visionSettings)
+    {
+        this.robotSettings = robotSettings;
+        this.grabberSettings = grabberSettings;
+        this.launcherSettings = launcherSettings;
+        this.motorConfigSettings = motorConfigSettings;
+        this.movementSettings = movementSettings;
+        this.positionSettings = positionSettings;
+        this.visionSettings = visionSettings;
+    }
 }
