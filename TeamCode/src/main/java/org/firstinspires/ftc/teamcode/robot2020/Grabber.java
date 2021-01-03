@@ -43,6 +43,7 @@ public class Grabber {
             setServoPositions[i] = grabberSettings.servoRestPositions[i];
             robot.motorConfig.grabberServos.get(i).setPosition(setServoPositions[i]);
         }
+        initGrabberPos();
     }
 
     void initGrabberPos()
@@ -54,9 +55,17 @@ public class Grabber {
             {
                 pos -= grabberSettings.homingSpeed;
                 robot.motorConfig.grabberLifterMotor.setTargetPosition(pos);
-                if(Math.abs(pos) > grabberSettings.maxMotorPos){break;}
+                if(Math.abs(pos) > grabberSettings.maxMotorPos)
+                {
+                    robot.addTelemetry("problem with Grabber", " could not home, please check grabber and try to re-home");
+                    return;
+                }
             }
         }
+        robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.motorConfig.grabberLifterMotor.setTargetPosition(0);
+        robot.motorConfig.grabberLifterMotor.setPower(grabberSettings.motorPower);
+        robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     void setFromControls(Gamepad gamepad)
