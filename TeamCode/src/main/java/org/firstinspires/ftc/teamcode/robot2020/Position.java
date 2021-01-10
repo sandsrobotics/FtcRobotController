@@ -49,8 +49,11 @@ public class Position extends Thread
 
     void initVals()
     {
-        currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
-        rotationOffset = -positionSettings.startRotation;
+        if(positionSettings.resetPos)
+        {
+            currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
+            rotationOffset = -positionSettings.startRotation;
+        }
     }
 
     //////////
@@ -187,7 +190,7 @@ class PositionSettings
     //position start
     boolean resetPos = true;
     double startPositionX = 0; // in inches
-    double startPositionY = 0; // in inches
+    double startPositionY = -120; // in inches
     double startRotation = 0; //in degrees from goal
 
     PositionSettings(){}

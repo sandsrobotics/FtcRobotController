@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import static android.os.SystemClock.sleep;
+
 @Config
 public class Launcher {
 
@@ -29,6 +31,8 @@ public class Launcher {
 
     //other
     boolean runWheelOnTrigger = false;
+    boolean moveIntakeMotorForward = false;
+    float intakeMotorPower = 0;
     double targetWheelRpm = 0;
     Robot robot;
     LauncherSettings launcherSettings;
@@ -157,10 +161,25 @@ public class Launcher {
         else setRPM();
     }
 
+    void setLauncherIntakeMotor(Gamepad gamepad)
+    {
+        intakeMotorPower = 0;
+
+        if(launcherSettings.intakeInButton.getButtonPressed(gamepad)) moveIntakeMotorForward = !moveIntakeMotorForward;
+        if(launcherSettings.intakeOutSlider.getSliderValue(gamepad) > launcherSettings.sliderTolerance){
+            moveIntakeMotorForward = false;
+            intakeMotorPower = -launcherSettings.intakeOutSlider.getSliderValue(gamepad);
+        }
+        if(moveIntakeMotorForward) intakeMotorPower = 1;
+
+        robot.motorConfig.launcherMotors.get(1).setPower(intakeMotorPower);
+    }
+
     void opModeRun(Gamepad gamepad, boolean telemetry)
     {
         setLauncherServo(gamepad);
         setLauncherWheelMotor(gamepad);
+        setLauncherIntakeMotor(gamepad);
         if(telemetry)telemetryDataOut();
     }
 
@@ -305,14 +324,17 @@ class LauncherSettings
     GamepadButtons revPowerSlide = GamepadButtons.leftTRIGGER;
     GamepadButtons revModeButton = GamepadButtons.Y;
     GamepadButtons launchButton = GamepadButtons.A;
+    GamepadButtons intakeInButton = GamepadButtons.rightBUMPER;
+    GamepadButtons intakeOutSlider = GamepadButtons.rightTRIGGER;
+    double sliderTolerance = .1;
     int buttonHoldTime = 500;
 
     //servo and motor config
     double ticksPerRev = 28;
     double gearRatio = 1;
     double maxRPM = 6000;
-    double servoRestAngle = .34;
-    double servoLaunchAngle = .46;
+    double servoRestAngle = 0;
+    double servoLaunchAngle = 1;
     int servoMoveTime = 250;
 
     //calibration data

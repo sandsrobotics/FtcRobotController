@@ -24,13 +24,11 @@ public class Grabber {
     {
         this.robot = robot;
         grabberSettings = new GrabberSettings();
-        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
     }
     Grabber(Robot robot, GrabberSettings grabberSettings)
     {
         this.robot = robot;
         this.grabberSettings = grabberSettings;
-        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
     }
 
     void init()
@@ -43,23 +41,20 @@ public class Grabber {
             setServoPositions[i] = grabberSettings.servoRestPositions[i];
             robot.motorConfig.grabberServos.get(i).setPosition(setServoPositions[i]);
         }
-        initGrabberPos();
+        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
+        limitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
     void initGrabberPos()
     {
-        if(!limitSwitch.getState())
+        if(limitSwitch.getState())
         {
             int pos = 0;
-            while(!limitSwitch.getState())
+            while(limitSwitch.getState() && !robot.stop())
             {
                 pos -= grabberSettings.homingSpeed;
                 robot.motorConfig.grabberLifterMotor.setTargetPosition(pos);
-                if(Math.abs(pos) > grabberSettings.maxMotorPos)
-                {
-                    robot.addTelemetry("problem with Grabber", " could not home, please check grabber and try to re-home");
-                    return;
-                }
+                robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
         }
         robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -98,13 +93,38 @@ public class Grabber {
     void runForTeleop(Gamepad gamepad)
     {
         setFromControls(gamepad);
+        moveAll();
+    }
 
+    void moveMotors()
+    {
         robot.motorConfig.grabberLifterMotor.setTargetPosition(setEncoderPos);
-
+    }
+    void moveServos()
+    {
         for(int i = 0; i < 2; i++)
         {
             robot.motorConfig.grabberServos.get(i).setPosition(setServoPositions[i]);
         }
+    }
+    void moveAll()
+    {
+        moveMotors();
+        moveServos();
+    }
+
+    void setGrabberToPos(int pos)
+    {
+        setEncoderPos = pos;
+        moveMotors();
+        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop()) { }
+    }
+
+    void setServosToPos(double[] servoPos)
+    {
+        setServoPositions[0] = servoPos[0];
+        setServoPositions[1] = servoPos[1];
+        moveServos();
     }
 }
 
@@ -113,14 +133,14 @@ class GrabberSettings
     ////////////////
     //user defined//
     ////////////////
-    protected int maxMotorPos = 1680*2;
+    protected int maxMotorPos = 1660;
     protected int minMotorPos = 0;
-    protected double motorPower = .5;
+    protected double motorPower = .75;
 
     //preset lifter functions
-    protected int capturePos = 150;
-    protected int horizontalPos = 1680;
-    protected int putOverPos = 450;
+    protected int capturePos = 1500;
+    protected int horizontalPos = 0;
+    protected int putOverPos = 1000;
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
@@ -129,15 +149,15 @@ class GrabberSettings
     //controls
     protected GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
     protected double stickTolerance = .03;
-    protected double stickToTicksMultiplier = 5;
+    protected double stickToTicksMultiplier = 20;
     protected GamepadButtons captureButton = GamepadButtons.A;
     protected GamepadButtons horizontalButton = GamepadButtons.B;
     protected GamepadButtons putOverButton = GamepadButtons.X;
     protected GamepadButtons grabButton = GamepadButtons.Y;
 
     //homing
-    String limitSwitchName = "test";
-    int homingSpeed = 3;
+    String limitSwitchName = "digital0B";
+    int homingSpeed = 50;
 
 
     GrabberSettings(){}

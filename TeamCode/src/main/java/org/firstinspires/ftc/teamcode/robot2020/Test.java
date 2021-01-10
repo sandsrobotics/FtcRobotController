@@ -19,7 +19,11 @@ public class Test extends LinearOpMode {
     public void runOpMode()
     {
 
-        robot = new Robot(this);
+        RobotUsage ru = new RobotUsage();
+        ru.setAllToValue(false);
+        ru.useLauncher = true;
+        ru.useDrive = true;
+        robot = new Robot(this, ru);
 
         waitForStart();
 
@@ -27,19 +31,8 @@ public class Test extends LinearOpMode {
 
         while(opModeIsActive())
         {
-            /*
-            robot.addTelemetry("pidf", robot.motorConfig.launcherWheelMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
-            robot.launcher.opModeRun(true);
-            if(GamepadButtons.dpadUP.getButtonHeld(gamepad1, 1000)) robot.motorConfig.launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, MotorConfig.launcherMotorPID);
-            robot.sendTelemetry();
-            */
-
-            if(gamepad1.a) robot.launcher.goToShootingPos();
-            robot.addTelemetry("point to goal ang: ", robot.launcher.getAngleToPointToPosition());
-            robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
-            robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
-            robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
+            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP);
+            robot.launcher.opModeRun(gamepad1, true);
             robot.sendTelemetry();
         }
 

@@ -125,6 +125,7 @@ public class Robot
         startTelemetry();
         position.start();
         if(robotUsage.useVuforia) vision.start();
+        //if(robotUsage.useGrabber) grabber.initGrabberPos();
     }
 
     /////////////
@@ -285,7 +286,8 @@ enum GamepadButtons
 
     boolean getButtonReleased(Gamepad gamepad)
     {
-        if(wasButtonPressed && !getButtonHeld(gamepad))
+        if(getButtonHeld(gamepad)) wasButtonPressed = true;
+        else if(wasButtonPressed)
         {
             wasButtonPressed = false;
             return true;
@@ -340,7 +342,7 @@ class PID
 
         double calculatedD = ((currentError - lastError) * PIDs.d / (System.currentTimeMillis() - lastTime));
 
-        value = (error * PIDs.p) + calculatedI - calculatedD;
+        value = (error * PIDs.p);// + calculatedI - calculatedD;
 
         lastTime = System.currentTimeMillis();
     }
@@ -373,7 +375,10 @@ class RobotUsage
 {
     boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV = true;
 
-    RobotUsage(){}
+    RobotUsage()
+    {
+        setAllToValue(true);
+    }
     RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
     {
         this.useDrive = useDrive;

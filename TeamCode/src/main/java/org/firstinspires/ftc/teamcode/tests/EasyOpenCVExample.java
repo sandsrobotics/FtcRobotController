@@ -74,7 +74,6 @@ public class EasyOpenCVExample extends LinearOpMode
             telemetry.addData("Analysis", pipeline.getAnalysis());
             telemetry.addData("Position", pipeline.position);
             telemetry.update();
-
             // Don't burn CPU cycles busy-looping in this sample
             sleep(50);
         }

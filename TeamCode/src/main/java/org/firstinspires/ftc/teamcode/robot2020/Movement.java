@@ -121,7 +121,7 @@ public class Movement
                         numOfTimesInTolerance++;
                     else numOfTimesInTolerance = 0;
 
-                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
+                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, false));
                     maxLoops--;
                     if(robot.robotSettings.debug_methods)
                     {
