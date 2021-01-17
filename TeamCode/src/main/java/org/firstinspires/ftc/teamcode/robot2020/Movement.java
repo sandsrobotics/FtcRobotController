@@ -162,7 +162,7 @@ public class Movement
     void setSpeedMultiplierToMax() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMax; }
     void setSpeedMultiplierToMin() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMin; }
 
-    void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
+    void moveForTeleOp(Gamepad gamepad1, GamepadButtons breakButton, boolean useTelemetry)
     {
         if(breakButton.getButtonHeld(gamepad1))
         {
@@ -170,6 +170,12 @@ public class Movement
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
         else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, true,true));
+        if(useTelemetry) teleOpTelemetry();
+    }
+
+    void teleOpTelemetry()
+    {
+
     }
 
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)

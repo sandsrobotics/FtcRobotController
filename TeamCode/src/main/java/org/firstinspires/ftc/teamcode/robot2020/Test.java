@@ -31,8 +31,8 @@ public class Test extends LinearOpMode {
 
         while(opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP);
-            robot.launcher.opModeRun(gamepad1, true);
+            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP,true);
+            robot.launcher.runForTeleOp(gamepad1, true);
             robot.sendTelemetry();
         }
 

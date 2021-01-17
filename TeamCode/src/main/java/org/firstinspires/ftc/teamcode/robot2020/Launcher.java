@@ -135,7 +135,6 @@ public class Launcher {
         else robot.addTelemetry("Mode: ", "Run using RPM");
         robot.addTelemetry("RPM", getPRM());
         robot.addTelemetry("Set RPM", targetWheelRpm);
-        robot.sendTelemetry();
     }
 
     void setLauncherServo(Gamepad gamepad)
@@ -180,7 +179,7 @@ public class Launcher {
         robot.motorConfig.launcherMotors.get(1).setPower(intakeMotorPower);
     }
 
-    void opModeRun(Gamepad gamepad, boolean telemetry)
+    void runForTeleOp(Gamepad gamepad, boolean telemetry)
     {
         setLauncherServo(gamepad);
         setLauncherWheelMotor(gamepad);

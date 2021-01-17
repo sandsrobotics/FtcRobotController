@@ -91,10 +91,16 @@ public class Grabber {
         }
     }
 
-    void runForTeleop(Gamepad gamepad)
+    void runForTeleOp(Gamepad gamepad, boolean useTelemetry)
     {
         setFromControls(gamepad);
         moveAll();
+        if(useTelemetry) teleOpTelemetry();
+    }
+
+    void teleOpTelemetry()
+    {
+
     }
 
     void moveMotors()

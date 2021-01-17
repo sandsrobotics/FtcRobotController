@@ -36,8 +36,8 @@ public class Test2 extends LinearOpMode
 
         while(opModeIsActive())
         {
-            robot.grabber.runForTeleop(gamepad1);
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.leftBUMPER);
+            robot.grabber.runForTeleOp(gamepad1, true);
+            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.leftBUMPER, true);
             /*
             if(gamepad1.x)
             {
