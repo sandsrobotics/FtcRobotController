@@ -54,6 +54,11 @@ public class Position extends Thread
             currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
             rotationOffset = -positionSettings.startRotation;
         }
+        else
+        {
+            currentRobotPosition = new double[]{0,0,0};
+            rotationOffset = 0;
+        }
     }
 
     //////////
@@ -173,6 +178,11 @@ public class Position extends Thread
         }
     }
 
+    double[] getPositionWithOffset(double X, double Y, double R)
+    {
+        return new double[]{currentRobotPosition[0] + X, currentRobotPosition[1] + Y,currentRobotPosition[2] + R};
+    }
+
     ///////////////
     //stop thread//
     ///////////////
@@ -189,8 +199,8 @@ class PositionSettings
     //////////////////
     //position start
     boolean resetPos = true;
-    double startPositionX = 0; // in inches
-    double startPositionY = -120; // in inches
+    double startPositionX = -20; // in inches
+    double startPositionY = -124; // in inches
     double startRotation = 0; //in degrees from goal
 
     PositionSettings(){}

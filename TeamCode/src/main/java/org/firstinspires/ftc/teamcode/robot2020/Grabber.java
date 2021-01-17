@@ -69,6 +69,7 @@ public class Grabber {
         if(grabberSettings.captureButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.capturePos;
         else if(grabberSettings.horizontalButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.horizontalPos;
         else if(grabberSettings.putOverButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.putOverPos;
+        else if(grabberSettings.restPosButton.getButtonPressed(gamepad)) setEncoderPos = grabberSettings.restPos;
 
         if(Math.abs(grabberSettings.moveGrabberStick.getSliderValue(gamepad)) >= grabberSettings.stickTolerance) {
             setEncoderPos += grabberSettings.moveGrabberStick.getSliderValue(gamepad) * grabberSettings.stickToTicksMultiplier;
@@ -113,11 +114,11 @@ public class Grabber {
         moveServos();
     }
 
-    void setGrabberToPos(int pos)
+    void setGrabberToPos(int pos, boolean waitForMotor)
     {
         setEncoderPos = pos;
         moveMotors();
-        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop()) { }
+        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { }
     }
 
     void setServosToPos(double[] servoPos)
@@ -138,9 +139,10 @@ class GrabberSettings
     protected double motorPower = .75;
 
     //preset lifter functions
-    protected int capturePos = 1500;
+    protected int capturePos = 1440;
     protected int horizontalPos = 0;
     protected int putOverPos = 1000;
+    protected int restPos = 0;
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
@@ -154,6 +156,7 @@ class GrabberSettings
     protected GamepadButtons horizontalButton = GamepadButtons.B;
     protected GamepadButtons putOverButton = GamepadButtons.X;
     protected GamepadButtons grabButton = GamepadButtons.Y;
+    protected GamepadButtons restPosButton = GamepadButtons.B;
 
     //homing
     String limitSwitchName = "digital0B";

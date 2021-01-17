@@ -51,6 +51,11 @@ public class Launcher {
         spinMultiplier = 60 / launcherSettings.ticksPerRev * launcherSettings.gearRatio;
     }
 
+    void init()
+    {
+        robot.motorConfig.launcherServo.setPosition(launcherSettings.servoRestAngle);
+    }
+
     ///////////////
     //Calibration//
     ///////////////

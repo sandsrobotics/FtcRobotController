@@ -22,10 +22,17 @@ public class Autonomous extends LinearOpMode {
         GamepadButtons closeButton = GamepadButtons.A;
         boolean closed = false;
         Vision.SkystoneDeterminationPipeline.RingPosition rings = Vision.SkystoneDeterminationPipeline.RingPosition.NONE;
-        double[] APos = {-20,-50,-90};
-        double[] BPosLose = {0,-65,0};
-        double[] BPos = {0,-26,-90};
-        double[] CPos = {-20,-2,-90};
+        double[] APos = {-16,-58,-90};
+        //double[] APosLose = {-20,-124,0};
+        double[] BPos = {2,-30,-90};
+        //double[] BPosLose = {-20,-124,0};
+        double[] CPos = {-16,-4,-90};
+        //double[] CPosLose = {-20,-124,0};
+
+        double[] secondGoalPos = {-6.5,-117,0};
+
+        double[] tolFinal = {1, 1, 1};
+        double[] tolLose = {2, 2, 5};
 
         RobotUsage ru = new RobotUsage();
         ru.useVuforia = false;
@@ -56,15 +63,30 @@ public class Autonomous extends LinearOpMode {
             robot.sendTelemetry();
             if(gamepad1.b)
             {
-               if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.NONE) robot.movement.moveToPosition(APos,new double[]{1,1,.5f},10,7000,.5);
+               if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.NONE)
+               {
+                   //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
+                   robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+                   robot.movement.moveToPosition(APos,tolFinal,15,7000,1);
+               }
                else if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.ONE)
                {
-                   robot.movement.moveToPosition(BPosLose, new double[]{5,5,5},1,7000,.5);
-                   robot.movement.moveToPosition(BPos,new double[]{1,1,.5},10,7000,.5);
+                   //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
+                   robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+                   robot.movement.moveToPosition(BPos,tolFinal,15,7000,1);
                }
-               else if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.FOUR) robot.movement.moveToPosition(CPos,new double[]{1,1,.5f},10,7000,.5);
-               robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos);
+               else if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.FOUR)
+               {
+                   //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
+                   robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+                   robot.movement.moveToPosition(CPos,tolFinal,15,7000,1);
+               }
+
                robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions);
+               robot.delay(100);
+                robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos), false);
+               robot.movement.moveToPosition(secondGoalPos, tolLose,1,7000,1);
+
             }
         }
     }
