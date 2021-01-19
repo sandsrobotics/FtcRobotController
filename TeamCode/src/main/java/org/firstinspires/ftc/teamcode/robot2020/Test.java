@@ -7,10 +7,11 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
-@TeleOp(name = "test launcher v1.1")
+@TeleOp(name = "test Tfod")
 public class Test extends LinearOpMode {
 
     Robot robot;
@@ -21,8 +22,10 @@ public class Test extends LinearOpMode {
 
         RobotUsage ru = new RobotUsage();
         ru.setAllToValue(false);
-        ru.useLauncher = true;
+        ru.useTensorFlow = true;
+        ru.useVuforia = true;
         ru.useDrive = true;
+
         robot = new Robot(this, ru);
 
         waitForStart();
@@ -32,7 +35,19 @@ public class Test extends LinearOpMode {
         while(opModeIsActive())
         {
             robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP,true);
-            robot.launcher.runForTeleOp(gamepad1, true);
+            if(robot.vision.anyTfodObjectsFound)
+            {
+                telemetry.addData("# Object Detected", robot.vision.tfodUpdatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : robot.vision.tfodUpdatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+                }
+            }
             robot.sendTelemetry();
         }
 

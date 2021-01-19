@@ -14,6 +14,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -66,6 +68,12 @@ public class Vision extends Thread
     OpenCvCamera phoneCam;
     SkystoneDeterminationPipeline pipeline;
 
+    //some tensorFlow stuff
+    TFObjectDetector tfod;
+    protected volatile List<Recognition> tfodRecognitions;
+    protected volatile List<Recognition> tfodUpdatedRecognitions;
+    protected boolean anyTfodObjectsFound = false;
+
     //other
     protected int cameraMonitorViewId;
 
@@ -88,7 +96,7 @@ public class Vision extends Thread
         this.robot = robot;
     }
 
-    void initAll(boolean useVuforia, boolean useOpenCV)
+    void initAll(boolean useVuforia, boolean useOpenCV, boolean useTensorFlow)
     {
         initCamera();
 
@@ -99,6 +107,11 @@ public class Vision extends Thread
             setAllTrackablesNames();
             setAllTrackablesPosition();
             setPhoneTransform(visionSettings.phonePosition, visionSettings.phoneRotation);
+
+            if(useTensorFlow)
+            {
+                initTfod();
+            }
         }
 
         if(useOpenCV)
@@ -109,7 +122,7 @@ public class Vision extends Thread
 
     void initAll()
     {
-        initAll(robot.robotUsage.useVuforia, robot.robotUsage.useOpenCV);
+        initAll(robot.robotUsage.useVuforia, robot.robotUsage.useOpenCV, robot.robotUsage.useTensorFlow);
     }
 
     void initCamera()
@@ -144,11 +157,9 @@ public class Vision extends Thread
 
     void setAllTrackablesNames()
     {
-        if(visionSettings.fieldType == Field.BlueFull || visionSettings.fieldType == Field.RedFull)
-        {
-            setTrackableName(1,"Red Tower Goal Target");
-            setTrackableName(2,"Red Alliance Target");
-        }
+
+        setTrackableName(1,"Red Tower Goal Target");
+        setTrackableName(2,"Red Alliance Target");
         setTrackableName(0,"Blue Tower Goal Target");
         setTrackableName(3,"Blue Alliance Target");
         setTrackableName(4,"Front Wall Target");
@@ -156,19 +167,11 @@ public class Vision extends Thread
 
     void setAllTrackablesPosition()
     {
-        if(visionSettings.fieldType == Field.RedFull || visionSettings.fieldType == Field.BlueFull) {
-            setTrackableTransform(2, new float[]{0, -visionSettings.halfFieldLength, visionSettings.trackablesHeight}, new float[]{90, 0, 180});
-            setTrackableTransform(3, new float[]{0, visionSettings.halfFieldLength, visionSettings.trackablesHeight}, new float[]{90, 0, 0});
-            setTrackableTransform(4, new float[]{-visionSettings.halfFieldLength, 0, visionSettings.trackablesHeight}, new float[]{90, 0, 90});
-            setTrackableTransform(0, new float[]{visionSettings.halfFieldLength, visionSettings.halfFieldLength / 2, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
-            setTrackableTransform(1, new float[]{visionSettings.halfFieldLength, -visionSettings.halfFieldLength / 2, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
-        }
-        else if(visionSettings.fieldType == Field.BlueHalf)
-        {
-            setTrackableTransform(3, new float[]{0, -visionSettings.halfFieldWidth, visionSettings.trackablesHeight}, new float[]{90, 0, 0});
-            setTrackableTransform(4, new float[]{-visionSettings.halfFieldLength, 0, visionSettings.trackablesHeight}, new float[]{90, 0, 90});
-            setTrackableTransform(0, new float[]{visionSettings.halfFieldLength, -visionSettings.goalDistanceFromMiddle, visionSettings.trackablesHeight}, new float[]{90, 0, -90});
-        }
+        setTrackableTransform(2, new float[]{0, 0, 0}, new float[]{0, 0, 0});
+        setTrackableTransform(3, new float[]{0, 0, 0}, new float[]{0, 0, 0});
+        setTrackableTransform(4, new float[]{0, 0, 0}, new float[]{0, 0, 0});
+        setTrackableTransform(0, new float[]{0, 0, 0}, new float[]{0, 0, 0});
+        setTrackableTransform(1, new float[]{0, 0, 0}, new float[]{0, 0, 0});
     }
 
     void setTrackableName(int posInTrackables, String name)
@@ -259,6 +262,30 @@ public class Vision extends Thread
     {
         if(m != null) return Orientation.getOrientation(m, EXTRINSIC, XYZ, DEGREES);
         return null;
+    }
+
+    //////////////////////
+    //tensorFlow Methods//
+    //////////////////////
+    void initTfod()
+    {
+        int tfodMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = visionSettings.minResultConfidence;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(visionSettings.TFOD_MODEL_ASSET, visionSettings.LABEL_FIRST_ELEMENT, visionSettings.LABEL_SECOND_ELEMENT);
+    }
+
+    void activateTfod(){tfod.activate();}
+    void deactivateTfod(){tfod.shutdown();}
+
+    void findAllTfodObjects()
+    {
+        tfodRecognitions = tfod.getRecognitions();
+        tfodUpdatedRecognitions = tfod.getUpdatedRecognitions();
+
+        anyTfodObjectsFound = tfodUpdatedRecognitions != null;
     }
 
     //////////////////
@@ -567,27 +594,22 @@ public class Vision extends Thread
     public void run()
     {
         activateVuforia();
+        if(robot.robotUsage.useTensorFlow) activateTfod();
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             findAllTrackables();
+            if(robot.robotUsage.useTensorFlow) findAllTfodObjects();
         }
 
         deactivateVuforia();
+        if(robot.robotUsage.useTensorFlow) deactivateTfod();
     }
 
     public void stopThread()
     {
         this.interrupt();
     }
-}
-
-enum Field
-{
-    RedHalf,
-    BlueHalf,
-    RedFull,
-    BlueFull
 }
 
 class VisionSettings
@@ -601,15 +623,6 @@ class VisionSettings
     protected boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
-    //set some measurements of the field(for position tracking) IN INCHES!!!
-    protected static final float trackablesHeight = 6;
-    protected static final float halfFieldLength = 72;
-    protected static final float halfFieldWidth  = 48;
-    protected static final float goalDistanceFromMiddle = 12;
-    static final Field fieldType = Field.BlueHalf;
-
-
-
     //to know where the phone or camera is IN INCHES!!! and degrees
     float[] phonePosition = {0,0,0};
     float[] phoneRotation = {0,0,0};
@@ -619,7 +632,13 @@ class VisionSettings
 
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    public static boolean usingWebcam = false;
+    protected final boolean usingWebcam = false;
+
+    //tensorFlow
+    protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
+    protected final String LABEL_FIRST_ELEMENT = "Quad";
+    protected final String LABEL_SECOND_ELEMENT = "Single";
+    protected float minResultConfidence = .8f;
 
     VisionSettings(){}
 }
