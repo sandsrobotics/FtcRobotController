@@ -3,13 +3,11 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.vuforia.CameraDevice;
-import com.vuforia.Trackable;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Position;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
@@ -18,12 +16,10 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -32,7 +28,6 @@ import org.openftc.easyopencv.OpenCvInternalCamera;
 import org.openftc.easyopencv.OpenCvPipeline;
 import org.openftc.easyopencv.OpenCvWebcam;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
@@ -40,7 +35,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
-import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
 
 @Config
 public class Vision extends Thread
@@ -49,37 +43,37 @@ public class Vision extends Thread
     // other variables//
     ////////////////////
     //converting inch to mm
-    private static final float mmPerInch = 25.4f;
+    protected final float mmPerInch = 25.4f; //just to convert mm to in
 
     // object location
-    protected volatile OpenGLMatrix[] lastTrackablesLocations = new OpenGLMatrix[5];
-    protected volatile OpenGLMatrix[] currentTrackablesLocations = new OpenGLMatrix[5];
-    protected volatile OpenGLMatrix lastCalculatedRobotLocation = new OpenGLMatrix();
-    protected volatile OpenGLMatrix currentCalculatedRobotLocation = new OpenGLMatrix();
-    protected volatile boolean anyTrackableFound = false;
+    protected volatile OpenGLMatrix[] lastTrackablesLocations = new OpenGLMatrix[5]; //stores the last known position of trackables
+    protected volatile OpenGLMatrix[] currentTrackablesLocations = new OpenGLMatrix[5]; //stores the current position of trackables if they are visible
+    protected volatile OpenGLMatrix lastCalculatedRobotLocation = new OpenGLMatrix(); //stores the last known robot location from trackables
+    protected volatile OpenGLMatrix currentCalculatedRobotLocation = new OpenGLMatrix(); //stores the current robot location if any trackables are visible
+    protected volatile boolean anyTrackableFound = false; //stores whether an trackables are visible
 
     // some vuforia stuff
-    protected VuforiaLocalizer vuforia = null;
-    protected VuforiaTrackables trackables;
-    protected VuforiaLocalizer.Parameters parameters;
+    protected VuforiaLocalizer vuforia = null; //API to setup trackables and Tfod
+    protected VuforiaTrackables trackables; //object that check if any trackables are visible
+    protected VuforiaLocalizer.Parameters parameters; //parameters to setup vuforia
 
     //some openCV stuff
-    OpenCvWebcam webcam;
-    OpenCvCamera phoneCam;
-    SkystoneDeterminationPipeline pipeline;
+    protected OpenCvWebcam webcam; //a webcam object to get image
+    protected OpenCvCamera phoneCam; //a phone camera to get picture from phone
+    protected SkystoneDeterminationPipeline pipeline; //pipeline to run OpenCV ring detection
 
     //some tensorFlow stuff
-    TFObjectDetector tfod;
-    protected volatile List<Recognition> tfodRecognitions;
-    protected volatile List<Recognition> tfodUpdatedRecognitions;
-    protected boolean anyTfodObjectsFound = false;
+    TFObjectDetector tfod; //a model object to find any rings
+    protected volatile List<Recognition> tfodLastRecognitions; //stores the last position and amount of rings
+    protected volatile List<Recognition> tfodCurrentRecognitions; //stores the current position and amount of rings if available
+    protected boolean anyTfodObjectsFound = false; //stores whether any objects where found
 
     //other
     protected int cameraMonitorViewId;
 
     //other class
-    Robot robot;
-    VisionSettings visionSettings;
+    Robot robot; //to use values/methods from the robot object, other objects, and LinearOpMode
+    VisionSettings visionSettings; //just an object to store all user set variables for vision
 
 
     //////////////////
@@ -96,7 +90,7 @@ public class Vision extends Thread
         this.robot = robot;
     }
 
-    void initAll(boolean useVuforia, boolean useOpenCV, boolean useTensorFlow)
+    void initAll(boolean useVuforia, boolean useOpenCV, boolean useTensorFlow) //sets up all the vision objects and camera
     {
         initCamera();
 
@@ -120,12 +114,12 @@ public class Vision extends Thread
         }
     }
 
-    void initAll()
+    void initAll() //the method above but it takes values from RobotUsage
     {
         initAll(robot.robotUsage.useVuforia, robot.robotUsage.useOpenCV, robot.robotUsage.useTensorFlow);
     }
 
-    void initCamera()
+    void initCamera() //gets the camera Id to make initialization easier for vision objects
     {
         cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
     }
@@ -188,7 +182,7 @@ public class Vision extends Thread
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, angles[0], angles[1], angles[2])));
     }
 
-    void setPhoneTransform(float[] position, float[] angles) // positions is in mm: X is mm left from center line, Y is mm above ground, Z is mm forward from center line. rotation is in order XYZ in deg
+    void setPhoneTransform(float[] position, float[] angles) // positions is in INCHES: X is INCHES left from center line, Y is INCHES above ground, Z is INCHES forward from center line. rotation is in order XYZ in deg
     {
         for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
 
@@ -282,10 +276,10 @@ public class Vision extends Thread
 
     void findAllTfodObjects()
     {
-        tfodRecognitions = tfod.getRecognitions();
-        tfodUpdatedRecognitions = tfod.getUpdatedRecognitions();
+        tfodLastRecognitions = tfod.getRecognitions();
+        tfodCurrentRecognitions = tfod.getUpdatedRecognitions();
 
-        anyTfodObjectsFound = tfodUpdatedRecognitions != null;
+        anyTfodObjectsFound = tfodCurrentRecognitions != null;
     }
 
     //////////////////
@@ -310,7 +304,7 @@ public class Vision extends Thread
                 @Override
                 public void onOpened()
                 {
-                    webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                    webcam.startStreaming(512,288, OpenCvCameraRotation.SIDEWAYS_LEFT);
                 }
             });
         }
@@ -594,16 +588,16 @@ public class Vision extends Thread
     public void run()
     {
         activateVuforia();
-        if(robot.robotUsage.useTensorFlow) activateTfod();
+        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) activateTfod();
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             findAllTrackables();
-            if(robot.robotUsage.useTensorFlow) findAllTfodObjects();
+            if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) findAllTfodObjects();
         }
 
         deactivateVuforia();
-        if(robot.robotUsage.useTensorFlow) deactivateTfod();
+        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) deactivateTfod();
     }
 
     public void stopThread()
@@ -618,27 +612,27 @@ class VisionSettings
     //user variables//
     //////////////////
     //just some stuff to get a working vuforia object
-    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK;
-    protected final boolean PHONE_IS_PORTRAIT = false;
-    protected boolean useExtendedTracking = false;
+    protected final VuforiaLocalizer.CameraDirection CAMERA_CHOICE_V = BACK; // if you are using a phone which camera do you want to use
+    protected final boolean PHONE_IS_PORTRAIT = false; // if you are using a phone which orientation is it
+    protected final boolean useExtendedTracking = false;
     protected final String VUFORIA_KEY = "Ad6cSm3/////AAABmRkDMfGtWktbjulxwWmgzxl9TiuwUBtfA9n1VM546drOcSfM+JxvMxvI1WrLSLNdapOtOebE6n3BkjTjyj+sTXHoEyyJW/lPPmlX5Ar2AjeYpTW/WZM/lzG8qDPsm0tquhEj3BUisA5GRttyGXffPwfKJZNPy3WDqnPxyY/U2v+jQNfZjsWqNvUfp3a3klhVPYd25N5dliMihK3WogqNQnZM9bwJc1wRT0zcczYBJJrhpws9A5H2FpOZD6Ov7GqT+rJdKrU6bh+smoueINDFeaFuYQVMEeo7VOLgkzOeRDpfFmVOVeJrmUv+mwnxfFthAY5v90e4kgekG5OYzRQDS2ta0dbUpG6GoJMoZU2vASSa";
 
     //to know where the phone or camera is IN INCHES!!! and degrees
-    float[] phonePosition = {0,0,0};
-    float[] phoneRotation = {0,0,0};
+    protected final float[] phonePosition = {0,0,0}; // the phone position from center of robot
+    protected final float[] phoneRotation = {0,0,0}; // the phone rotation
 
     //to see where goal is
-    int goalPictureNum = 3;
+    protected final int goalPictureNum = 3; // which picture is the one under the goal
 
     //to set up easy openCV camera
-    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK;
-    protected final boolean usingWebcam = false;
+    protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK; // if you are using a phone which camera do you want to use
+    protected final boolean usingWebcam = false; // weather or not you are using a web-cam or phone
 
     //tensorFlow
-    protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite";
+    protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite"; //what is the name of the model
     protected final String LABEL_FIRST_ELEMENT = "Quad";
     protected final String LABEL_SECOND_ELEMENT = "Single";
-    protected float minResultConfidence = .8f;
+    protected final float minResultConfidence = .6f; //how confident does the model have to be to say there is a ring
 
     VisionSettings(){}
 }

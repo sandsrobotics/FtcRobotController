@@ -373,13 +373,13 @@ class PID
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV, useTensorFlow = true;
+    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV, boolean useTensorFlow)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
@@ -390,6 +390,7 @@ class RobotUsage
         this.useVuforia = useVuforia;
         this.useOpenCV = useOpenCV;
         this.useTensorFlow = useTensorFlow;
+        this.useTensorFlowInTread = useTensorFlowInTread;
     }
 
     void setAllToValue(boolean value)
@@ -403,6 +404,7 @@ class RobotUsage
         this.useVuforia = value;
         this.useOpenCV = value;
         this.useTensorFlow = value;
+        this.useTensorFlowInTread = value;
     }
 }
 
