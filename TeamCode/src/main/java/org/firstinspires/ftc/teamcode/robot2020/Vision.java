@@ -136,6 +136,7 @@ public class Vision extends Thread
         parameters.vuforiaLicenseKey = visionSettings.VUFORIA_KEY;
         parameters.cameraDirection = visionSettings.CAMERA_CHOICE_V;
         parameters.useExtendedTracking = visionSettings.useExtendedTracking;
+        if(robot.robotUsage.useTensorFlow) parameters.cameraName = robot.hardwareMap.get(WebcamName.class, "Webcam 1");
 
         //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -269,6 +270,7 @@ public class Vision extends Thread
         tfodParameters.minResultConfidence = visionSettings.minResultConfidence;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(visionSettings.TFOD_MODEL_ASSET, visionSettings.LABEL_FIRST_ELEMENT, visionSettings.LABEL_SECOND_ELEMENT);
+        tfod.setZoom(1.05, 16/9);
     }
 
     void activateTfod(){tfod.activate();}
@@ -304,7 +306,7 @@ public class Vision extends Thread
                 @Override
                 public void onOpened()
                 {
-                    webcam.startStreaming(512,288, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                    webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
                 }
             });
         }
@@ -630,8 +632,8 @@ class VisionSettings
 
     //tensorFlow
     protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite"; //what is the name of the model
-    protected final String LABEL_FIRST_ELEMENT = "Quad";
-    protected final String LABEL_SECOND_ELEMENT = "Single";
+    protected final String LABEL_FIRST_ELEMENT = "4";
+    protected final String LABEL_SECOND_ELEMENT = "1";
     protected final float minResultConfidence = .6f; //how confident does the model have to be to say there is a ring
 
     VisionSettings(){}
