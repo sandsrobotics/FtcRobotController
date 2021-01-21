@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -21,10 +22,14 @@ public class Test extends LinearOpMode {
         ru.setAllToValue(false);
         ru.useTensorFlow = true;
         ru.useVuforia = true;
-        ru.useTensorFlowInTread = true;
+        ru.useTensorFlowInTread = false;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
+
+        robot.vision.activateTfod();
+        robot.vision.tfod.setZoom(1.5, 16/9);
+        FtcDashboard.getInstance().startCameraStream(robot.vision.tfod, 0);
 
         waitForStart();
 
@@ -32,6 +37,7 @@ public class Test extends LinearOpMode {
 
         while(opModeIsActive())
         {
+            robot.vision.findAllTfodObjects();
             robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP,true);
             if(robot.vision.anyTfodObjectsFound)
             {
