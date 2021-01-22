@@ -22,7 +22,7 @@ public class Test extends LinearOpMode {
         ru.setAllToValue(false);
         ru.useTensorFlow = true;
         ru.useVuforia = true;
-        ru.useTensorFlowInTread = false;
+        ru.useTensorFlowInTread = true;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);

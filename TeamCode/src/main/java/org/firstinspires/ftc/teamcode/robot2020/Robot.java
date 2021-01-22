@@ -24,7 +24,7 @@ public class Robot
     //other variables//
     ///////////////////
     //other classes
-    public MotorConfig motorConfig;
+    public MotorConfig motorConfig; //stores and configures all motors and servos
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
