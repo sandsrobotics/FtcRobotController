@@ -142,7 +142,11 @@ public class Vision extends Thread
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
     }
 
-    void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);} // starts a dashboard stream at a certain fps
+    void startDashboardCameraStream(int maxFps, boolean useVuforia)
+    {
+        if(useVuforia && vuforia != null) FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);
+        else if(tfod != null) FtcDashboard.getInstance().startCameraStream(tfod,maxFps);
+    } // starts a dashboard stream at a certain fps
     void stopDashboardCameraStream(){FtcDashboard.getInstance().stopCameraStream();} // stops the dashboard stream
 
     void loadAsset(String assetName) { trackables = vuforia.loadTrackablesFromAsset(assetName); } // loads the vuforia assets from a file
