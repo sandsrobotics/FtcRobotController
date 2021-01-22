@@ -302,6 +302,7 @@ public class Vision extends Thread
         }
         return 0;
     }
+    int getNumOfRings() { return getNumOfRings(getHighestConfidence()); }
 
     void findAllTfodObjects()
     {
@@ -333,7 +334,7 @@ public class Vision extends Thread
                 @Override
                 public void onOpened()
                 {
-                    webcam.startStreaming(320,240, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                    webcam.startStreaming(320,240, OpenCvCameraRotation.UPRIGHT);
                 }
             });
         }
@@ -616,16 +617,16 @@ public class Vision extends Thread
     /////////////////
     public void run()
     {
-        activateVuforia();
+        if(robot.robotUsage.useVuforiaInThread)activateVuforia();
         if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) todActivationSequence();
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
-            findAllTrackables();
+            if(robot.robotUsage.useVuforiaInThread)findAllTrackables();
             if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) findAllTfodObjects();
         }
 
-        deactivateVuforia();
+        if(robot.robotUsage.useVuforiaInThread)deactivateVuforia();
         if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) deactivateTfod();
     }
 

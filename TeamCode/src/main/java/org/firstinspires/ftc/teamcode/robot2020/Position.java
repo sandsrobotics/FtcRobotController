@@ -81,7 +81,7 @@ public class Position extends Thread
     {
         //get difference
         lastMotorPos = currMotorPos;
-        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
         int[] diff = new int[4];
         for(int i = 0; i < 4; i++)
         {
@@ -106,7 +106,7 @@ public class Position extends Thread
             {
                 positionAccuracy = 100;
                 //currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
-                currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
+                //currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
             }
         }
     }
@@ -151,7 +151,7 @@ public class Position extends Thread
     //////////////////
     void initialize()
     {
-        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
     }
 
     void updateAll()
@@ -164,10 +164,7 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        if(robot.robotUsage.usePositionTracking)
-        {
-            initialize();
-        }
+        //if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
@@ -175,7 +172,7 @@ public class Position extends Thread
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                if(robot.robotUsage.logPositionTracking) addCurrentPosition(true);
+                //if(robot.robotUsage.logPosition) addCurrentPosition(true);
                 updatePositionFromVuforia();
             }
         }

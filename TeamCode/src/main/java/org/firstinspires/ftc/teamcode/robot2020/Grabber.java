@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Grabber {
 
@@ -14,7 +13,6 @@ public class Grabber {
     /////////////
     Robot robot;
     GrabberSettings grabberSettings;
-    DigitalChannel limitSwitch;
 
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
@@ -32,18 +30,9 @@ public class Grabber {
         this.grabberSettings = grabberSettings;
     }
 
-    void init()
+    void initHardware()
     {
-        robot.motorConfig.grabberLifterMotor.setTargetPosition(0);
-        robot.motorConfig.grabberLifterMotor.setPower(grabberSettings.motorPower);
-        robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        for(int i = 0; i < 2; i++)
-        {
-            setServoPositions[i] = grabberSettings.servoRestPositions[i];
-            robot.motorConfig.grabberServos.get(i).setPosition(setServoPositions[i]);
-        }
-        limitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
-        limitSwitch.setMode(DigitalChannel.Mode.INPUT);
+
     }
 
     void initGrabberPos()
@@ -54,14 +43,14 @@ public class Grabber {
             while(limitSwitch.getState() && !robot.stop())
             {
                 pos -= grabberSettings.homingSpeed;
-                robot.motorConfig.grabberLifterMotor.setTargetPosition(pos);
-                robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.hardware.grabberLifterMotor.setTargetPosition(pos);
+                robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
         }
-        robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.motorConfig.grabberLifterMotor.setTargetPosition(0);
-        robot.motorConfig.grabberLifterMotor.setPower(grabberSettings.motorPower);
-        robot.motorConfig.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.hardware.grabberLifterMotor.setTargetPosition(0);
+        robot.hardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
+        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     void setFromControls(Gamepad gamepad)
@@ -106,14 +95,14 @@ public class Grabber {
 
     void moveMotors()
     {
-        robot.motorConfig.grabberLifterMotor.setTargetPosition(setEncoderPos);
+        robot.hardware.grabberLifterMotor.setTargetPosition(setEncoderPos);
         stopMotor();
     }
     void moveServos()
     {
         for(int i = 0; i < 2; i++)
         {
-            robot.motorConfig.grabberServos.get(i).setPosition(setServoPositions[i]);
+            robot.hardware.grabberServos.get(i).setPosition(setServoPositions[i]);
         }
     }
     void moveAll()
@@ -126,20 +115,20 @@ public class Grabber {
     {
         setEncoderPos = pos;
         moveMotors();
-        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { if(stopMotor()) break; }
+        while(robot.hardware.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { if(stopMotor()) break; }
     }
 
     boolean stopMotor()
     {
         if(!limitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
         {
-            robot.motorConfig.grabberLifterMotor.setPower(0);
+            robot.hardware.grabberLifterMotor.setPower(0);
             motorStopped = true;
             return true;
         }
         else if(motorStopped)
         {
-            robot.motorConfig.grabberLifterMotor.setPower(grabberSettings.motorPower);
+            robot.hardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
             motorStopped = false;
         }
         return false;

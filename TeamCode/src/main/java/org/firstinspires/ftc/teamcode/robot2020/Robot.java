@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import androidx.room.Room;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -12,9 +10,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 
 
 @Config
@@ -24,7 +19,7 @@ public class Robot
     //other variables//
     ///////////////////
     //other classes
-    public MotorConfig motorConfig; //stores and configures all motors and servos
+    public Hardware hardware; //stores and configures all motors and servos
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
@@ -62,7 +57,7 @@ public class Robot
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        motorConfig = new MotorConfig(this, robotSettingsMain.motorConfigSettings);
+        hardware = new Hardware(this, robotSettingsMain.motorConfigSettings);
         position = new Position(this, robotSettingsMain.positionSettings);
 
         if(robotUsage.useDrive) movement = new Movement(this, robotSettingsMain.movementSettings);
@@ -73,13 +68,13 @@ public class Robot
         addTelemetry("grabber", " init");}
 
         initHardware();
-        if(robotUsage.useDrive || robotUsage.usePositionTracking) motorConfig.initDriveMotors();
-        if(robotUsage.useLauncher) motorConfig.initLauncherMotors();
+        if(robotUsage.useDrive || robotUsage.usePositionTracking) hardware.initDriveMotors();
+        if(robotUsage.useLauncher) hardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
         if(robotUsage.useGrabber)
         {
-            motorConfig.initGrabberMotors();
-            grabber.init();
+            hardware.initGrabberMotors();
+            grabber.initHardware();
         }
     }
 
@@ -123,8 +118,8 @@ public class Robot
     void start()
     {
         startTelemetry();
-        position.start();
-        if(robotUsage.useVuforia) vision.start();
+        if(robotUsage.runPositionThread)position.start();
+        if(robotUsage.useVuforia && (robotUsage.useVuforiaInThread || (robotUsage.useTensorFlow && robotUsage.useTensorFlowInTread))) vision.start();
         if(robotUsage.useGrabber) grabber.initGrabberPos();
     }
 
@@ -386,21 +381,23 @@ class PID
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
+    boolean useDrive, usePositionTracking, logPosition, runPositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPosition, boolean runPositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
-        this.logPositionTracking = logPositionTracking;
+        this.logPosition = logPosition;
+        this.runPositionThread = runPositionThread;
         this.useComplexMovement = useComplexMovement;
         this.useLauncher = useLauncher;
         this.useGrabber = useGrabber;
         this.useVuforia = useVuforia;
+        this.useVuforiaInThread = useVuforiaInThread;
         this.useOpenCV = useOpenCV;
         this.useTensorFlow = useTensorFlow;
         this.useTensorFlowInTread = useTensorFlowInTread;
@@ -410,11 +407,12 @@ class RobotUsage
     {
         this.useDrive = value;
         this.usePositionTracking = value;
-        this.logPositionTracking = value;
+        this.logPosition = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
         this.useGrabber = value;
         this.useVuforia = value;
+        this.useVuforiaInThread = value;
         this.useOpenCV = value;
         this.useTensorFlow = value;
         this.useTensorFlowInTread = value;

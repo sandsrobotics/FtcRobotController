@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import androidx.room.Room;
 import com.acmerobotics.dashboard.config.Config;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
+
 import org.firstinspires.ftc.teamcode.robot2020.persistence.Movement.MovementEntity;
 
 import java.util.ArrayList;
@@ -57,12 +55,12 @@ public class ComplexMovement {
             {
                 if(startOfRecording)
                 {
-                    motorStartOffset = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+                    motorStartOffset = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
                     startMs = System.currentTimeMillis();
                     startOfRecording = false;
                 }
 
-                int[] pos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+                int[] pos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
                 for(int i = 0; i < pos.length; i++) pos[i] -= motorStartOffset[i];
                 positions.add(pos);
             }
@@ -74,7 +72,7 @@ public class ComplexMovement {
     void startRecording()
     {
         resetRecording();
-        robot.motorConfig.setMotorsToCoastList(robot.motorConfig.driveMotors);
+        robot.hardware.setMotorsToCoastList(robot.hardware.driveMotors);
         isRecording = true;
     }
 
@@ -104,7 +102,7 @@ public class ComplexMovement {
         //robot.db.movementEntityDAO().insertAll(entity);
         for (int i = 0; i < positions.size(); i++)
         {
-            for (int m = 0; m < robot.motorConfig.driveMotors.size(); m++) {
+            for (int m = 0; m < robot.hardware.driveMotors.size(); m++) {
                 MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m]);
                 //robot.db.movementEntityDAO().insertAll(entity1);
             }
@@ -231,22 +229,22 @@ public class ComplexMovement {
         {
             int curInstruction = 0;
             double[] curLoadedVelocities = new double[4];
-            int[] motorStartPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+            int[] motorStartPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
             boolean start = true;
-            robot.motorConfig.setMotorsToBrakeList(robot.motorConfig.driveMotors);
+            robot.hardware.setMotorsToBrakeList(robot.hardware.driveMotors);
 
             double startMs = System.currentTimeMillis();
 
             while (!robot.stop()) {
                 if (curInstruction * loaded_MeasureDelay <= System.currentTimeMillis() - startMs) {
                     for (int m = 0; m < 4; m++) {
-                        robot.motorConfig.driveMotors.get(m).setTargetPosition(loaded_Positions.get(curInstruction)[m] + motorStartPos[m]);
+                        robot.hardware.driveMotors.get(m).setTargetPosition(loaded_Positions.get(curInstruction)[m] + motorStartPos[m]);
                     }
                     curInstruction++;
                 }
                 if (start) {
-                    robot.motorConfig.setMotorsToPowerList(robot.motorConfig.driveMotors,1);
-                    robot.motorConfig.setMotorsToRunToPositionList(robot.motorConfig.driveMotors);
+                    robot.hardware.setMotorsToPowerList(robot.hardware.driveMotors,1);
+                    robot.hardware.setMotorsToRunToPositionList(robot.hardware.driveMotors);
                     start = false;
                 }
                 if (curInstruction == loaded_Positions.size() || robot.stop()) break;
@@ -255,10 +253,10 @@ public class ComplexMovement {
                     break;
                 }
             }
-            while(!robot.motorConfig.motorPositionsInToleranceList(robot.motorConfig.driveMotors, 5) && !stopIfTimeIsMoreThanMoveTime){if(robot.stop()) break;}
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
-            robot.motorConfig.setMotorsToRunWithEncodersList(robot.motorConfig.driveMotors);
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            while(!robot.hardware.motorPositionsInToleranceList(robot.hardware.driveMotors, 5) && !stopIfTimeIsMoreThanMoveTime){if(robot.stop()) break;}
+            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
+            robot.hardware.setMotorsToRunWithEncodersList(robot.hardware.driveMotors);
+            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
         }
         else if(robot.robotSettings.debug_methods) robot.addTelemetry("warning in ComplexMovement.RunMoveV2: ", "no loaded move!");
     }

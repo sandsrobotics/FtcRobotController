@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.io.BufferedReader;
@@ -10,8 +9,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.os.SystemClock.sleep;
 
 @Config
 public class Launcher {
@@ -55,7 +52,7 @@ public class Launcher {
 
     void init()
     {
-        robot.motorConfig.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     ///////////////
@@ -164,7 +161,7 @@ public class Launcher {
         if(launcherSettings.revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
-        if (runWheelOnTrigger) robot.motorConfig.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
+        if (runWheelOnTrigger) robot.hardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
         else setRPM();
     }
 
@@ -179,7 +176,7 @@ public class Launcher {
         }
         if(moveIntakeMotorForward) intakeMotorPower = 1;
 
-        robot.motorConfig.launcherMotors.get(1).setPower(intakeMotorPower);
+        robot.hardware.launcherMotors.get(1).setPower(intakeMotorPower);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
@@ -255,7 +252,7 @@ public class Launcher {
 
     double getPRM()
     {
-        return  robot.motorConfig.launcherWheelMotor.getVelocity() * spinMultiplier;
+        return  robot.hardware.launcherWheelMotor.getVelocity() * spinMultiplier;
     }
 
     double getDistanceToGoal(boolean useMinLaunchDistance)
@@ -276,7 +273,7 @@ public class Launcher {
     void setRPM(double RPM)
     {
         targetWheelRpm = RPM;
-        robot.motorConfig.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
+        robot.hardware.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
     }
 
     void setRPM()
@@ -305,9 +302,9 @@ public class Launcher {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;
         }
-        robot.motorConfig.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
+        robot.hardware.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
         robot.delay(actuatorTime);
-        robot.motorConfig.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     void moveLaunchServo()
