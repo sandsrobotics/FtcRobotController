@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
@@ -19,9 +20,11 @@ public class Autonomous extends LinearOpMode {
     public void runOpMode()
     {
 
+        /////////////
+        //variables//
+        /////////////
         GamepadButtons closeButton = GamepadButtons.A;
         boolean closed = false;
-        Vision.SkystoneDeterminationPipeline.RingPosition rings = Vision.SkystoneDeterminationPipeline.RingPosition.NONE;
 
         double[] APos = {-16,-58,-90};
         //double[] APosLose = {-20,-124,0};
@@ -36,13 +39,18 @@ public class Autonomous extends LinearOpMode {
         double[] tolLose = {2, 2, 5};
 
         int servoMoveTime = 150;
+        int rings = 0;
 
+        ////////
+        //code//
+        ////////
         RobotUsage ru = new RobotUsage();
-        ru.useVuforia = false;
         ru.useComplexMovement = false;
 
-        RobotSettingsMain rsm = new RobotSettingsMain();
-        robot = new Robot(this, ru, rsm);
+        robot = new Robot(this, ru);
+
+        robot.vision.todActivationSequence();
+        robot.vision.startDashboardCameraStream(24,false);
 
         while(!isStarted())
         {
@@ -52,8 +60,12 @@ public class Autonomous extends LinearOpMode {
                 if(closed) robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions);
                 else robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions);
             }
-            rings = robot.vision.pipeline.position;
+            robot.vision.findAllTfodObjects();
+            robot.vision.getHighestConfidence();
+            rings = robot.vision.getNumOfRings(robot.vision.getHighestConfidence());
         }
+
+
 
         robot.start();
 
@@ -66,24 +78,25 @@ public class Autonomous extends LinearOpMode {
             robot.sendTelemetry();
             if(gamepad1.b)
             {
-               if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.NONE)
+               if(rings == 0)
                {
                    //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
                    robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                    robot.movement.moveToPosition(APos,tolFinal,15,7000,.25);
                }
-               else if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.ONE)
+               else if(rings == 1)
                {
                    //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
                    robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                    robot.movement.moveToPosition(BPos,tolFinal,15,7000,.25);
                }
-               else if(rings == Vision.SkystoneDeterminationPipeline.RingPosition.FOUR)
+               else if(rings == 4)
                {
                    //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
                    robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                    robot.movement.moveToPosition(CPos,tolFinal,15,7000,.25);
                }
+               else return;
 
                robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions);
                robot.delay(servoMoveTime);

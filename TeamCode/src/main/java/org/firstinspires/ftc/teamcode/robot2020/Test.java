@@ -27,9 +27,8 @@ public class Test extends LinearOpMode {
 
         robot = new Robot(this, ru);
 
-        robot.vision.tfod.activate();
-        robot.vision.tfod.setZoom(1.1, (double)16/(double)9);
-        FtcDashboard.getInstance().startCameraStream(robot.vision.tfod, 24);
+        robot.vision.todActivationSequence();
+        robot.vision.startDashboardCameraStream(24,false);
 
         while (!isStarted())
         {

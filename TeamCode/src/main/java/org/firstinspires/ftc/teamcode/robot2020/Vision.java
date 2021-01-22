@@ -273,6 +273,36 @@ public class Vision extends Thread
     void activateTfod(){tfod.activate();}
     void deactivateTfod(){tfod.shutdown();}
 
+    void todActivationSequence()
+    {
+        activateTfod();
+        tfod.setZoom(1.1, (double)16/(double)9);
+    }
+
+    Recognition getHighestConfidence()
+    {
+        Recognition out = null;
+        if(anyTfodObjectsFound)
+        {
+            for(Recognition rec: tfodCurrentRecognitions)
+            {
+                if(out == null) out = rec;
+                else if(rec.getConfidence() > out.getConfidence()) out = rec;
+            }
+        }
+        return out;
+    }
+
+    int getNumOfRings(Recognition rec)
+    {
+        if(rec != null)
+        {
+            if(rec.getLabel() == "QUAD") return 4;
+            else if(rec.getLabel() == "SINGLE") return 1;
+        }
+        return 0;
+    }
+
     void findAllTfodObjects()
     {
         tfodLastRecognitions = tfod.getRecognitions();
@@ -587,11 +617,7 @@ public class Vision extends Thread
     public void run()
     {
         activateVuforia();
-        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread)
-        {
-            activateTfod();
-            tfod.setZoom(1.1, (double)16/(double)9);
-        }
+        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) todActivationSequence();
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
@@ -633,8 +659,8 @@ class VisionSettings
 
     //tensorFlow
     protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite"; //what is the name of the model
-    protected final String LABEL_FIRST_ELEMENT = "4";
-    protected final String LABEL_SECOND_ELEMENT = "1";
+    protected final String LABEL_FIRST_ELEMENT = "QUAD";
+    protected final String LABEL_SECOND_ELEMENT = "SINGLE";
     protected final float minResultConfidence = .6f; //how confident does the model have to be to say there is a ring
 
     VisionSettings(){}
