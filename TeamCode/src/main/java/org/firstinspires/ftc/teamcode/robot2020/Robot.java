@@ -38,7 +38,7 @@ public class Robot
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
-    protected AppDatabase db;
+    //protected AppDatabase db;
     protected RobotUsage robotUsage;
     protected RobotSettings robotSettings;
 
@@ -115,7 +115,7 @@ public class Robot
         /////////////
         //data base//
         /////////////
-        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
+        //db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
     }
 
     //------------------My Methods------------------//
@@ -125,7 +125,7 @@ public class Robot
         startTelemetry();
         position.start();
         if(robotUsage.useVuforia) vision.start();
-        //if(robotUsage.useGrabber) grabber.initGrabberPos();
+        if(robotUsage.useGrabber) grabber.initGrabberPos();
     }
 
     /////////////
@@ -236,26 +236,38 @@ enum GamepadButtons
 
     boolean wasButtonPressed = false;
     long lastButtonRelease = System.currentTimeMillis();
+}
+
+class GamepadButtonManager
+{
+    boolean wasButtonPressed = false;
+    long lastButtonRelease = System.currentTimeMillis();
+    GamepadButtons gamepadButton;
+
+    GamepadButtonManager(GamepadButtons gamepadButton)
+    {
+        this.gamepadButton = gamepadButton;
+    }
 
     boolean getButtonHeld(Gamepad gamepad)
     {
-        if(this == GamepadButtons.A) return gamepad.a;
-        if(this == GamepadButtons.B) return gamepad.b;
-        if(this == GamepadButtons.X) return gamepad.x;
-        if(this == GamepadButtons.Y) return gamepad.y;
+        if(gamepadButton == GamepadButtons.A) return gamepad.a;
+        if(gamepadButton == GamepadButtons.B) return gamepad.b;
+        if(gamepadButton == GamepadButtons.X) return gamepad.x;
+        if(gamepadButton == GamepadButtons.Y) return gamepad.y;
 
-        if(this == GamepadButtons.dpadUP) return gamepad.dpad_up;
-        if(this == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
-        if(this == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
-        if(this == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
+        if(gamepadButton == GamepadButtons.dpadUP) return gamepad.dpad_up;
+        if(gamepadButton == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
+        if(gamepadButton == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
+        if(gamepadButton == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
 
-        if(this == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
-        if(this == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
-        if(this == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
-        if(this == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
+        if(gamepadButton == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
+        if(gamepadButton == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
+        if(gamepadButton == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
+        if(gamepadButton == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
 
-        if(this == GamepadButtons.START) return gamepad.start;
-        if(this == GamepadButtons.BACK) return gamepad.back;
+        if(gamepadButton == GamepadButtons.START) return gamepad.start;
+        if(gamepadButton == GamepadButtons.BACK) return gamepad.back;
 
         return false;
     }
@@ -297,17 +309,18 @@ enum GamepadButtons
 
     float getSliderValue(Gamepad gamepad)
     {
-        if(this == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
-        if(this == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
-        if(this == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
-        if(this == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
+        if(gamepadButton == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
+        if(gamepadButton == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
+        if(gamepadButton == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
+        if(gamepadButton == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
 
-        if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
-        if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
-        if(this == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
+        if(gamepadButton == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
+        if(gamepadButton == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+        if(gamepadButton == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
 
         return 0;
     }
+
 }
 
 class PID

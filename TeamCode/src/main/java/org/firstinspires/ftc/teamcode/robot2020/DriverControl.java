@@ -17,6 +17,7 @@ public class DriverControl extends LinearOpMode
         ru.useVuforia = false;
         ru.useComplexMovement = false;
 
+
         robot = new Robot(this,ru);
 
         waitForStart();
@@ -26,7 +27,7 @@ public class DriverControl extends LinearOpMode
 
         while (opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1, GamepadButtons.leftBUMPER, true);
+            robot.movement.moveForTeleOp(gamepad1, new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
             robot.grabber.runForTeleOp(gamepad1, true);
             robot.launcher.runForTeleOp(gamepad2,true);
             robot.sendTelemetry();

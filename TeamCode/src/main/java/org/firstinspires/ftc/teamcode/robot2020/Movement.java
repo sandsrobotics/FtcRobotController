@@ -162,14 +162,14 @@ public class Movement
     void setSpeedMultiplierToMax() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMax; }
     void setSpeedMultiplierToMin() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMin; }
 
-    void moveForTeleOp(Gamepad gamepad1, GamepadButtons breakButton, boolean useTelemetry)
+    void moveForTeleOp(Gamepad gamepad, GamepadButtonManager breakButton, boolean useTelemetry)
     {
-        if(breakButton.getButtonHeld(gamepad1))
+        if(breakButton.getButtonHeld(gamepad))
         {
             robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
-        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, true,true));
+        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
         if(useTelemetry) teleOpTelemetry();
     }
 
@@ -252,13 +252,18 @@ class MovementSettings
     public static PIDCoefficients turnPID = new PIDCoefficients(.04,0,0);
     public static PIDCoefficients moveXPID = new PIDCoefficients(.06,0,0);
     public static PIDCoefficients moveYPID = new PIDCoefficients(.06,0,0);
-    public static double moveXSmoothingSteps = .1;
-    public static double moveYSmoothingSteps = .1;
-    public static double rotationSmoothingSteps = .1;
+    public static double moveXSmoothingSteps = .125;
+    public static double moveYSmoothingSteps = .125;
+    public static double rotationSmoothingSteps = .125;
 
     protected double speedMultiplier = 1;
     protected final double speedMultiplierMin = .2;
     protected final double speedMultiplierMax = 2;
+
+    //controls
+    GamepadButtonManager XMoveStick = new GamepadButtonManager(GamepadButtons.leftJoyStickX);
+    GamepadButtonManager YMoveStick = new GamepadButtonManager(GamepadButtons.leftJoyStickY);
+    GamepadButtonManager RotMoveStick = new GamepadButtonManager(GamepadButtons.rightJoyStickX);
 
     MovementSettings(){}
 }

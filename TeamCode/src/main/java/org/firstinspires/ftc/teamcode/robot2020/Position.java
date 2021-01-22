@@ -116,7 +116,7 @@ public class Position extends Thread
     ////////////
     void setCurrentRun(boolean addOne)
     {
-        currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
+        //currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
         if(addOne) currentRun ++;
     }
 
@@ -124,11 +124,12 @@ public class Position extends Thread
     {
         RobotPositionEntity pos = new RobotPositionEntity(0, currentRobotPosition[0],currentRobotPosition[1],currentRotation, positionAccuracy);
         if(useCurrentRun) pos.runNumber = currentRun;
-        robot.db.robotPositionEntityDAO().insertAll(pos);
+        //robot.db.robotPositionEntityDAO().insertAll(pos);
     }
 
     void loadLastPos()
     {
+        /*
         RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
         if(last == null){ if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
@@ -139,9 +140,11 @@ public class Position extends Thread
             currentRobotPosition[2] = last.rotation;
             rotationOffset = -last.rotation;
         }
+
+         */
     }
 
-    void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
+    //void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
 
     //////////////////
     //runs in thread//

@@ -19,6 +19,7 @@ public class Grabber {
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
     protected boolean clawClosed = false;
+    protected boolean motorStopped = false;
 
     Grabber(Robot robot)
     {
@@ -106,6 +107,7 @@ public class Grabber {
     void moveMotors()
     {
         robot.motorConfig.grabberLifterMotor.setTargetPosition(setEncoderPos);
+        stopMotor();
     }
     void moveServos()
     {
@@ -124,14 +126,31 @@ public class Grabber {
     {
         setEncoderPos = pos;
         moveMotors();
-        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { }
+        while(robot.motorConfig.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { if(stopMotor()) break; }
     }
 
-    void setServosToPos(double[] servoPos)
+    boolean stopMotor()
+    {
+        if(!limitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
+        {
+            robot.motorConfig.grabberLifterMotor.setPower(0);
+            motorStopped = true;
+            return true;
+        }
+        else if(motorStopped)
+        {
+            robot.motorConfig.grabberLifterMotor.setPower(grabberSettings.motorPower);
+            motorStopped = false;
+        }
+        return false;
+    }
+
+    void setServosToPos(double[] servoPos, boolean waitForServos)
     {
         setServoPositions[0] = servoPos[0];
         setServoPositions[1] = servoPos[1];
         moveServos();
+        robot.delay(grabberSettings.servoCloseTime);
     }
 }
 
@@ -140,7 +159,7 @@ class GrabberSettings
     ////////////////
     //user defined//
     ////////////////
-    protected int maxMotorPos = 1660;
+    protected int maxMotorPos = 1600;
     protected int minMotorPos = 0;
     protected double motorPower = .75;
 
@@ -153,16 +172,17 @@ class GrabberSettings
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
     protected double[] servoGrabPositions = {.9, .1};
+    protected int servoCloseTime = 100; // time for the servos to close/open(in ms)
 
     //controls
-    protected GamepadButtons moveGrabberStick = GamepadButtons.combinedTRIGGERS;
+    protected GamepadButtonManager moveGrabberStick = new GamepadButtonManager(GamepadButtons.combinedTRIGGERS);
     protected double stickTolerance = .03;
     protected double stickToTicksMultiplier = 20;
-    protected GamepadButtons captureButton = GamepadButtons.A;
-    protected GamepadButtons horizontalButton = GamepadButtons.B;
-    protected GamepadButtons putOverButton = GamepadButtons.X;
-    protected GamepadButtons grabButton = GamepadButtons.Y;
-    protected GamepadButtons restPosButton = GamepadButtons.B;
+    protected GamepadButtonManager captureButton = new GamepadButtonManager(GamepadButtons.A);
+    protected GamepadButtonManager horizontalButton = new GamepadButtonManager(GamepadButtons.B);
+    protected GamepadButtonManager putOverButton = new GamepadButtonManager(GamepadButtons.X);
+    protected GamepadButtonManager grabButton = new GamepadButtonManager(GamepadButtons.Y);
+    protected GamepadButtonManager restPosButton = new GamepadButtonManager(GamepadButtons.B);
 
     //homing
     String limitSwitchName = "digital0B";
