@@ -22,20 +22,18 @@ public class Test extends LinearOpMode {
         ru.setAllToValue(false);
         ru.useTensorFlow = true;
         ru.useVuforia = true;
-        ru.useTensorFlowInTread = true;
+        ru.useTensorFlowInTread = false;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
-        robot.vision.startDashboardCameraStream(24, false);
 
-        waitForStart();
+        robot.vision.tfod.activate();
+        robot.vision.tfod.setZoom(1.1, (double)16/(double)9);
+        FtcDashboard.getInstance().startCameraStream(robot.vision.tfod, 24);
 
-        robot.start();
-
-        while(opModeIsActive())
+        while (!isStarted())
         {
             robot.vision.findAllTfodObjects();
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.dpadUP,true);
             if(robot.vision.anyTfodObjectsFound)
             {
                 telemetry.addData("# Object Detected", robot.vision.tfodCurrentRecognitions.size());
@@ -52,5 +50,11 @@ public class Test extends LinearOpMode {
             robot.sendTelemetry();
         }
 
+        waitForStart();
+
+        while(opModeIsActive())
+        {
+
+        }
     }
 }
