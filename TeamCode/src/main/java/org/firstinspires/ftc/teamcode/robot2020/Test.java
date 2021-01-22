@@ -26,10 +26,7 @@ public class Test extends LinearOpMode {
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
-
-        robot.vision.activateTfod();
-        robot.vision.tfod.setZoom(1.5, 16/9);
-        FtcDashboard.getInstance().startCameraStream(robot.vision.tfod, 0);
+        robot.vision.startDashboardCameraStream(24);
 
         waitForStart();
 

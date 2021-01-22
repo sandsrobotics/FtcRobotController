@@ -127,7 +127,7 @@ public class Vision extends Thread
     ///////////////////
     //Vuforia Methods//
     ///////////////////
-    void initVuforia()
+    void initVuforia() //initializes vuforia
     {
         //make a parameters object
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
@@ -142,15 +142,12 @@ public class Vision extends Thread
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
     }
 
-    void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);}
-    void stopDashboardCameraStream(){FtcDashboard.getInstance().stopCameraStream();}
+    void startDashboardCameraStream(int maxFps){FtcDashboard.getInstance().startCameraStream(vuforia,maxFps);} // starts a dashboard stream at a certain fps
+    void stopDashboardCameraStream(){FtcDashboard.getInstance().stopCameraStream();} // stops the dashboard stream
 
-    void loadAsset(String assetName)
-    {
-        trackables = vuforia.loadTrackablesFromAsset(assetName);
-    }
+    void loadAsset(String assetName) { trackables = vuforia.loadTrackablesFromAsset(assetName); } // loads the vuforia assets from a file
 
-    void setAllTrackablesNames()
+    void setAllTrackablesNames() // sets vuforia tackable names
     {
 
         setTrackableName(1,"Red Tower Goal Target");
@@ -160,7 +157,7 @@ public class Vision extends Thread
         setTrackableName(4,"Front Wall Target");
     }
 
-    void setAllTrackablesPosition()
+    void setAllTrackablesPosition() // sets vuforia tackable positions
     {
         setTrackableTransform(2, new float[]{0, 0, 0}, new float[]{0, 0, 0});
         setTrackableTransform(3, new float[]{0, 0, 0}, new float[]{0, 0, 0});
@@ -169,12 +166,12 @@ public class Vision extends Thread
         setTrackableTransform(1, new float[]{0, 0, 0}, new float[]{0, 0, 0});
     }
 
-    void setTrackableName(int posInTrackables, String name)
+    void setTrackableName(int posInTrackables, String name) //sets the name for a single trackable
     {
         trackables.get(posInTrackables).setName(name);
     }
     
-    void setTrackableTransform(int posInTrackables, float[] position, float[] angles) // position is in inches and rotation is in deg with order XYZ
+    void setTrackableTransform(int posInTrackables, float[] position, float[] angles) //sets the position for a single trackable // position is in inches and rotation is in deg with order XYZ
     {
         for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
 
@@ -183,7 +180,7 @@ public class Vision extends Thread
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, angles[0], angles[1], angles[2])));
     }
 
-    void setPhoneTransform(float[] position, float[] angles) // positions is in INCHES: X is INCHES left from center line, Y is INCHES above ground, Z is INCHES forward from center line. rotation is in order XYZ in deg
+    void setPhoneTransform(float[] position, float[] angles) //sets the phone transform // positions is in INCHES: X is INCHES left from center line, Y is INCHES above ground, Z is INCHES forward from center line. rotation is in order XYZ in deg
     {
         for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
 
@@ -211,15 +208,12 @@ public class Vision extends Thread
         }
     }
 
-    void setPhoneTorch(boolean on)
-    {
-        CameraDevice.getInstance().setFlashTorchMode(on);
-    }
+    void setPhoneTorch(boolean on) { CameraDevice.getInstance().setFlashTorchMode(on); } //turns on/off the phone flashlight
 
-    void activateVuforia(){trackables.activate();}
-    void deactivateVuforia(){trackables.deactivate();}
+    void activateVuforia(){trackables.activate();} // activates vuforia trackables to find objects
+    void deactivateVuforia(){trackables.deactivate();} // deactivates vuforia trackables if not needed
 
-    void findAllTrackables()
+    void findAllTrackables() // will find all objects(pictures on wall) that are visible
     {
         int i = 0;
         anyTrackableFound = false;
@@ -248,7 +242,7 @@ public class Vision extends Thread
         if(!anyTrackableFound) currentCalculatedRobotLocation = null;
     }
 
-    OpenGLMatrix getCurrentGaolLocation()
+    OpenGLMatrix getCurrentGaolLocation() //returns the current position for goal picture if visible
     {
         return currentTrackablesLocations[visionSettings.goalPictureNum];
     }
