@@ -264,7 +264,6 @@ public class Vision extends Thread
         tfodParameters.minResultConfidence = visionSettings.minResultConfidence;
         tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
         tfod.loadModelFromAsset(visionSettings.TFOD_MODEL_ASSET, visionSettings.LABEL_FIRST_ELEMENT, visionSettings.LABEL_SECOND_ELEMENT);
-        tfod.setZoom(1.1, (double)16/(double)9);
     }
 
     void activateTfod(){tfod.activate();}
@@ -584,7 +583,11 @@ public class Vision extends Thread
     public void run()
     {
         activateVuforia();
-        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) activateTfod();
+        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread)
+        {
+            activateTfod();
+            tfod.setZoom(1.1, (double)16/(double)9);
+        }
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
