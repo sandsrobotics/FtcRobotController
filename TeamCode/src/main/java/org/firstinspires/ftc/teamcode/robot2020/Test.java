@@ -26,7 +26,7 @@ public class Test extends LinearOpMode {
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
-        robot.vision.startDashboardCameraStream(24);
+        robot.vision.startDashboardCameraStream(24, false);
 
         waitForStart();
 
