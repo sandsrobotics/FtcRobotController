@@ -65,13 +65,13 @@ public class Hardware
             i++;
         }
 
-        initMotorSettings(driveMotors);
+        initMotorSettings(driveMotors, DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void initLauncherMotors()
     {
         launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherWheelMotorNum);
-        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, hardwareSettings.launcherWheelMotorPID);
+        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, HardwareSettings.launcherWheelMotorPID);
         launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
         launcherServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherServoNum);
@@ -80,8 +80,8 @@ public class Hardware
         if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
         if(hardwareSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
 
-        initMotorSettings(launcherWheelMotor);
-        initMotorSettings(launcherIntakeMotor);
+        initMotorSettings(launcherWheelMotor, DcMotor.ZeroPowerBehavior.FLOAT);
+        initMotorSettings(launcherIntakeMotor, DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void initGrabberHardware()
@@ -106,20 +106,20 @@ public class Hardware
         robot.hardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
-    public void initMotorSettings(List<DcMotorEx> motors)
+    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
     {
         for(DcMotorEx motor:motors)
         {
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            motor.setZeroPowerBehavior(zeroPowerBehavior);
             motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
     }
 
-    public void initMotorSettings(DcMotorEx motor)
+    public void initMotorSettings(DcMotorEx motor, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
     {
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motor.setZeroPowerBehavior(zeroPowerBehavior);
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 

@@ -176,7 +176,7 @@ public class Launcher {
         }
         if(moveIntakeMotorForward) intakeMotorPower = 1;
 
-        robot.hardware.launcherMotors.get(1).setPower(intakeMotorPower);
+        robot.hardware.launcherIntakeMotor.setPower(intakeMotorPower);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
@@ -357,5 +357,5 @@ class LauncherSettings
     double maxRPMAcceleration = 10; // acceleration measured in RPM/s
     double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
-    LauncherSettings(){};
+    LauncherSettings(){}
 }

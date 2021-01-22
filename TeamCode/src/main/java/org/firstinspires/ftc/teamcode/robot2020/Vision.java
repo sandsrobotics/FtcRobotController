@@ -297,8 +297,8 @@ public class Vision extends Thread
     {
         if(rec != null)
         {
-            if(rec.getLabel() == "QUAD") return 4;
-            else if(rec.getLabel() == "SINGLE") return 1;
+            if(rec.getLabel().equals("QUAD")) return 4;
+            else if(rec.getLabel().equals("SINGLE")) return 1;
         }
         return 0;
     }
@@ -310,6 +310,12 @@ public class Vision extends Thread
         tfodCurrentRecognitions = tfod.getUpdatedRecognitions();
 
         anyTfodObjectsFound = tfodCurrentRecognitions != null;
+    }
+
+    int RunTodSequenceForRings()
+    {
+        findAllTfodObjects();
+        return getNumOfRings();
     }
 
     //////////////////

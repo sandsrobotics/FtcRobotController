@@ -71,10 +71,7 @@ public class Robot
         if(robotUsage.useDrive || robotUsage.usePositionTracking) hardware.initDriveMotors();
         if(robotUsage.useLauncher) hardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
-        if(robotUsage.useGrabber)
-        {
-            hardware.initGrabberHardware();
-        }
+        if(robotUsage.useGrabber) { hardware.initGrabberHardware(); }
     }
 
     void initHardware()
