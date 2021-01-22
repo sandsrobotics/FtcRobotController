@@ -30,17 +30,12 @@ public class Grabber {
         this.grabberSettings = grabberSettings;
     }
 
-    void initHardware()
-    {
-
-    }
-
     void initGrabberPos()
     {
-        if(limitSwitch.getState())
+        if(robot.hardware.grabberLimitSwitch.getState())
         {
             int pos = 0;
-            while(limitSwitch.getState() && !robot.stop())
+            while(robot.hardware.grabberLimitSwitch.getState() && !robot.stop())
             {
                 pos -= grabberSettings.homingSpeed;
                 robot.hardware.grabberLifterMotor.setTargetPosition(pos);
@@ -120,7 +115,7 @@ public class Grabber {
 
     boolean stopMotor()
     {
-        if(!limitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
+        if(!robot.hardware.grabberLimitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
         {
             robot.hardware.grabberLifterMotor.setPower(0);
             motorStopped = true;
@@ -174,7 +169,6 @@ class GrabberSettings
     protected GamepadButtonManager restPosButton = new GamepadButtonManager(GamepadButtons.B);
 
     //homing
-    String limitSwitchName = "digital0B";
     int homingSpeed = 50;
 
 

@@ -57,7 +57,7 @@ public class Robot
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        hardware = new Hardware(this, robotSettingsMain.motorConfigSettings);
+        hardware = new Hardware(this, robotSettingsMain.hardwareSettings);
         position = new Position(this, robotSettingsMain.positionSettings);
 
         if(robotUsage.useDrive) movement = new Movement(this, robotSettingsMain.movementSettings);
@@ -73,8 +73,7 @@ public class Robot
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
         if(robotUsage.useGrabber)
         {
-            hardware.initGrabberMotors();
-            grabber.initHardware();
+            hardware.initGrabberHardware();
         }
     }
 
@@ -441,7 +440,7 @@ class RobotSettingsMain
     protected RobotSettings robotSettings;
     protected GrabberSettings grabberSettings;
     protected LauncherSettings launcherSettings;
-    protected MotorConfigSettings motorConfigSettings;
+    protected HardwareSettings hardwareSettings;
     protected MovementSettings movementSettings;
     protected PositionSettings positionSettings;
     protected VisionSettings visionSettings;
@@ -451,17 +450,17 @@ class RobotSettingsMain
         robotSettings = new RobotSettings();
         grabberSettings = new GrabberSettings();
         launcherSettings = new LauncherSettings();
-        motorConfigSettings = new MotorConfigSettings();
+        hardwareSettings = new HardwareSettings();
         movementSettings = new MovementSettings();
         positionSettings = new PositionSettings();
         visionSettings = new VisionSettings();
     }
-    RobotSettingsMain( RobotSettings robotSettings, GrabberSettings grabberSettings, LauncherSettings launcherSettings, MotorConfigSettings motorConfigSettings, MovementSettings movementSettings, PositionSettings positionSettings, VisionSettings visionSettings)
+    RobotSettingsMain(RobotSettings robotSettings, GrabberSettings grabberSettings, LauncherSettings launcherSettings, HardwareSettings hardwareSettings, MovementSettings movementSettings, PositionSettings positionSettings, VisionSettings visionSettings)
     {
         this.robotSettings = robotSettings;
         this.grabberSettings = grabberSettings;
         this.launcherSettings = launcherSettings;
-        this.motorConfigSettings = motorConfigSettings;
+        this.hardwareSettings = hardwareSettings;
         this.movementSettings = movementSettings;
         this.positionSettings = positionSettings;
         this.visionSettings = visionSettings;

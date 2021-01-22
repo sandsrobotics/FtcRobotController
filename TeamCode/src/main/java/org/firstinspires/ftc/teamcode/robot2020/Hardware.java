@@ -5,11 +5,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,16 +34,16 @@ public class Hardware
 
     //other class
     Robot robot;
-    MotorConfigSettings motorConfigSettings;
+    HardwareSettings hardwareSettings;
 
     public Hardware(Robot robot)
     {
-        motorConfigSettings = new MotorConfigSettings();
+        hardwareSettings = new HardwareSettings();
         this.robot = robot;
     }
-    public Hardware(Robot robot, MotorConfigSettings motorConfigSettings)
+    public Hardware(Robot robot, HardwareSettings hardwareSettings)
     {
-        this.motorConfigSettings = motorConfigSettings;
+        this.hardwareSettings = hardwareSettings;
         this.robot = robot;
     }
 
@@ -54,16 +52,16 @@ public class Hardware
     ////////
     public void initDriveMotors()
     {
-        leftTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + motorConfigSettings.leftTopMotorNum);
-        leftBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + motorConfigSettings.leftBottomMotorNum);
-        rightTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + motorConfigSettings.rightTopMotorNum);
-        rightBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + motorConfigSettings.rightBottomMotorNum);
+        leftTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.leftTopMotorNum);
+        leftBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.leftBottomMotorNum);
+        rightTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.rightTopMotorNum);
+        rightBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.rightBottomMotorNum);
         driveMotors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
 
         int i = 0;
         for(DcMotor motor:driveMotors)
         {
-            if(motorConfigSettings.flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            if(hardwareSettings.flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }
 
@@ -72,43 +70,39 @@ public class Hardware
 
     public void initLauncherMotors()
     {
-        launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + motorConfigSettings.launcherWheelMotorNum);
-        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, motorConfigSettings.launcherWheelMotorPID);
-        launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + motorConfigSettings.launcherIntakeMotorNum);
+        launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherWheelMotorNum);
+        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, hardwareSettings.launcherWheelMotorPID);
+        launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
-        launcherServo = robot.hardwareMap.servo.get("servo" + motorConfigSettings.launcherServoNum);
+        launcherServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherServoNum);
 
-        if(motorConfigSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
-        if(motorConfigSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
-        if(motorConfigSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
 
         initMotorSettings(launcherWheelMotor);
         initMotorSettings(launcherIntakeMotor);
     }
 
-    public void initGrabberMotors()
+    public void initGrabberHardware()
     {
-        grabberLifterMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + motorConfigSettings.grabberLifterMotorNum);
-        grabberLeftServo = robot.hardwareMap.servo.get("servo" + motorConfigSettings.grabberLeftServoNum);
-        grabberRightServo = robot.hardwareMap.servo.get("servo" + motorConfigSettings.grabberRightServoNum);
+        grabberLifterMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.grabberLifterMotorNum);
+        grabberLeftServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.grabberLeftServoNum);
+        grabberRightServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.grabberRightServoNum);
         grabberServos = Arrays.asList(grabberLeftServo, grabberRightServo);
 
-        if(motorConfigSettings.flipGrabberMotorDir[0]) grabberLifterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        if(motorConfigSettings.flipGrabberMotorDir[1]) grabberServos.get(0).setDirection(Servo.Direction.REVERSE);
-        if(motorConfigSettings.flipGrabberMotorDir[2]) grabberServos.get(1).setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[0]) grabberLifterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[1]) grabberServos.get(0).setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[2]) grabberServos.get(1).setDirection(Servo.Direction.REVERSE);
 
         grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         grabberLifterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         robot.hardware.grabberLifterMotor.setTargetPosition(0);
-        robot.hardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
+        robot.hardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
         robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        for(int i = 0; i < 2; i++)
-        {
-            setServoPositions[i] = grabberSettings.servoRestPositions[i];
-            robot.hardware.grabberServos.get(i).setPosition(setServoPositions[i]);
-        }
-        robot.hardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, grabberSettings.limitSwitchName);
+
+        robot.hardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
         robot.hardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
@@ -347,7 +341,7 @@ public class Hardware
     }
 }
 
-class MotorConfigSettings
+class HardwareSettings
 {
     //////////////////
     //user variables//
@@ -369,6 +363,7 @@ class MotorConfigSettings
     protected String grabberLifterMotorNum = "2B";
     protected String grabberLeftServoNum = "1B";
     protected String grabberRightServoNum = "2B";
+    protected String limitSwitchName = "digital0B";
 
-    MotorConfigSettings(){}
+    HardwareSettings(){}
 }
