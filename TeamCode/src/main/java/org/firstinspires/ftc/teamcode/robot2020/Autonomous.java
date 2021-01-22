@@ -3,11 +3,6 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
@@ -20,26 +15,33 @@ public class Autonomous extends LinearOpMode {
     public void runOpMode()
     {
 
-        /////////////
-        //variables//
-        /////////////
+        //////////////////
+        //user variables//
+        //////////////////
+        //buttons
         GamepadButtons closeButton = GamepadButtons.A;
-        boolean closed = false;
 
+        //positions
         double[] APos = {-16,-58,-90};
         //double[] APosLose = {-20,-124,0};
         double[] BPos = {2,-30,-90};
         //double[] BPosLose = {-20,-124,0};
         double[] CPos = {-16,-4,-90};
         //double[] CPosLose = {-20,-124,0};
+        double[] GoalPos = {-4,-117,0};
 
-        double[] secondGoalPos = {-4,-117,0};
-
+        //tolerances
         double[] tolFinal = {1, 1, 1};
         double[] tolLose = {2, 2, 5};
 
+
+        /////////////
+        //variables//
+        /////////////
         int servoMoveTime = 150;
         int rings = 0;
+        boolean closed = false;
+
 
         ////////
         //code//
@@ -65,8 +67,8 @@ public class Autonomous extends LinearOpMode {
             rings = robot.vision.getNumOfRings(robot.vision.getHighestConfidence());
         }
 
-
-
+        robot.vision.deactivateTfod();
+        robot.vision.stopDashboardCameraStream();
         robot.start();
 
         while (opModeIsActive())
@@ -101,7 +103,7 @@ public class Autonomous extends LinearOpMode {
                robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions);
                robot.delay(servoMoveTime);
                robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos), false);
-               robot.movement.moveToPosition(secondGoalPos, tolLose,1,7000,.25);
+               robot.movement.moveToPosition(GoalPos, tolLose,1,7000,.25);
                robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions);
                robot.delay(servoMoveTime);
 
