@@ -77,10 +77,6 @@ public class Autonomous extends LinearOpMode {
 
         robot.start();
 
-        robot.addTelemetry("posX", robot.position.currentRobotPosition[0]);
-        robot.addTelemetry("posY", robot.position.currentRobotPosition[1]);
-        robot.sendTelemetry();
-
         robot.launcher.setRPM(3700);
            if(finalNumOfRings == 0)
            {
