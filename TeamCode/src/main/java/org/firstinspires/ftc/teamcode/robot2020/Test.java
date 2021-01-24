@@ -1,16 +1,15 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
-@TeleOp(name = "test launcher v1.1")
+@TeleOp(name = "test Tfod")
 public class Test extends LinearOpMode {
 
     Robot robot;
@@ -19,29 +18,42 @@ public class Test extends LinearOpMode {
     public void runOpMode()
     {
 
-        robot = new Robot(this,true, true,false, false, true,false, false, false);
+        RobotUsage ru = new RobotUsage();
+        ru.setAllToValue(false);
+        ru.useTensorFlow = true;
+        ru.useVuforia = true;
+        ru.useTensorFlowInTread = false;
+        ru.useDrive = true;
 
-        waitForStart();
+        robot = new Robot(this, ru);
 
-        robot.start();
+        robot.vision.todActivationSequence();
+        robot.vision.startDashboardCameraStream(24,false);
 
-        while(opModeIsActive())
+        while (!isStarted())
         {
-            /*
-            robot.addTelemetry("pidf", robot.motorConfig.launcherWheelMotor.getPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER));
-            robot.launcher.opModeRun(true);
-            if(GamepadButtons.dpadUP.getButtonHeld(gamepad1, 1000)) robot.motorConfig.launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, MotorConfig.launcherMotorPID);
-            robot.sendTelemetry();
-            */
-
-            if(gamepad1.a) robot.launcher.goToShootingPos();
-            robot.addTelemetry("point to goal ang: ", robot.launcher.getAngleToPointToPosition());
-            robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
-            robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
-            robot.addTelemetry("rot: ", robot.position.currentRobotPosition[2]);
-            robot.movement.moveForTeleOp(gamepad1,GamepadButtons.X);
+            robot.vision.findAllTfodObjects();
+            if(robot.vision.anyTfodObjectsFound)
+            {
+                telemetry.addData("# Object Detected", robot.vision.tfodCurrentRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : robot.vision.tfodCurrentRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+                }
+            }
             robot.sendTelemetry();
         }
 
+        waitForStart();
+
+        while(opModeIsActive())
+        {
+
+        }
     }
 }

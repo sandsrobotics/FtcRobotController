@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
-import androidx.room.Room;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -12,35 +10,16 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.Velocity;
-import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 
 
 @Config
 public class Robot
 {
-    /////////////
-    //user data//
-    /////////////
-    //debug
-    protected boolean debug_telemetry = true;
-    protected boolean debug_dashboard = true; // turn this to false during competition
-    protected boolean debug_methods = true;
-
-    //user dashboard variable
-    public static boolean emergencyStop = false;
-
-    //database
-    protected String dataBaseName = "FIRST_INSPIRE_2020";
-
-    //sensor
-
     ///////////////////
     //other variables//
     ///////////////////
     //other classes
-    public MotorConfig motorConfig;
+    public Hardware hardware; //stores and configures all motors and servos
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
@@ -54,48 +33,45 @@ public class Robot
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
-    protected AppDatabase db;
+    //protected AppDatabase db;
     protected RobotUsage robotUsage;
+    protected RobotSettings robotSettings;
 
     //other
     protected Gamepad gamepad1;
     protected Gamepad gamepad2;
     TelemetryPacket packet = new TelemetryPacket();
+    public static boolean emergencyStop = false;
 
-    Robot(LinearOpMode opMode, boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
-    {
-        robotUsage = new RobotUsage(useDrive,usePositionTracking,logPositionTracking,useComplexMovement,useLauncher, useGrabber, useVuforia, useOpenCV);
-        init(opMode, robotUsage);
-    }
+    Robot(LinearOpMode opMode, RobotUsage robotUsage, RobotSettingsMain robotSettingsMain) { init(opMode,robotUsage,robotSettingsMain); }
+    Robot(LinearOpMode opMode, RobotUsage robotUsage) { init(opMode, robotUsage, new RobotSettingsMain()); }
+    Robot(LinearOpMode opMode) { init(opMode, new RobotUsage(), new RobotSettingsMain()); }
 
-    Robot(LinearOpMode opMode, RobotUsage robotUsage)
-    {
-        init(opMode, robotUsage);
-    }
-
-    private void init(LinearOpMode opMode, RobotUsage robotUsage)
+    private void init(LinearOpMode opMode, RobotUsage robotUsage, RobotSettingsMain robotSettingsMain)
     {
         this.robotUsage = robotUsage;
+        this.robotSettings = robotSettingsMain.robotSettings;
         this.opMode = opMode;
         this.hardwareMap = opMode.hardwareMap;
         this.telemetry = opMode.telemetry;
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        motorConfig = new MotorConfig(this);
-        position = new Position(this);
+        hardware = new Hardware(this, robotSettingsMain.hardwareSettings);
+        position = new Position(this, robotSettingsMain.positionSettings);
 
-        if(robotUsage.useDrive) movement = new Movement(this);
-        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this);
-        if(robotUsage.useLauncher) launcher = new Launcher(this);
+        if(robotUsage.useDrive) movement = new Movement(this, robotSettingsMain.movementSettings);
+        if(robotUsage.useOpenCV || robotUsage.useVuforia) vision = new Vision(this, robotSettingsMain.visionSettings);
+        if(robotUsage.useLauncher) launcher = new Launcher(this, robotSettingsMain.launcherSettings);
         if(robotUsage.useComplexMovement) complexMovement = new ComplexMovement(this);
-        if(robotUsage.useGrabber) grabber = new Grabber(this);
+        if(robotUsage.useGrabber){ grabber = new Grabber(this, robotSettingsMain.grabberSettings);
+        addTelemetry("grabber", " init");}
 
         initHardware();
-        if(robotUsage.useDrive || robotUsage.usePositionTracking) motorConfig.initDriveMotors();
-        //if(useLauncher) motorConfig.initLauncherMotors();
+        if(robotUsage.useDrive || robotUsage.usePositionTracking) hardware.initDriveMotors();
+        if(robotUsage.useLauncher) hardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
-        if(robotUsage.useGrabber) motorConfig.initGrabberMotors();
+        if(robotUsage.useGrabber) { hardware.initGrabberHardware(); }
     }
 
     void initHardware()
@@ -124,13 +100,13 @@ public class Robot
         /////////////
         //dashboard//
         /////////////
-        if(debug_dashboard) dashboard = FtcDashboard.getInstance();
+        if(robotSettings.debug_dashboard) dashboard = FtcDashboard.getInstance();
         startTelemetry();
 
         /////////////
         //data base//
         /////////////
-        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, dataBaseName).build();
+        //db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
     }
 
     //------------------My Methods------------------//
@@ -138,8 +114,9 @@ public class Robot
     void start()
     {
         startTelemetry();
-        position.start();
-        if(robotUsage.useVuforia) vision.start();
+        if(robotUsage.runPositionThread)position.start();
+        if(robotUsage.useVuforia && (robotUsage.useVuforiaInThread || (robotUsage.useTensorFlow && robotUsage.useTensorFlowInTread))) vision.start();
+        if(robotUsage.useGrabber) grabber.initGrabberPos();
     }
 
     /////////////
@@ -148,7 +125,7 @@ public class Robot
 
     void startTelemetry()
     {
-        if(debug_dashboard)
+        if(robotSettings.debug_dashboard)
         {
             packet = new TelemetryPacket();
         }
@@ -156,14 +133,14 @@ public class Robot
 
     void addTelemetry(String cap, Object val)
     {
-        if(debug_dashboard) packet.put(cap, val);
-        if(debug_telemetry) telemetry.addData(cap, val);
+        if(robotSettings.debug_dashboard) packet.put(cap, val);
+        if(robotSettings.debug_telemetry) telemetry.addData(cap, val);
     }
 
     void sendTelemetry()
     {
-        if(debug_dashboard) dashboard.sendTelemetryPacket(packet);
-        if(debug_telemetry) telemetry.update();
+        if(robotSettings.debug_dashboard) dashboard.sendTelemetryPacket(packet);
+        if(robotSettings.debug_telemetry) telemetry.update();
     }
 
     ////////////////
@@ -250,26 +227,38 @@ enum GamepadButtons
 
     boolean wasButtonPressed = false;
     long lastButtonRelease = System.currentTimeMillis();
+}
+
+class GamepadButtonManager
+{
+    boolean wasButtonPressed = false;
+    long lastButtonRelease = System.currentTimeMillis();
+    GamepadButtons gamepadButton;
+
+    GamepadButtonManager(GamepadButtons gamepadButton)
+    {
+        this.gamepadButton = gamepadButton;
+    }
 
     boolean getButtonHeld(Gamepad gamepad)
     {
-        if(this == GamepadButtons.A) return gamepad.a;
-        if(this == GamepadButtons.B) return gamepad.b;
-        if(this == GamepadButtons.X) return gamepad.x;
-        if(this == GamepadButtons.Y) return gamepad.y;
+        if(gamepadButton == GamepadButtons.A) return gamepad.a;
+        if(gamepadButton == GamepadButtons.B) return gamepad.b;
+        if(gamepadButton == GamepadButtons.X) return gamepad.x;
+        if(gamepadButton == GamepadButtons.Y) return gamepad.y;
 
-        if(this == GamepadButtons.dpadUP) return gamepad.dpad_up;
-        if(this == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
-        if(this == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
-        if(this == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
+        if(gamepadButton == GamepadButtons.dpadUP) return gamepad.dpad_up;
+        if(gamepadButton == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
+        if(gamepadButton == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
+        if(gamepadButton == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
 
-        if(this == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
-        if(this == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
-        if(this == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
-        if(this == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
+        if(gamepadButton == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
+        if(gamepadButton == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
+        if(gamepadButton == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
+        if(gamepadButton == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
 
-        if(this == GamepadButtons.START) return gamepad.start;
-        if(this == GamepadButtons.BACK) return gamepad.back;
+        if(gamepadButton == GamepadButtons.START) return gamepad.start;
+        if(gamepadButton == GamepadButtons.BACK) return gamepad.back;
 
         return false;
     }
@@ -300,7 +289,8 @@ enum GamepadButtons
 
     boolean getButtonReleased(Gamepad gamepad)
     {
-        if(wasButtonPressed && !getButtonHeld(gamepad))
+        if(getButtonHeld(gamepad)) wasButtonPressed = true;
+        else if(wasButtonPressed)
         {
             wasButtonPressed = false;
             return true;
@@ -310,17 +300,18 @@ enum GamepadButtons
 
     float getSliderValue(Gamepad gamepad)
     {
-        if(this == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
-        if(this == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
-        if(this == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
-        if(this == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
+        if(gamepadButton == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
+        if(gamepadButton == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
+        if(gamepadButton == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
+        if(gamepadButton == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
 
-        if(this == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
-        if(this == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
-        if(this == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
+        if(gamepadButton == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
+        if(gamepadButton == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
+        if(gamepadButton == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
 
         return 0;
     }
+
 }
 
 class PID
@@ -328,75 +319,147 @@ class PID
     PIDCoefficients PIDs;
     double maxClamp;
     double minClamp;
-    
+    double value;
+
     double totalError;
     double lastError;
     double currentError;
-    
+    long lastTime;
+
+    PID(){}
     PID(PIDCoefficients PIDs, double minClamp, double maxClamp)
     {
         this.PIDs = PIDs;
         this.minClamp = minClamp;
         this.maxClamp = maxClamp;
     }
-    
+
     void updatePID(double error)
     {
         lastError = currentError;
         currentError = error;
         totalError += error;
-        
-        double value = (error * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
 
-        if((value > maxClamp || value < minClamp) && Math.signum(error) != Math.signum(totalError))
-        {
-            totalError = 0;
-        }
+        double calculatedI = (totalError * PIDs.i);
+        if(calculatedI > maxClamp) calculatedI = maxClamp;
+        else if(calculatedI < minClamp) calculatedI = minClamp;
+
+        double calculatedD = ((currentError - lastError) * PIDs.d / (System.currentTimeMillis() - lastTime));
+
+        value = (error * PIDs.p);// + calculatedI - calculatedD;
+
+        lastTime = System.currentTimeMillis();
     }
-    
+
+    void resetErrors()
+    {
+        totalError = 0;
+        lastError = 0;
+        currentError = 0;
+    }
+
     double updatePIDAndReturnValue(double error)
     {
         updatePID(error);
         return returnValue();
     }
-    
+
     double returnValue()
     {
-        return Math.max(Math.min((currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d), maxClamp), minClamp);
+        return Math.min(Math.max(value, minClamp), maxClamp);
     }
-    
+
     double returnUncappedValue()
     {
-        return (currentError * PIDs.p) + (totalError * PIDs.i) + ((currentError - lastError) * PIDs.d);
+        return value;
     }
 }
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, logPositionTracking, useComplexMovement, useLauncher, useGrabber, useVuforia, useOpenCV = true;
+    boolean useDrive, usePositionTracking, logPosition, runPositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
-    RobotUsage(){}
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPositionTracking, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useOpenCV)
+    RobotUsage()
+    {
+        setAllToValue(true);
+    }
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPosition, boolean runPositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
-        this.logPositionTracking = logPositionTracking;
+        this.logPosition = logPosition;
+        this.runPositionThread = runPositionThread;
         this.useComplexMovement = useComplexMovement;
         this.useLauncher = useLauncher;
         this.useGrabber = useGrabber;
         this.useVuforia = useVuforia;
+        this.useVuforiaInThread = useVuforiaInThread;
         this.useOpenCV = useOpenCV;
+        this.useTensorFlow = useTensorFlow;
+        this.useTensorFlowInTread = useTensorFlowInTread;
     }
 
     void setAllToValue(boolean value)
     {
         this.useDrive = value;
         this.usePositionTracking = value;
-        this.logPositionTracking = value;
+        this.logPosition = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
         this.useGrabber = value;
         this.useVuforia = value;
+        this.useVuforiaInThread = value;
         this.useOpenCV = value;
+        this.useTensorFlow = value;
+        this.useTensorFlowInTread = value;
+    }
+}
+
+class RobotSettings
+{
+    /////////////
+    //user data//
+    /////////////
+    //debug
+    protected boolean debug_telemetry = true;
+    protected boolean debug_dashboard = true; // turn this to false during competition
+    protected boolean debug_methods = true;
+
+    //database
+    protected String dataBaseName = "FIRST_INSPIRE_2020";
+
+
+    RobotSettings(){}
+}
+
+class RobotSettingsMain
+{
+    protected RobotSettings robotSettings;
+    protected GrabberSettings grabberSettings;
+    protected LauncherSettings launcherSettings;
+    protected HardwareSettings hardwareSettings;
+    protected MovementSettings movementSettings;
+    protected PositionSettings positionSettings;
+    protected VisionSettings visionSettings;
+
+    RobotSettingsMain()
+    {
+        robotSettings = new RobotSettings();
+        grabberSettings = new GrabberSettings();
+        launcherSettings = new LauncherSettings();
+        hardwareSettings = new HardwareSettings();
+        movementSettings = new MovementSettings();
+        positionSettings = new PositionSettings();
+        visionSettings = new VisionSettings();
+    }
+    RobotSettingsMain(RobotSettings robotSettings, GrabberSettings grabberSettings, LauncherSettings launcherSettings, HardwareSettings hardwareSettings, MovementSettings movementSettings, PositionSettings positionSettings, VisionSettings visionSettings)
+    {
+        this.robotSettings = robotSettings;
+        this.grabberSettings = grabberSettings;
+        this.launcherSettings = launcherSettings;
+        this.hardwareSettings = hardwareSettings;
+        this.movementSettings = movementSettings;
+        this.positionSettings = positionSettings;
+        this.visionSettings = visionSettings;
     }
 }

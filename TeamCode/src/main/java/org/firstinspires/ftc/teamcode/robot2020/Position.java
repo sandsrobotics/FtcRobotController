@@ -9,26 +9,19 @@ import org.firstinspires.ftc.teamcode.robot2020.persistence.Position.RobotPositi
 
 public class Position extends Thread
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    //position start
-    double startPositionX = 0; // in inches
-    double startPositionY = 0; // in inches
-    double startRotation = 0; //in degrees from goal
 
     ///////////////////
     //other variables//
     ///////////////////
     //robot position
-    protected volatile double[] currentRobotPosition = new double[]{startPositionX, startPositionY, startRotation};
+    protected volatile double[] currentRobotPosition;
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
     volatile double currentRotation;
-    protected double rotationOffset = -startRotation;
+    protected double rotationOffset;
 
     //angular velocity
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
@@ -39,10 +32,33 @@ public class Position extends Thread
 
     //other class
     Robot robot;
+    PositionSettings positionSettings;
 
     Position(Robot robot)
     {
+        positionSettings = new PositionSettings();
         this.robot = robot;
+        initVals();
+    }
+    Position(Robot robot, PositionSettings positionSettings)
+    {
+        this.positionSettings = positionSettings;
+        this.robot = robot;
+        initVals();
+    }
+
+    void initVals()
+    {
+        if(positionSettings.resetPos)
+        {
+            currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
+            rotationOffset = -positionSettings.startRotation;
+        }
+        else
+        {
+            currentRobotPosition = new double[]{0,0,0};
+            rotationOffset = 0;
+        }
     }
 
     //////////
@@ -65,7 +81,7 @@ public class Position extends Thread
     {
         //get difference
         lastMotorPos = currMotorPos;
-        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
         int[] diff = new int[4];
         for(int i = 0; i < 4; i++)
         {
@@ -73,8 +89,8 @@ public class Position extends Thread
         }
 
         //get movement
-        double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/Movement.ticksPerInchForward;
-        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/Movement.ticksPerInchSideways;
+        double YMove = (.25 * (diff[0] + diff[2] + diff[1] + diff[3]))/MovementSettings.ticksPerInchForward;
+        double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/MovementSettings.ticksPerInchSideways;
 
         //rotate and add to robot position
         currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
@@ -90,7 +106,7 @@ public class Position extends Thread
             {
                 positionAccuracy = 100;
                 //currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
-                currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
+                //currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
             }
         }
     }
@@ -100,7 +116,7 @@ public class Position extends Thread
     ////////////
     void setCurrentRun(boolean addOne)
     {
-        currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
+        //currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
         if(addOne) currentRun ++;
     }
 
@@ -108,13 +124,14 @@ public class Position extends Thread
     {
         RobotPositionEntity pos = new RobotPositionEntity(0, currentRobotPosition[0],currentRobotPosition[1],currentRotation, positionAccuracy);
         if(useCurrentRun) pos.runNumber = currentRun;
-        robot.db.robotPositionEntityDAO().insertAll(pos);
+        //robot.db.robotPositionEntityDAO().insertAll(pos);
     }
 
     void loadLastPos()
     {
+        /*
         RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
-        if(last == null){ if(robot.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
+        if(last == null){ if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
         {
             positionAccuracy = last.accuracy;
@@ -123,16 +140,18 @@ public class Position extends Thread
             currentRobotPosition[2] = last.rotation;
             rotationOffset = -last.rotation;
         }
+
+         */
     }
 
-    void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
+    //void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
 
     //////////////////
     //runs in thread//
     //////////////////
     void initialize()
     {
-        currMotorPos = robot.motorConfig.getMotorPositionsList(robot.motorConfig.driveMotors);
+        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
     }
 
     void updateAll()
@@ -145,12 +164,7 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        if(robot.robotUsage.usePositionTracking)
-        {
-            initialize();
-            setCurrentRun(true);
-            loadLastPos();
-        }
+        //if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
@@ -158,11 +172,15 @@ public class Position extends Thread
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                if(robot.robotUsage.logPositionTracking) addCurrentPosition(true);
+                //if(robot.robotUsage.logPosition) addCurrentPosition(true);
                 updatePositionFromVuforia();
             }
         }
-        if(robot.robotUsage.usePositionTracking) addCurrentPosition(true);
+    }
+
+    double[] getPositionWithOffset(double X, double Y, double R)
+    {
+        return new double[]{currentRobotPosition[0] + X, currentRobotPosition[1] + Y,currentRobotPosition[2] + R};
     }
 
     ///////////////
@@ -172,4 +190,18 @@ public class Position extends Thread
     {
         this.interrupt();
     }
+}
+
+class PositionSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //position start
+    boolean resetPos = true;
+    double startPositionX = -20; // in inches
+    double startPositionY = -124; // in inches
+    double startRotation = 0; //in degrees from goal
+
+    PositionSettings(){}
 }

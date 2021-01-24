@@ -4,36 +4,16 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 @Config
-public class MotorConfig
+public class Hardware
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    //drive motors
-    protected boolean[] flipDriveMotorDir = {true, true, false, false};
-    protected String leftTopMotorNum = "0";
-    protected String leftBottomMotorNum = "2";
-    protected String rightTopMotorNum = "1";
-    protected String rightBottomMotorNum = "3";
-    //launcher motors
-    protected boolean[] flipLauncherMotorDir = {true, false};
-    protected String launcherWheelMotorNum = "3";
-    public static PIDFCoefficients launcherMotorPID = new PIDFCoefficients(10,3,0,0);
-    protected String launcherServoNum = "0";
-    //grabber motors
-    protected boolean[] flipGrabberMotorDir = {false, false, false};
-    protected String grabberLifterMotorNum = "1B";
-    protected String grabberLeftServoNum = "1B";
-    protected String grabberRightServoNum = "2B";
 
     /////////
     //other//
@@ -41,18 +21,29 @@ public class MotorConfig
     //drive
     protected DcMotorEx leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor;
     protected List<DcMotorEx> driveMotors;
+
     //launcher
-    DcMotorEx launcherWheelMotor;
-    Servo launcherServo;
+    protected DcMotorEx launcherWheelMotor, launcherIntakeMotor;
+    protected Servo launcherServo;
+
     //grabber
     protected DcMotorEx grabberLifterMotor;
     protected Servo grabberLeftServo, grabberRightServo;
     protected List<Servo> grabberServos;
+    protected DigitalChannel grabberLimitSwitch;
+
     //other class
     Robot robot;
+    HardwareSettings hardwareSettings;
 
-    public MotorConfig(Robot robot)
+    public Hardware(Robot robot)
     {
+        hardwareSettings = new HardwareSettings();
+        this.robot = robot;
+    }
+    public Hardware(Robot robot, HardwareSettings hardwareSettings)
+    {
+        this.hardwareSettings = hardwareSettings;
         this.robot = robot;
     }
 
@@ -61,53 +52,75 @@ public class MotorConfig
     ////////
     public void initDriveMotors()
     {
-        leftTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + leftTopMotorNum);
-        leftBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + leftBottomMotorNum);
-        rightTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + rightTopMotorNum);
-        rightBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + rightBottomMotorNum);
+        leftTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.leftTopMotorNum);
+        leftBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.leftBottomMotorNum);
+        rightTopMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.rightTopMotorNum);
+        rightBottomMotor = robot.hardwareMap.get(DcMotorEx.class,"motor" + hardwareSettings.rightBottomMotorNum);
         driveMotors = Arrays.asList(leftTopMotor, leftBottomMotor, rightTopMotor, rightBottomMotor);
 
         int i = 0;
         for(DcMotor motor:driveMotors)
         {
-            if(flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
+            if(hardwareSettings.flipDriveMotorDir[i]) motor.setDirection(DcMotor.Direction.REVERSE);
             i++;
         }
 
-        resetMotorEncodersList(driveMotors);
-        setMotorsToRunWithEncodersList(driveMotors);
-        setMotorsToBrakeList(driveMotors);
+        initMotorSettings(driveMotors, DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     public void initLauncherMotors()
     {
-        launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + launcherWheelMotorNum);
-        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, launcherMotorPID);
+        launcherWheelMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherWheelMotorNum);
+        launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, HardwareSettings.launcherWheelMotorPID);
+        launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
-        launcherServo = robot.hardwareMap.servo.get("servo" + launcherServoNum);
+        launcherServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherServoNum);
 
-        if(flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
-        if(flipLauncherMotorDir[1]) launcherServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
 
-        launcherWheelMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        launcherWheelMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        launcherWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        initMotorSettings(launcherWheelMotor, DcMotor.ZeroPowerBehavior.FLOAT);
+        initMotorSettings(launcherIntakeMotor, DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-    public void initGrabberMotors()
+    public void initGrabberHardware()
     {
-        grabberLifterMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + grabberLifterMotorNum);
-        grabberLeftServo = robot.hardwareMap.servo.get("servo" + grabberLeftServoNum);
-        grabberRightServo = robot.hardwareMap.servo.get("servo" + grabberRightServoNum);
+        grabberLifterMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.grabberLifterMotorNum);
+        grabberLeftServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.grabberLeftServoNum);
+        grabberRightServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.grabberRightServoNum);
         grabberServos = Arrays.asList(grabberLeftServo, grabberRightServo);
 
-        if(flipGrabberMotorDir[0]) grabberLifterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        if(flipGrabberMotorDir[1]) grabberServos.get(0).setDirection(Servo.Direction.REVERSE);
-        if(flipGrabberMotorDir[2]) grabberServos.get(1).setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[0]) grabberLifterMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[1]) grabberServos.get(0).setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipGrabberMotorDir[2]) grabberServos.get(1).setDirection(Servo.Direction.REVERSE);
 
         grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         grabberLifterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        grabberLifterMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        robot.hardware.grabberLifterMotor.setTargetPosition(0);
+        robot.hardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
+        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        robot.hardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
+        robot.hardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
+    }
+
+    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
+    {
+        for(DcMotorEx motor:motors)
+        {
+            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            motor.setZeroPowerBehavior(zeroPowerBehavior);
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+    }
+
+    public void initMotorSettings(DcMotorEx motor, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
+    {
+        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motor.setZeroPowerBehavior(zeroPowerBehavior);
+        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
     public void resetMotorEncodersList(List<DcMotorEx> motors)
@@ -117,8 +130,6 @@ public class MotorConfig
             motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         }
     }
-
-    //public void resetMotorEncoder()
 
     ///////////////////
     //set motor modes//
@@ -328,4 +339,31 @@ public class MotorConfig
         for (DcMotorEx m:motors){if(Math.abs(m.getTargetPosition()-m.getCurrentPosition()) > tolerance) return false;}
         return true;
     }
+}
+
+class HardwareSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    //drive motors
+    protected boolean[] flipDriveMotorDir = {true, true, false, false};
+    protected String leftTopMotorNum = "0";
+    protected String leftBottomMotorNum = "2";
+    protected String rightTopMotorNum = "1";
+    protected String rightBottomMotorNum = "3";
+    //launcher motors
+    protected boolean[] flipLauncherMotorDir = {true, true, false};
+    protected String launcherWheelMotorNum = "0B";
+    public static PIDFCoefficients launcherWheelMotorPID = new PIDFCoefficients(10,3,0,0);
+    protected String launcherIntakeMotorNum = "1B";
+    protected String launcherServoNum = "0B";
+    //grabber motors
+    protected boolean[] flipGrabberMotorDir = {true, false, false};
+    protected String grabberLifterMotorNum = "2B";
+    protected String grabberLeftServoNum = "1B";
+    protected String grabberRightServoNum = "2B";
+    protected String limitSwitchName = "digital0B";
+
+    HardwareSettings(){}
 }

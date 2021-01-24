@@ -1,28 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 @Config
 public class Movement
 {
-    //////////////////
-    //user variables//
-    //////////////////
-    public static double ticksPerInchForward = 44;
-    public static double ticksPerInchSideways = 50;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
-    public static PIDCoefficients moveXPID = new PIDCoefficients(.05,0,0);
-    public static PIDCoefficients moveYPID = new PIDCoefficients(.05,0,0);
-    public static double moveXSmoothingSteps = .05;
-    public static double moveYSmoothingSteps = .05;
-    public static double rotationSmoothingSteps = .05;
-
-    protected double speedMultiplier = 1;
-    protected final double speedMultiplierMin = .2;
-    protected final double speedMultiplierMax = 2;
 
     ///////////////////
     //other variables//
@@ -32,9 +16,16 @@ public class Movement
 
     //other class
     Robot robot;
+    MovementSettings movementSettings;
 
     Movement(Robot robot)
     {
+        movementSettings = new MovementSettings();
+        this.robot = robot;
+    }
+    Movement(Robot robot, MovementSettings movementSettings)
+    {
+        this.movementSettings = movementSettings;
         this.robot = robot;
     }
 
@@ -49,21 +40,21 @@ public class Movement
         if(Math.abs(error) > tolerance) {
 
             int numberOfTimesInTolerance = 0;
-            PID pid = new PID(turnPID, -maxSpeed, maxSpeed);
+            PID pid = new PID(movementSettings.turnPID, -maxSpeed, maxSpeed);
 
             while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && maxRuntime > 0 && !robot.stop())
             {
                 error = robot.findAngleError(robot.position.currentRotation, targetAngle);
                 pid.updatePID(error);
 
-                robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(0, 0, pid.returnValue(),false,true));
+                robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(0, 0, pid.returnValue(),false,true));
 
                 if (Math.abs(error) < tolerance) numberOfTimesInTolerance++;
                 else numberOfTimesInTolerance = 0;
 
                 maxRuntime--;
             }
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
         }
     }
 
@@ -73,13 +64,13 @@ public class Movement
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
-        robot.motorConfig.moveMotorForwardSeparateAmountList(robot.motorConfig.driveMotors, arr, power);
-        robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
+        robot.hardware.moveMotorForwardSeparateAmountList(robot.hardware.driveMotors, arr, power);
+        robot.hardware.waitForMotorsToFinishList(robot.hardware.driveMotors);
     }
 
     void strafeSidewaysInches(double inches, double power)
     {
-        strafeSidewaysTicks((int)(ticksPerInchSideways * inches), power);
+        strafeSidewaysTicks((int)(movementSettings.ticksPerInchSideways * inches), power);
     }
 
     ////////////////
@@ -87,8 +78,8 @@ public class Movement
     ////////////////
     void moveForwardInches(double inches, double power)
     {
-        robot.motorConfig.moveMotorsForwardList(robot.motorConfig.driveMotors, (int)(ticksPerInchForward * inches), power);
-        robot.motorConfig.waitForMotorsToFinishList(robot.motorConfig.driveMotors);
+        robot.hardware.moveMotorsForwardList(robot.hardware.driveMotors, (int)(movementSettings.ticksPerInchForward * inches), power);
+        robot.hardware.waitForMotorsToFinishList(robot.hardware.driveMotors);
     }
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
@@ -129,9 +120,9 @@ public class Movement
                         numOfTimesInTolerance++;
                     else numOfTimesInTolerance = 0;
 
-                    robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
+                    robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
                     maxLoops--;
-                    if(robot.debug_methods)
+                    if(robot.robotSettings.debug_methods)
                     {
                         robot.addTelemetry("x: ", robot.position.currentRobotPosition[0]);
                         robot.addTelemetry("y: ", robot.position.currentRobotPosition[1]);
@@ -142,12 +133,12 @@ public class Movement
                     }
                 }
             }
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
         }
-        else if(robot.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
+        else if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
 
-    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, moveXPID, moveYPID, turnPID, maxSpeed); }
+    void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, movementSettings.moveXPID, movementSettings.moveYPID, movementSettings.turnPID, maxSpeed); }
 
     //////////
     //teleOp//
@@ -155,29 +146,35 @@ public class Movement
 
     void setSpeedMultiplier(double amount)
     {
-        if(amount > speedMultiplierMax)
+        if(amount > movementSettings.speedMultiplierMax)
         {
-            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
-            amount = speedMultiplierMax;
+            if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is greater than max speed. setting to max speed");
+            amount = movementSettings.speedMultiplierMax;
         }
-        else if(amount < speedMultiplierMin)
+        else if(amount < movementSettings.speedMultiplierMin)
         {
-            if (robot.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
-            amount = speedMultiplierMin;
+            if (robot.robotSettings.debug_methods) robot.addTelemetry("warning in Movement.setSpeedMultiplier: ", "set speed is less than min speed. setting to min speed");
+            amount = movementSettings.speedMultiplierMin;
         }
-        speedMultiplier = amount;
+        movementSettings.speedMultiplier = amount;
     }
-    void setSpeedMultiplierToMax() { speedMultiplier = speedMultiplierMax; }
-    void setSpeedMultiplierToMin() { speedMultiplier = speedMultiplierMin; }
+    void setSpeedMultiplierToMax() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMax; }
+    void setSpeedMultiplierToMin() { movementSettings.speedMultiplier = movementSettings.speedMultiplierMin; }
 
-    void moveForTeleOp(Gamepad gamepad1 , GamepadButtons breakButton)
+    void moveForTeleOp(Gamepad gamepad, GamepadButtonManager breakButton, boolean useTelemetry)
     {
-        if(breakButton.getButtonHeld(gamepad1))
+        if(breakButton.getButtonHeld(gamepad))
         {
-            robot.motorConfig.stopMotorsList(robot.motorConfig.driveMotors);
+            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
-        else robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, true,true));
+        else robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
+        if(useTelemetry) teleOpTelemetry();
+    }
+
+    void teleOpTelemetry()
+    {
+
     }
 
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
@@ -190,7 +187,7 @@ public class Movement
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;
         XY[1] *= power;
-        robot.motorConfig.setMotorsToSeparatePowersArrayList(robot.motorConfig.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
+        robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
     }
 
     /////////
@@ -202,9 +199,9 @@ public class Movement
         if(applyMoveSmoothing)
         {
             //smoothing for XYR
-            X = applySmoothing(X, lastMovePowers[0], moveXSmoothingSteps);
-            Y = applySmoothing(Y, lastMovePowers[1], moveYSmoothingSteps);
-            rotation = applySmoothing(rotation, lastMovePowers[2], rotationSmoothingSteps);
+            X = applySmoothing(X, lastMovePowers[0], movementSettings.moveXSmoothingSteps);
+            Y = applySmoothing(Y, lastMovePowers[1], movementSettings.moveYSmoothingSteps);
+            rotation = applySmoothing(rotation, lastMovePowers[2], movementSettings.rotationSmoothingSteps);
 
             lastMovePowers[0] = X;
             lastMovePowers[1] = Y;
@@ -222,7 +219,7 @@ public class Movement
 
         for(double val:arr) if(val > highestPower) highestPower = val;
         if(highestPower > 1) for(int i = 0; i < 4; i++) arr[i] /= highestPower;
-        if(applySpeedMultiplier)for(int i = 0; i < 4; i++) arr[i] *= speedMultiplier;
+        if(applySpeedMultiplier)for(int i = 0; i < 4; i++) arr[i] *= movementSettings.speedMultiplier;
         return (arr);
     }
 
@@ -242,4 +239,30 @@ public class Movement
         else if(currentVal - lastVal < -smoothingSteps) { currentVal = lastVal - smoothingSteps; }
         return currentVal;
     }
+}
+
+class MovementSettings
+{
+    //////////////////
+    //user variables//
+    //////////////////
+    public static double ticksPerInchForward = 44;
+    public static double ticksPerInchSideways = 51.3;
+    public static PIDCoefficients turnPID = new PIDCoefficients(.04,0,0);
+    public static PIDCoefficients moveXPID = new PIDCoefficients(.06,0,0);
+    public static PIDCoefficients moveYPID = new PIDCoefficients(.06,0,0);
+    public static double moveXSmoothingSteps = .125;
+    public static double moveYSmoothingSteps = .125;
+    public static double rotationSmoothingSteps = .125;
+
+    protected double speedMultiplier = 1;
+    protected final double speedMultiplierMin = .2;
+    protected final double speedMultiplierMax = 2;
+
+    //controls
+    GamepadButtonManager XMoveStick = new GamepadButtonManager(GamepadButtons.leftJoyStickX);
+    GamepadButtonManager YMoveStick = new GamepadButtonManager(GamepadButtons.leftJoyStickY);
+    GamepadButtonManager RotMoveStick = new GamepadButtonManager(GamepadButtons.rightJoyStickX);
+
+    MovementSettings(){}
 }
