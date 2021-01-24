@@ -16,7 +16,9 @@ public class DriverControl extends LinearOpMode
         RobotUsage ru = new RobotUsage();
         ru.useVuforia = false;
         ru.useComplexMovement = false;
-
+        ru.useVuforiaInThread = false;
+        ru.useTensorFlow = false;
+        ru.useTensorFlowInTread = false;
 
         robot = new Robot(this,ru);
 
