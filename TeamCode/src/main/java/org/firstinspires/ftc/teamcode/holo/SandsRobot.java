@@ -67,8 +67,17 @@ public class SandsRobot {
         }
 
         motorLauncherWheel.setZeroPowerBehavior(FLOAT);
+        if (odometryEnabled) {
+            initOdometry();
+        }
     }
 
+    private void initOdometry() {
+        encoderVertical = hardwareMap.get(DcMotorEx.class, "motor2B");
+        encoderHorizontal = hardwareMap.get(DcMotorEx.class, "motor3B");
+        encoderVertical.setMode(STOP_AND_RESET_ENCODER);
+        encoderHorizontal.setMode(STOP_AND_RESET_ENCODER);
+    }
     // Initialize the imu within the expansion hub
     private void initImu() {
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -76,7 +85,7 @@ public class SandsRobot {
         // Create new IMU Parameters object.
         imuParameters = new BNO055IMU.Parameters();
         // Use degrees as angle unit.
-        imuParameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        imuParameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
         imuParameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         imuParameters.loggingEnabled = false;
         // Initialize IMU.
@@ -176,7 +185,7 @@ public class SandsRobot {
      * Gets the orientation of the robot using the REV IMU
      * @return the angle of the robot
      */
-    protected double getZAngle(){
+    public double getZAngle(){
         return (-imu.getAngularOrientation().firstAngle);
     }
 
@@ -189,6 +198,7 @@ public class SandsRobot {
     protected Gamepad gamepad2;
     protected Thread positionThread;
     protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel, motorLiftArm;
+    public DcMotorEx encoderVertical, encoderHorizontal;
     protected Servo servo0, servoClawLeft, servoClawRight;
     //protected DcMotorEx verticalLeft, verticalRight, horizontal;
     private List<DcMotorEx> motors;
@@ -199,5 +209,6 @@ public class SandsRobot {
     public static double D;
     public static double F;
     double released; // Claw released
+    protected boolean odometryEnabled = true;
 
 }
