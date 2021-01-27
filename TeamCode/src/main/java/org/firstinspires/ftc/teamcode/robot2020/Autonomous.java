@@ -56,9 +56,12 @@ public class Autonomous extends LinearOpMode {
     {
         RobotUsage ru = new RobotUsage();
         ru.useComplexMovement = false;
+        ru.useVuforia = false;
+        ru.useTensorFlow = false;
         ru.useVuforiaInThread = false;
         ru.useTensorFlowInTread = false;
         ru.useOpenCV = false;
+        ru.useGrabber = false;
 
         robot = new Robot(this, ru);
 
