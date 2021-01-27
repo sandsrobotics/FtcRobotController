@@ -52,7 +52,7 @@ public class Launcher {
 
     void init()
     {
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     ///////////////
@@ -161,7 +161,7 @@ public class Launcher {
         if(launcherSettings.revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
-        if (runWheelOnTrigger) robot.hardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
+        if (runWheelOnTrigger) robot.robotHardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
         else setRPM();
     }
 
@@ -176,7 +176,7 @@ public class Launcher {
         }
         if(moveIntakeMotorForward) intakeMotorPower = 1;
 
-        robot.hardware.launcherIntakeMotor.setPower(intakeMotorPower);
+        robot.robotHardware.launcherIntakeMotor.setPower(intakeMotorPower);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
@@ -252,7 +252,7 @@ public class Launcher {
 
     double getPRM()
     {
-        return  robot.hardware.launcherWheelMotor.getVelocity() * spinMultiplier;
+        return  robot.robotHardware.launcherWheelMotor.getVelocity() * spinMultiplier;
     }
 
     double getDistanceToGoal(boolean useMinLaunchDistance)
@@ -273,7 +273,7 @@ public class Launcher {
     void setRPM(double RPM)
     {
         targetWheelRpm = RPM;
-        robot.hardware.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
+        robot.robotHardware.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
     }
 
     void setRPM()
@@ -302,9 +302,9 @@ public class Launcher {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;
         }
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
+        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
         robot.delay(actuatorTime);
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     void moveLaunchServo()

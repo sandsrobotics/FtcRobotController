@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Config
-public class Hardware
+public class RobotHardware
 {
 
     /////////
@@ -36,12 +36,12 @@ public class Hardware
     Robot robot;
     HardwareSettings hardwareSettings;
 
-    public Hardware(Robot robot)
+    public RobotHardware(Robot robot)
     {
         hardwareSettings = new HardwareSettings();
         this.robot = robot;
     }
-    public Hardware(Robot robot, HardwareSettings hardwareSettings)
+    public RobotHardware(Robot robot, HardwareSettings hardwareSettings)
     {
         this.hardwareSettings = hardwareSettings;
         this.robot = robot;
@@ -98,12 +98,12 @@ public class Hardware
         grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         grabberLifterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        robot.hardware.grabberLifterMotor.setTargetPosition(0);
-        robot.hardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
-        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.robotHardware.grabberLifterMotor.setTargetPosition(0);
+        robot.robotHardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
+        robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        robot.hardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
-        robot.hardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
+        robot.robotHardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
+        robot.robotHardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
     public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)

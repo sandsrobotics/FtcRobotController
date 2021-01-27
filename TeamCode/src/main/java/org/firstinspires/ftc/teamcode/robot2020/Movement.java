@@ -47,14 +47,14 @@ public class Movement
                 error = robot.findAngleError(robot.position.currentRotation, targetAngle);
                 pid.updatePID(error);
 
-                robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(0, 0, pid.returnValue(),false,true));
+                robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(0, 0, pid.returnValue(),false,true));
 
                 if (Math.abs(error) < tolerance) numberOfTimesInTolerance++;
                 else numberOfTimesInTolerance = 0;
 
                 maxRuntime--;
             }
-            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
+            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
         }
     }
 
@@ -64,8 +64,8 @@ public class Movement
     void strafeSidewaysTicks(int ticks, double power)
     {
         int[] arr = {ticks, -ticks, -ticks, ticks};
-        robot.hardware.moveMotorForwardSeparateAmountList(robot.hardware.driveMotors, arr, power);
-        robot.hardware.waitForMotorsToFinishList(robot.hardware.driveMotors);
+        robot.robotHardware.moveMotorForwardSeparateAmountList(robot.robotHardware.driveMotors, arr, power);
+        robot.robotHardware.waitForMotorsToFinishList(robot.robotHardware.driveMotors);
     }
 
     void strafeSidewaysInches(double inches, double power)
@@ -78,8 +78,8 @@ public class Movement
     ////////////////
     void moveForwardInches(double inches, double power)
     {
-        robot.hardware.moveMotorsForwardList(robot.hardware.driveMotors, (int)(movementSettings.ticksPerInchForward * inches), power);
-        robot.hardware.waitForMotorsToFinishList(robot.hardware.driveMotors);
+        robot.robotHardware.moveMotorsForwardList(robot.robotHardware.driveMotors, (int)(movementSettings.ticksPerInchForward * inches), power);
+        robot.robotHardware.waitForMotorsToFinishList(robot.robotHardware.driveMotors);
     }
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
@@ -120,7 +120,7 @@ public class Movement
                         numOfTimesInTolerance++;
                     else numOfTimesInTolerance = 0;
 
-                    robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
+                    robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(powers[0], powers[1], powers[2], false, true));
                     maxLoops--;
                     if(robot.robotSettings.debug_methods)
                     {
@@ -133,7 +133,7 @@ public class Movement
                     }
                 }
             }
-            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
+            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
         }
         else if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
@@ -165,10 +165,10 @@ public class Movement
     {
         if(breakButton.getButtonHeld(gamepad))
         {
-            robot.hardware.stopMotorsList(robot.hardware.driveMotors);
+            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
-        else robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
+        else robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
         if(useTelemetry) teleOpTelemetry();
     }
 
@@ -187,7 +187,7 @@ public class Movement
         double[] XY = robot.getXYFromAngle(error);
         XY[0] *= power;
         XY[1] *= power;
-        robot.hardware.setMotorsToSeparatePowersArrayList(robot.hardware.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
+        robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
     }
 
     /////////

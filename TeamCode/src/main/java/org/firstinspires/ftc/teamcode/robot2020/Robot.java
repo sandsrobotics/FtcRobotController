@@ -19,7 +19,7 @@ public class Robot
     //other variables//
     ///////////////////
     //other classes
-    public Hardware hardware; //stores and configures all motors and servos
+    public RobotHardware robotHardware; //stores and configures all motors and servos
     public Movement movement;
     public Vision vision;
     public Launcher launcher;
@@ -57,7 +57,7 @@ public class Robot
         this.gamepad1 = opMode.gamepad1;
         this.gamepad2 = opMode.gamepad2;
 
-        hardware = new Hardware(this, robotSettingsMain.hardwareSettings);
+        robotHardware = new RobotHardware(this, robotSettingsMain.hardwareSettings);
         position = new Position(this, robotSettingsMain.positionSettings);
 
         if(robotUsage.useDrive) movement = new Movement(this, robotSettingsMain.movementSettings);
@@ -68,10 +68,10 @@ public class Robot
         addTelemetry("grabber", " init");}
 
         initHardware();
-        if(robotUsage.useDrive || robotUsage.usePositionTracking) hardware.initDriveMotors();
-        if(robotUsage.useLauncher) hardware.initLauncherMotors();
+        if(robotUsage.useDrive || robotUsage.usePositionTracking) robotHardware.initDriveMotors();
+        if(robotUsage.useLauncher) robotHardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
-        if(robotUsage.useGrabber) { hardware.initGrabberHardware(); }
+        if(robotUsage.useGrabber) { robotHardware.initGrabberHardware(); }
     }
 
     void initHardware()

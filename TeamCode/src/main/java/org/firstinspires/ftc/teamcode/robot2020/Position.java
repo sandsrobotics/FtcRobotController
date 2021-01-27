@@ -81,7 +81,7 @@ public class Position extends Thread
     {
         //get difference
         lastMotorPos = currMotorPos;
-        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
+        currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
         int[] diff = new int[4];
         for(int i = 0; i < 4; i++)
         {
@@ -151,7 +151,7 @@ public class Position extends Thread
     //////////////////
     void initialize()
     {
-        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
+        currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
     }
 
     void updateAll()

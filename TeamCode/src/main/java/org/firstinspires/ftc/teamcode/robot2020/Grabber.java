@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 public class Grabber {
@@ -32,20 +31,20 @@ public class Grabber {
 
     void initGrabberPos()
     {
-        if(robot.hardware.grabberLimitSwitch.getState())
+        if(robot.robotHardware.grabberLimitSwitch.getState())
         {
             int pos = 0;
-            while(robot.hardware.grabberLimitSwitch.getState() && !robot.stop())
+            while(robot.robotHardware.grabberLimitSwitch.getState() && !robot.stop())
             {
                 pos -= grabberSettings.homingSpeed;
-                robot.hardware.grabberLifterMotor.setTargetPosition(pos);
-                robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.robotHardware.grabberLifterMotor.setTargetPosition(pos);
+                robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
         }
-        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.hardware.grabberLifterMotor.setTargetPosition(0);
-        robot.hardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
-        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.robotHardware.grabberLifterMotor.setTargetPosition(0);
+        robot.robotHardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
+        robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     void setFromControls(Gamepad gamepad)
@@ -90,14 +89,14 @@ public class Grabber {
 
     void moveMotors()
     {
-        robot.hardware.grabberLifterMotor.setTargetPosition(setEncoderPos);
+        robot.robotHardware.grabberLifterMotor.setTargetPosition(setEncoderPos);
         stopMotor();
     }
     void moveServos()
     {
         for(int i = 0; i < 2; i++)
         {
-            robot.hardware.grabberServos.get(i).setPosition(setServoPositions[i]);
+            robot.robotHardware.grabberServos.get(i).setPosition(setServoPositions[i]);
         }
     }
     void moveAll()
@@ -110,20 +109,20 @@ public class Grabber {
     {
         setEncoderPos = pos;
         moveMotors();
-        while(robot.hardware.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { if(stopMotor()) break; }
+        while(robot.robotHardware.grabberLifterMotor.isBusy() && !robot.stop() && waitForMotor) { if(stopMotor()) break; }
     }
 
     boolean stopMotor()
     {
-        if(!robot.hardware.grabberLimitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
+        if(!robot.robotHardware.grabberLimitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
         {
-            robot.hardware.grabberLifterMotor.setPower(0);
+            robot.robotHardware.grabberLifterMotor.setPower(0);
             motorStopped = true;
             return true;
         }
         else if(motorStopped)
         {
-            robot.hardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
+            robot.robotHardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
             motorStopped = false;
         }
         return false;
