@@ -164,7 +164,7 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        //if(robot.robotUsage.usePositionTracking) { initialize();}
+        if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
