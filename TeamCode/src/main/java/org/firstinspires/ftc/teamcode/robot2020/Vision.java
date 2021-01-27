@@ -66,7 +66,7 @@ public class Vision extends Thread
     TFObjectDetector tfod; //a model object to find any rings
     protected volatile List<Recognition> tfodLastRecognitions; //stores the last position and amount of rings
     protected volatile List<Recognition> tfodCurrentRecognitions; //stores the current position and amount of rings if available
-    protected boolean anyTfodObjectsFound = false; //stores whether any objects where found
+    protected volatile boolean anyTfodObjectsFound = false; //stores whether any objects where found
 
     //other
     protected int cameraMonitorViewId;
@@ -136,7 +136,7 @@ public class Vision extends Thread
         parameters.vuforiaLicenseKey = visionSettings.VUFORIA_KEY;
         parameters.cameraDirection = visionSettings.CAMERA_CHOICE_V;
         parameters.useExtendedTracking = visionSettings.useExtendedTracking;
-        if(robot.robotUsage.useTensorFlow) parameters.cameraName = robot.hardwareMap.get(WebcamName.class, "Webcam 1");
+        if(robot.robotUsage.useTensorFlow && visionSettings.usingWebcam) parameters.cameraName = robot.hardwareMap.get(WebcamName.class, "Webcam 1");
 
         //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -309,7 +309,7 @@ public class Vision extends Thread
         tfodLastRecognitions = tfod.getRecognitions();
         tfodCurrentRecognitions = tfod.getUpdatedRecognitions();
 
-        anyTfodObjectsFound = tfodCurrentRecognitions != null;
+        anyTfodObjectsFound = (tfodCurrentRecognitions != null);
     }
 
     int RunTodSequenceForRings()

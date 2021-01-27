@@ -404,6 +404,7 @@ class RobotUsage
         this.useDrive = value;
         this.usePositionTracking = value;
         this.logPosition = value;
+        this.runPositionThread = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
         this.useGrabber = value;

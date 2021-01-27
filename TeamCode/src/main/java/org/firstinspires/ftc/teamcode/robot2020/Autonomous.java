@@ -70,9 +70,9 @@ public class Autonomous extends LinearOpMode {
                 if(closed) robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, false);
                 else robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
             }
-            finalNumOfRings = getNumOfRings();
-            if(finalNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
-            else robot.addTelemetry("rings", finalNumOfRings);
+            //finalNumOfRings = getNumOfRings();
+            //if(finalNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
+            //else robot.addTelemetry("rings", finalNumOfRings);
         }
 
         robot.start();
@@ -81,23 +81,23 @@ public class Autonomous extends LinearOpMode {
            if(finalNumOfRings == 0)
            {
                //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+               //robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                robot.movement.moveToPosition(APos,tolFinal,15,7000,.5);
            }
            else if(finalNumOfRings == 1)
            {
                //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+               //robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                robot.movement.moveToPosition(BPos,tolFinal,15,7000,.5);
            }
            else if(finalNumOfRings == 4)
            {
                //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+               //robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
                robot.movement.moveToPosition(CPos,tolFinal,15,7000,.5);
            }
 
-           robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+           //robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
            robot.movement.moveToPosition(launchPos, tolFinal,15,7000,.5);
            for(int i = 0; i < 4; i++)

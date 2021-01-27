@@ -27,6 +27,8 @@ public class Test extends LinearOpMode {
 
         robot = new Robot(this, ru);
 
+        robot.start();
+
         robot.vision.todActivationSequence();
         robot.vision.startDashboardCameraStream(24,false);
 
