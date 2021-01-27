@@ -56,12 +56,14 @@ public class Autonomous extends LinearOpMode {
     {
         RobotUsage ru = new RobotUsage();
         ru.useComplexMovement = false;
-        ru.useTensorFlow = false;
         ru.useTensorFlowInTread = false;
+        ru.useOpenCV = false;
+        ru.useVuforiaInThread = false;
 
         robot = new Robot(this, ru);
+        robot.vision.tofdActivationSequence();
 
-        while(!isStarted())
+        while(!isStarted() && opModeIsActive())
         {
             if(closeButton.getButtonPressed(gamepad1))
             {
@@ -69,9 +71,10 @@ public class Autonomous extends LinearOpMode {
                 if(closed) robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, false);
                 else robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
             }
-            //finalNumOfRings = getNumOfRings();
-            //if(finalNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
-            //else robot.addTelemetry("rings", finalNumOfRings);
+            finalNumOfRings = getNumOfRings();
+            if(finalNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
+            else robot.addTelemetry("rings", finalNumOfRings);
+            robot.sendTelemetry();
         }
 
         robot.start();

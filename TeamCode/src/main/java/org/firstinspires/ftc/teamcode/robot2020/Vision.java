@@ -273,7 +273,7 @@ public class Vision extends Thread
     void activateTfod(){tfod.activate();}
     void deactivateTfod(){tfod.shutdown();}
 
-    void todActivationSequence()
+    void tofdActivationSequence()
     {
         activateTfod();
         tfod.setZoom(1.1, (double)16/(double)9);
@@ -624,7 +624,7 @@ public class Vision extends Thread
     public void run()
     {
         if(robot.robotUsage.useVuforiaInThread)activateVuforia();
-        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) todActivationSequence();
+        if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) tofdActivationSequence();
 
         while(!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
@@ -662,13 +662,13 @@ class VisionSettings
 
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK; // if you are using a phone which camera do you want to use
-    protected final boolean usingWebcam = false; // weather or not you are using a web-cam or phone
+    protected final boolean usingWebcam = true; // weather or not you are using a web-cam or phone
 
     //tensorFlow
     protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite"; //what is the name of the model
     protected final String LABEL_FIRST_ELEMENT = "QUAD";
     protected final String LABEL_SECOND_ELEMENT = "SINGLE";
-    protected final float minResultConfidence = .6f; //how confident does the model have to be to say there is a ring
+    protected final float minResultConfidence = .5f; //how confident does the model have to be to say there is a ring
 
     VisionSettings(){}
 }
