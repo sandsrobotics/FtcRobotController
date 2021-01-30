@@ -50,10 +50,6 @@ public class Launcher {
         targetWheelRpm = launcherSettings.startRPM;
     }
 
-    void init()
-    {
-        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
-    }
 
     ///////////////
     //Calibration//
@@ -177,6 +173,9 @@ public class Launcher {
         if(moveIntakeMotorForward) intakeMotorPower = 1;
 
         robot.robotHardware.launcherIntakeMotor.setPower(intakeMotorPower);
+
+        if(intakeMotorPower != 0) robot.robotHardware.launcherIntakeServo.setPower(1);
+        else robot.robotHardware.launcherIntakeServo.setPower(0);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
@@ -302,9 +301,9 @@ public class Launcher {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;
         }
-        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoLaunchAngle);
         robot.delay(actuatorTime);
-        robot.robotHardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     void moveLaunchServo()

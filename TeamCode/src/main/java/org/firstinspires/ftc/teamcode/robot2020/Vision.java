@@ -64,12 +64,12 @@ public class Vision extends Thread
 
     //some tensorFlow stuff
     TFObjectDetector tfod; //a model object to find any rings
-    protected volatile List<Recognition> tfodLastRecognitions; //stores the last position and amount of rings
     protected volatile List<Recognition> tfodCurrentRecognitions; //stores the current position and amount of rings if available
     protected volatile boolean anyTfodObjectsFound = false; //stores whether any objects where found
 
     //other
     protected int cameraMonitorViewId;
+    protected boolean usingWebcam; // weather or not you are using a web-cam or phone
 
     //other class
     Robot robot; //to use values/methods from the robot object, other objects, and LinearOpMode
@@ -93,6 +93,7 @@ public class Vision extends Thread
     void initAll(boolean useVuforia, boolean useOpenCV, boolean useTensorFlow) //sets up all the vision objects and camera
     {
         initCamera();
+        checkCameraType();
 
         if(useVuforia)
         {
@@ -124,6 +125,19 @@ public class Vision extends Thread
         cameraMonitorViewId = robot.hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", robot.hardwareMap.appContext.getPackageName());
     }
 
+    void checkCameraType()
+    {
+        try
+        {
+            robot.hardwareMap.get(WebcamName.class, "Webcam 1");
+            usingWebcam = true;
+        }
+        catch(Exception e)
+        {
+            usingWebcam = false;
+        }
+    }
+
     ///////////////////
     //Vuforia Methods//
     ///////////////////
@@ -136,7 +150,7 @@ public class Vision extends Thread
         parameters.vuforiaLicenseKey = visionSettings.VUFORIA_KEY;
         parameters.cameraDirection = visionSettings.CAMERA_CHOICE_V;
         parameters.useExtendedTracking = visionSettings.useExtendedTracking;
-        if(robot.robotUsage.useTensorFlow && visionSettings.usingWebcam) parameters.cameraName = robot.hardwareMap.get(WebcamName.class, "Webcam 1");
+        if(robot.robotUsage.useTensorFlow && usingWebcam) parameters.cameraName = robot.hardwareMap.get(WebcamName.class, "Webcam 1");
 
         //Instantiate the Vuforia engine
         vuforia = ClassFactory.getInstance().createVuforia(parameters);
@@ -306,13 +320,11 @@ public class Vision extends Thread
 
     void findAllTfodObjects()
     {
-        tfodLastRecognitions = tfod.getRecognitions();
-        tfodCurrentRecognitions = tfod.getUpdatedRecognitions();
-
+        tfodCurrentRecognitions = tfod.getRecognitions();
         anyTfodObjectsFound = (tfodCurrentRecognitions != null);
     }
 
-    int RunTodSequenceForRings()
+    int runTfodSequenceForRings()
     {
         findAllTfodObjects();
         return getNumOfRings();
@@ -323,7 +335,7 @@ public class Vision extends Thread
     //////////////////
     void initOpenCV()
     {
-        if(visionSettings.usingWebcam)
+        if(usingWebcam)
         {
             //creating a camera object
             webcam = OpenCvCameraFactory.getInstance().createWebcam(robot.hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
@@ -662,7 +674,6 @@ class VisionSettings
 
     //to set up easy openCV camera
     protected final OpenCvInternalCamera.CameraDirection CAMERA_CHOICE_O = OpenCvInternalCamera.CameraDirection.BACK; // if you are using a phone which camera do you want to use
-    protected final boolean usingWebcam = true; // weather or not you are using a web-cam or phone
 
     //tensorFlow
     protected final String TFOD_MODEL_ASSET = "UltimateGoal.tflite"; //what is the name of the model

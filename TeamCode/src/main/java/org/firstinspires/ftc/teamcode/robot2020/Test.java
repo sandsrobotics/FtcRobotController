@@ -26,12 +26,14 @@ public class Test extends LinearOpMode {
 
         robot = new Robot(this, ru);
 
-        robot.start();
+        waitForStart();
+
+        robot.start(true);
 
         robot.vision.tofdActivationSequence();
         robot.vision.startDashboardCameraStream(24,false);
 
-        while (!isStarted())
+        while (opModeIsActive())
         {
             robot.vision.findAllTfodObjects();
             if(robot.vision.anyTfodObjectsFound)
@@ -48,13 +50,6 @@ public class Test extends LinearOpMode {
                 }
             }
             robot.sendTelemetry();
-        }
-
-        waitForStart();
-
-        while(opModeIsActive())
-        {
-
         }
     }
 }

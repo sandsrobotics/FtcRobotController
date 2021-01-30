@@ -15,8 +15,16 @@ public class Position extends Thread
     ///////////////////
     //robot position
     protected volatile double[] currentRobotPosition;
+
+    //wheels
     protected int[] lastMotorPos;
     protected int[] currMotorPos;
+
+    //odometry
+    protected int[] lastOdometryPos;
+    protected int[] currOdometryPos;
+    protected double ticksPerDegreeX;
+    protected double ticksPerDegreeY;
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
@@ -59,6 +67,8 @@ public class Position extends Thread
             currentRobotPosition = new double[]{0,0,0};
             rotationOffset = 0;
         }
+        ticksPerDegreeX = positionSettings.XOdometryWheelOffset * Math.PI / 180 * positionSettings.ticksPerInch;
+        ticksPerDegreeY = positionSettings.YOdometryWheelOffset * Math.PI / 180 * positionSettings.ticksPerInch;
     }
 
     //////////
@@ -93,6 +103,28 @@ public class Position extends Thread
         double XMove = (.25 * (-diff[0] + diff[2] + diff[1] - diff[3]))/MovementSettings.ticksPerInchSideways;
 
         //rotate and add to robot position
+        currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[2] = currentRotation;
+    }
+
+    void getPosFromOdometry()
+    {
+        lastOdometryPos = currOdometryPos;
+        currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+
+        int[] diff = new int[2];
+        for(int i = 0; i < 2; i++)
+        {
+            diff[i] = currOdometryPos[i] - lastOdometryPos[i];
+            robot.addTelemetry("diff" + i, diff[i]);
+        }
+
+        double rotationDiff = currentRotation - currentRobotPosition[2];
+
+        double XMove = (diff[0] - (ticksPerDegreeX * rotationDiff)) / positionSettings.ticksPerInch;
+        double YMove = (diff[1] - (ticksPerDegreeY * rotationDiff)) / positionSettings.ticksPerInch;
+
         currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
         currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
         currentRobotPosition[2] = currentRotation;
@@ -152,6 +184,7 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
+        currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
     }
 
     void updateAll()
@@ -171,9 +204,10 @@ public class Position extends Thread
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
-                getPosFromEncoder();
+                //getPosFromEncoder();
+                getPosFromOdometry();
                 //if(robot.robotUsage.logPosition) addCurrentPosition(true);
-                updatePositionFromVuforia();
+                //updatePositionFromVuforia();
             }
         }
     }
@@ -202,6 +236,11 @@ class PositionSettings
     double startPositionX = -20; // in inches
     double startPositionY = -124; // in inches
     double startRotation = 0; //in degrees from goal
+
+    //odometry wheels
+    protected final float XOdometryWheelOffset = 2;//offset from center of rotation in inches
+    protected final float YOdometryWheelOffset = 5.5f;//offset from center of rotation in inches
+    protected final float ticksPerInch = (float)(1440 / (1.49606 * Math.PI));//the number of ticks per 1 inch of movement
 
     PositionSettings(){}
 }

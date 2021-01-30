@@ -71,7 +71,8 @@ public class Robot
         if(robotUsage.useDrive || robotUsage.usePositionTracking) robotHardware.initDriveMotors();
         if(robotUsage.useLauncher) robotHardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
-        if(robotUsage.useGrabber) { robotHardware.initGrabberHardware(); }
+        if(robotUsage.useGrabber) robotHardware.initGrabberHardware();
+        if(robotUsage.usePositionTracking) robotHardware.initOdometryWheels();
     }
 
     void initHardware()
@@ -111,12 +112,12 @@ public class Robot
 
     //------------------My Methods------------------//
 
-    void start()
+    void start(boolean resetGrabberPos)
     {
         startTelemetry();
-        if(robotUsage.runPositionThread)position.start();
+        if(robotUsage.usePositionThread)position.start();
         if(robotUsage.useVuforia && (robotUsage.useVuforiaInThread || (robotUsage.useTensorFlow && robotUsage.useTensorFlowInTread))) vision.start();
-        if(robotUsage.useGrabber) grabber.initGrabberPos();
+        if(robotUsage.useGrabber && resetGrabberPos) grabber.initGrabberPos();
     }
 
     /////////////
@@ -151,9 +152,9 @@ public class Robot
         targetAngle = scaleAngle(targetAngle);
         double angleError = currentAngle - targetAngle;
         if (angleError > 180) {
-            angleError = angleError - 360;
+            angleError -= 360;
         } else if (angleError < -180) {
-            angleError = angleError + 360;
+            angleError += 360;
         }
         return -angleError;
     }
@@ -377,18 +378,18 @@ class PID
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, logPosition, runPositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
+    boolean useDrive, usePositionTracking, logPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPosition, boolean runPositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
         this.logPosition = logPosition;
-        this.runPositionThread = runPositionThread;
+        this.usePositionThread = usePositionThread;
         this.useComplexMovement = useComplexMovement;
         this.useLauncher = useLauncher;
         this.useGrabber = useGrabber;
@@ -404,7 +405,7 @@ class RobotUsage
         this.useDrive = value;
         this.usePositionTracking = value;
         this.logPosition = value;
-        this.runPositionThread = value;
+        this.usePositionThread = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
         this.useGrabber = value;

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -24,13 +25,19 @@ public class RobotHardware
 
     //launcher
     protected DcMotorEx launcherWheelMotor, launcherIntakeMotor;
-    protected Servo launcherServo;
+    protected Servo launcherLaunchServo;
+    protected CRServo launcherIntakeServo;
 
     //grabber
     protected DcMotorEx grabberLifterMotor;
     protected Servo grabberLeftServo, grabberRightServo;
     protected List<Servo> grabberServos;
     protected DigitalChannel grabberLimitSwitch;
+
+    //Odometry wheels
+    protected List<DcMotorEx> odometryWheels;
+    protected DcMotorEx XOdometryWheel;
+    protected DcMotorEx YOdometryWheel;
 
     //other class
     Robot robot;
@@ -74,14 +81,21 @@ public class RobotHardware
         launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, HardwareSettings.launcherWheelMotorPID);
         launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
-        launcherServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherServoNum);
+        launcherLaunchServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherLaunchServoNum);
+        launcherIntakeServo = robot.hardwareMap.crservo.get("servo" + hardwareSettings.launcherIntakeServoNum);
 
         if(hardwareSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
-        if(hardwareSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[2]) launcherLaunchServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[3]) launcherIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         initMotorSettings(launcherWheelMotor, DcMotor.ZeroPowerBehavior.FLOAT);
-        initMotorSettings(launcherIntakeMotor, DcMotor.ZeroPowerBehavior.BRAKE);
+
+        launcherIntakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launcherIntakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        robot.robotHardware.launcherLaunchServo.setPosition(robot.launcher.launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherIntakeServo.setPower(0);
     }
 
     public void initGrabberHardware()
@@ -104,6 +118,20 @@ public class RobotHardware
 
         robot.robotHardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
         robot.robotHardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
+    }
+
+    public void initOdometryWheels()
+    {
+        XOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.XOdometryWheelMotorNum);
+        YOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.YOdometryWheelMotorNum);
+
+        if(hardwareSettings.flipOdometryWheelDir[0]) XOdometryWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+        if(hardwareSettings.flipOdometryWheelDir[1]) YOdometryWheel.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        odometryWheels = Arrays.asList(XOdometryWheel, YOdometryWheel);
+
+        resetMotorEncodersList(odometryWheels);
+        setMotorsToRunWithEncodersList(odometryWheels);
     }
 
     public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
@@ -352,18 +380,26 @@ class HardwareSettings
     protected String leftBottomMotorNum = "2";
     protected String rightTopMotorNum = "1";
     protected String rightBottomMotorNum = "3";
+
     //launcher motors
-    protected boolean[] flipLauncherMotorDir = {true, true, false};
+    protected boolean[] flipLauncherMotorDir = {true, true, false, false};
     protected String launcherWheelMotorNum = "0B";
     public static PIDFCoefficients launcherWheelMotorPID = new PIDFCoefficients(10,3,0,0);
     protected String launcherIntakeMotorNum = "1B";
-    protected String launcherServoNum = "0B";
+    protected String launcherLaunchServoNum = "0B";
+    protected String launcherIntakeServoNum = "4B";
+
     //grabber motors
     protected boolean[] flipGrabberMotorDir = {true, false, false};
     protected String grabberLifterMotorNum = "2B";
     protected String grabberLeftServoNum = "1B";
     protected String grabberRightServoNum = "2B";
     protected String limitSwitchName = "digital0B";
+
+    //onmi wheel motors
+    protected  boolean[] flipOdometryWheelDir = {false, false};
+    protected String XOdometryWheelMotorNum = "3B";
+    protected String YOdometryWheelMotorNum = "2B";
 
     HardwareSettings(){}
 }

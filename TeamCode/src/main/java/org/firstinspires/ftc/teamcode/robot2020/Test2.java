@@ -18,10 +18,11 @@ public class Test2 extends LinearOpMode
     public void runOpMode()
     {
         RobotUsage ru = new RobotUsage();
-        ru.setAllToValue(true);
-        ru.useVuforia = false;
-        RobotSettingsMain rs = new RobotSettingsMain();
-        rs.positionSettings.resetPos = false;
+        ru.setAllToValue(false);
+        ru.usePositionTracking = true;
+        ru.usePositionThread = true;
+        ru.useDrive = true;
+
         robot = new Robot(this, ru);
 
         robot.startTelemetry();
@@ -30,25 +31,15 @@ public class Test2 extends LinearOpMode
 
         waitForStart();
 
-        robot.start();
-
-        robot.grabber.initGrabberPos();
+        robot.start(false);
 
         while(opModeIsActive())
         {
-            robot.grabber.runForTeleOp(gamepad1, true);
             robot.movement.moveForTeleOp(gamepad1,new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
-            /*
-            if(gamepad1.x)
-            {
-                robot.movement.moveToPosition(robot.position.getPositionWithOffset(10,0,0),new double[]{.1,.1,.1},100,7000,.3);
-            }
-            if(gamepad1.y)
-            {
-                robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,10,0),new double[]{.1,.1,.1},100,7000,.3);
-            }
-
-             */
+            robot.addTelemetry("posX", robot.position.currentRobotPosition[0]);
+            robot.addTelemetry("posY", robot.position.currentRobotPosition[1]);
+            robot.addTelemetry("rot", robot.position.currentRobotPosition[2]);
+            robot.sendTelemetry();
         }
     }
 }
