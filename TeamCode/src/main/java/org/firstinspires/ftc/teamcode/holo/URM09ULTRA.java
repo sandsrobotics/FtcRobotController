@@ -24,7 +24,8 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
 
     public short getDistanceCm()
     {
-        return readShort(Register.DIST_H_INDEX);
+        short tempCM = readShort(Register.CMD_INDEX.DIST_H_INDEX);
+        return tempCM;
     }
 
     public short getTemperatureC()
@@ -48,6 +49,13 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
         writeShort(Register.CMD_INDEX, CMD_DISTANCE_MEASURE);
     }
 
+    public void directMeasureRange()
+    {
+        byte[] txbuf =  {0x01};
+        deviceClient.write(Register.CMD_INDEX.bVal, txbuf);
+
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Read and Write Methods
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -57,10 +65,15 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
         deviceClient.write(reg.bVal, TypeConversion.shortToByteArray(value));
     }
 
+    protected byte readOneShort(Register reg)
+    {
+        byte[] raw = deviceClient.read(reg.bVal,1);
+        return raw[0];
+    }
+
     protected short readShort(Register reg)
     {
-        short theval = TypeConversion.byteArrayToShort(deviceClient.read(reg.bVal, 2));
-        return theval;
+        return TypeConversion.byteArrayToShort(deviceClient.read(reg.bVal, 2));
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +118,7 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
     {
         CM150(0x00),
         CM300(0x01),
-        CM500(0x20); // might be 0x20
+        CM500(0x20);
 
         public int bVal;
 
@@ -125,10 +138,8 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
     public URM09ULTRA(I2cDeviceSynch deviceClient)
     {
         super(deviceClient, true, new Parameters());
-
-        this.setOptimalReadWindow();
+        //this.setOptimalReadWindow();
         this.deviceClient.setI2cAddress(ADDRESS_I2C_DEFAULT);
-
         super.registerArmingStateCallback(false); // Deals with USB cables getting unplugged
         // Sensor starts off disengaged so we can change things like I2C address. Need to engage
         this.deviceClient.engage();
@@ -156,8 +167,10 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
 
         //the measurement mode is set to active mode, measurement range is set to 500CM.
         writeShort(Register.CFG_INDEX, (short) configSettings);
-
-        return readShort(Register.CFG_INDEX) == configSettings;
+        byte theByte = readOneShort(Register.CFG_INDEX);
+        short config_index = readShort(Register.CFG_INDEX);
+        return config_index == configSettings;
+        //return true;
     }
 
     public static class Parameters implements Cloneable
@@ -165,7 +178,7 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
         I2cAddr i2cAddr = ADDRESS_I2C_DEFAULT;
 
         // All settings available
-        MaxRange maxRange = MaxRange.CM500;
+        MaxRange maxRange = MaxRange.CM150;
         MeasureMode measureMode = MeasureMode.PASSIVE;
 
         public Parameters clone()
