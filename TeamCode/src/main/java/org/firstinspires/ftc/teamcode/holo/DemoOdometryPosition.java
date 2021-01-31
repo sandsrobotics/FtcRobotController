@@ -2,13 +2,13 @@ package org.firstinspires.ftc.teamcode.holo;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.holo.odometry.OdometryGlobalCoordinatePosition;
+import org.firstinspires.ftc.teamcode.holo.odometry.OdometryGlobalCoordinatePosition3e;
 
 @TeleOp(name = "Demo Odometry", group = "")
 public class DemoOdometryPosition extends LinearOpMode {
     SandsRobot robot;
     //The amount of encoder ticks for each inch the robot moves.
-    final double COUNTS_PER_INCH = 306.381642; // original 307.699557;
+    final double COUNTS_PER_INCH = 307.699557; //306.381642; // original 307.699557;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -17,10 +17,11 @@ public class DemoOdometryPosition extends LinearOpMode {
         waitForStart();
 
         //Create and start GlobalCoordinatePosition thread to constantly update the global coordinate positions\
-        OdometryGlobalCoordinatePosition globalPositionUpdate = new OdometryGlobalCoordinatePosition(robot, COUNTS_PER_INCH, 75);
+        OdometryGlobalCoordinatePosition3e globalPositionUpdate = new OdometryGlobalCoordinatePosition3e(robot, COUNTS_PER_INCH, 75);
         Thread positionThread = new Thread(globalPositionUpdate);
         positionThread.start();
 
+        globalPositionUpdate.reverseLeftEncoder();
         //globalPositionUpdate.reverseVerticalEncoder();
         //globalPositionUpdate.reverseNormalEncoder();
 

@@ -11,7 +11,7 @@ import java.io.File;
 /**
  * Created by Sarthak on 6/1/2019.
  */
-public class OdometryGlobalCoordinatePosition implements Runnable{
+public class OdometryGlobalCoordinatePosition2e implements Runnable{
     //Thead run condition
     private boolean isRunning = true;
 
@@ -37,7 +37,7 @@ public class OdometryGlobalCoordinatePosition implements Runnable{
      * @param robot robot that includes vertical and horizontal encoders
      * @param threadSleepDelay delay in milliseconds for the GlobalPositionUpdate thread (50-75 milliseconds is suggested)
      */
-    public OdometryGlobalCoordinatePosition(SandsRobot robot, double COUNTS_PER_INCH, int threadSleepDelay){
+    public OdometryGlobalCoordinatePosition2e(SandsRobot robot, double COUNTS_PER_INCH, int threadSleepDelay){
         this.robot = robot;
         sleepTime = threadSleepDelay;
     }
@@ -47,7 +47,7 @@ public class OdometryGlobalCoordinatePosition implements Runnable{
      */
     private void globalCoordinatePositionUpdate(){
         //Get Current Positions
-        verticalEncoderWheelPosition = (robot.encoderVertical.getCurrentPosition() * verticalEncoderPositionMultiplier);
+        verticalEncoderWheelPosition = (robot.verticalRightEncoder.getCurrentPosition() * verticalEncoderPositionMultiplier);
         double verticalChange = verticalEncoderWheelPosition - previousVerticalEncoderWheelPosition;
 
         //Calculate Angle
@@ -56,7 +56,7 @@ public class OdometryGlobalCoordinatePosition implements Runnable{
         robotOrientationRadians = ((robotOrientationRadians + changeInRobotOrientation));
 
         //Get the components of the motion
-        normalEncoderWheelPosition = (robot.encoderHorizontal.getCurrentPosition()*normalEncoderPositionMultiplier);
+        normalEncoderWheelPosition = (robot.horizontalEncoder.getCurrentPosition()*normalEncoderPositionMultiplier);
         double rawHorizontalChange = normalEncoderWheelPosition - prevNormalEncoderWheelPosition;
         double horizontalChange = rawHorizontalChange - (changeInRobotOrientation*horizontalEncoderTickPerDegreeOffset);
 

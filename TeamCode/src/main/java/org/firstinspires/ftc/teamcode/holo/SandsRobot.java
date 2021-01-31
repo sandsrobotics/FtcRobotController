@@ -4,7 +4,6 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -73,10 +72,12 @@ public class SandsRobot {
     }
 
     private void initOdometry() {
-        encoderVertical = hardwareMap.get(DcMotorEx.class, "motor2B");
-        encoderHorizontal = hardwareMap.get(DcMotorEx.class, "motor3B");
-        encoderVertical.setMode(STOP_AND_RESET_ENCODER);
-        encoderHorizontal.setMode(STOP_AND_RESET_ENCODER);
+        verticalLeftEncoder = hardwareMap.get(DcMotorEx.class, "motor1B");
+        verticalRightEncoder = hardwareMap.get(DcMotorEx.class, "motor2B");
+        horizontalEncoder = hardwareMap.get(DcMotorEx.class, "motor3B");
+        verticalLeftEncoder.setMode(STOP_AND_RESET_ENCODER);
+        verticalRightEncoder.setMode(STOP_AND_RESET_ENCODER);
+        horizontalEncoder.setMode(STOP_AND_RESET_ENCODER);
     }
     // Initialize the imu within the expansion hub
     private void initImu() {
@@ -189,6 +190,8 @@ public class SandsRobot {
         return (-imu.getAngularOrientation().firstAngle);
     }
 
+    public double getZAngleDeg(){ return Math.toDegrees(getZAngle()) % 360; }
+
     // Variable Definitions for Robot
     protected HardwareMap hardwareMap;
     protected Telemetry telemetry;
@@ -198,7 +201,7 @@ public class SandsRobot {
     protected Gamepad gamepad2;
     protected Thread positionThread;
     protected DcMotorEx motorLeftFront, motorLeftRear, motorRightRear, motorRightFront, motorLauncherWheel, motorLiftArm;
-    public DcMotorEx encoderVertical, encoderHorizontal;
+    public DcMotorEx verticalLeftEncoder, verticalRightEncoder, horizontalEncoder;
     protected Servo servo0, servoClawLeft, servoClawRight;
     //protected DcMotorEx verticalLeft, verticalRight, horizontal;
     private List<DcMotorEx> motors;
