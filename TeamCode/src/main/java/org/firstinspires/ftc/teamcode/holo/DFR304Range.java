@@ -12,60 +12,41 @@ import androidx.annotation.NonNull;
 
 @SuppressWarnings("WeakerAccess")
 @I2cDeviceType
-@DeviceProperties(name = "DFRobot Temp/Range Sensor V2",
-        description = "DFRobot Temp/Range Sensor V2",
-        xmlTag = "DFRobotURM09RangeV2",
+@DeviceProperties(name = "DFR Range Sensor",
+        description = "DFR Range Sensor",
+        xmlTag = "DFRURM09RangeV2",
         compatibleControlSystems = ControlSystem.REV_HUB, builtIn = true)
-public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, URM09ULTRA.Parameters>
+public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, DFR304Range.Parameters>
 {
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // User Methods
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public short getDistanceCm()
-    {
-        short tempCM = readShort(Register.CMD_INDEX.DIST_H_INDEX);
-        return tempCM;
-    }
-
-    public short getTemperatureC()
-    {
-        return (short)(readShort(Register.TEMP_H_INDEX)/10);
-    }
-
+    public short getDistanceCm() { return readShort(Register.DIST_H_INDEX); }
+    public short getTemperatureC() { return (short)(readShort(Register.TEMP_H_INDEX)/10); }
     public short getDistanceIn()
     {
         return (short)(getDistanceCm() / 2.54);
     }
-
     public short getTemperatureF()
     {
         return (short)(getTemperatureC() * 1.8 + 32);
     }
-
     // in passive mode must force a temperature read
     public void measureRange()
     {
-        writeShort(Register.CMD_INDEX, CMD_DISTANCE_MEASURE);
-    }
-
-    public void directMeasureRange()
-    {
-        byte[] txbuf =  {0x01};
-        deviceClient.write(Register.CMD_INDEX.bVal, txbuf);
-
+        writeByte(Register.CMD_INDEX, CMD_DISTANCE_MEASURE);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Read and Write Methods
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
-    protected void writeShort(final Register reg, short value)
+    protected void writeByte(final Register reg, Byte value)
     {
-        deviceClient.write(reg.bVal, TypeConversion.shortToByteArray(value));
+        byte[] txbuf =  {value};
+        deviceClient.write(reg.bVal, txbuf);
     }
 
-    protected byte readOneShort(Register reg)
+    protected byte readOneByte(Register reg)
     {
         byte[] raw = deviceClient.read(reg.bVal,1);
         return raw[0];
@@ -78,8 +59,24 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Registers and Config Settings
+    // CFG_INDEX
+    // Bit7(control bit in ranging mode) 0: passive measurement, send ranging command once,
+    // the module ranges the distance once and store the measured value into the distance register.
+    // 1: automatic measurement mode, the module keeps ranging distance and updating the distance register all the time.
+    // Bit6: save
+    // Bit5-bit4(the maximum ranging distance bit that can be set)
+    // 00:150CM(the ranging cycle is about 20MS)
+    // 01:300CM(the ranging cycle is about 30MS)
+    // 10:500CM(the ranging cycle is about 40MS)
+    // Bits:   7654321
+    // Mode  0bx000000
+    // PASSIVE =  0 0x00  -- Must call measureRange() to measure range, then read it.
+    // ACTIVE = 128 0x80 -- Continuously measures range, read any time.
+    // ----Range----
+    // 150CM 0b0000000 =  0 0x00
+    // 300CM 0b0100000 = 16 0x10
+    // 500CM 0b1000000 = 32 0z20
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
     public enum Register
     {
         FIRST(0x00),
@@ -104,7 +101,7 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
     public enum MeasureMode
     {
         PASSIVE(0x00),
-        ACTIVE(0x01);
+        ACTIVE(0x80);
 
         public int bVal;
 
@@ -117,7 +114,7 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
     public enum MaxRange
     {
         CM150(0x00),
-        CM300(0x01),
+        CM300(0x10),
         CM500(0x20);
 
         public int bVal;
@@ -131,14 +128,13 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Construction and Initialization
     ////////////////////////////////////////////////////////////////////////////////////////////////
-
     public final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x11);
-    public final static short CMD_DISTANCE_MEASURE = (0x01);
+    public final static byte CMD_DISTANCE_MEASURE = (0x01);
 
-    public URM09ULTRA(I2cDeviceSynch deviceClient)
+    public DFR304Range(I2cDeviceSynch deviceClient)
     {
         super(deviceClient, true, new Parameters());
-        //this.setOptimalReadWindow();
+        this.setOptimalReadWindow();
         this.deviceClient.setI2cAddress(ADDRESS_I2C_DEFAULT);
         super.registerArmingStateCallback(false); // Deals with USB cables getting unplugged
         // Sensor starts off disengaged so we can change things like I2C address. Need to engage
@@ -163,21 +159,15 @@ public class URM09ULTRA extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSync
         this.parameters = params.clone();
         deviceClient.setI2cAddress(params.i2cAddr);
 
-        int configSettings = params.measureMode.bVal | params.maxRange.bVal;
-
-        //the measurement mode is set to active mode, measurement range is set to 500CM.
-        writeShort(Register.CFG_INDEX, (short) configSettings);
-        byte theByte = readOneShort(Register.CFG_INDEX);
-        short config_index = readShort(Register.CFG_INDEX);
-        return config_index == configSettings;
-        //return true;
+        byte configSettings = (byte)(params.measureMode.bVal | params.maxRange.bVal);
+        writeByte(Register.CFG_INDEX, configSettings);
+        return readOneByte(Register.CFG_INDEX) == configSettings;
     }
 
     public static class Parameters implements Cloneable
     {
         I2cAddr i2cAddr = ADDRESS_I2C_DEFAULT;
 
-        // All settings available
         MaxRange maxRange = MaxRange.CM150;
         MeasureMode measureMode = MeasureMode.PASSIVE;
 
