@@ -38,6 +38,7 @@ public class RobotHardware
     protected List<DcMotorEx> odometryWheels;
     protected DcMotorEx XOdometryWheel;
     protected DcMotorEx YOdometryWheel;
+    protected DcMotorEx Y2OdometryWheel;
 
     //other class
     Robot robot;
@@ -124,12 +125,10 @@ public class RobotHardware
     {
         XOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.XOdometryWheelMotorNum);
         YOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.YOdometryWheelMotorNum);
+        Y2OdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.Y2OdometryWheelMotorNum);
+        odometryWheels = Arrays.asList(XOdometryWheel, YOdometryWheel, Y2OdometryWheel);
 
-        if(hardwareSettings.flipOdometryWheelDir[0]) XOdometryWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-        if(hardwareSettings.flipOdometryWheelDir[1]) YOdometryWheel.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        odometryWheels = Arrays.asList(XOdometryWheel, YOdometryWheel);
-
+        for(int i = 0; i < odometryWheels.size(); i++) if(hardwareSettings.flipOdometryWheelDir[i]) odometryWheels.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
         resetMotorEncodersList(odometryWheels);
         setMotorsToRunWithEncodersList(odometryWheels);
     }
@@ -397,9 +396,10 @@ class HardwareSettings
     protected String limitSwitchName = "digital0B";
 
     //onmi wheel motors
-    protected  boolean[] flipOdometryWheelDir = {false, false};
+    protected  boolean[] flipOdometryWheelDir = {true, true, false};
     protected String XOdometryWheelMotorNum = "3B";
     protected String YOdometryWheelMotorNum = "2B";
+    protected String Y2OdometryWheelMotorNum = "1B";
 
     HardwareSettings(){}
 }

@@ -30,7 +30,6 @@ public class Autonomous extends LinearOpMode {
     double[] tolLose = {2, 2, 5};
 
     //other
-    int servoMoveTime = 150;
     int timesRingRecognitionReq = 50; //how many times does tfod have to see a certain number of rings to call it good
 
     ///////////////////

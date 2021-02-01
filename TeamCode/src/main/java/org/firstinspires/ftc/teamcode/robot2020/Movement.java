@@ -194,6 +194,11 @@ public class Movement
     //other//
     /////////
 
+    void moveRobot(double X, double Y, double rotation, boolean applySpeedMultiplier, boolean applyMoveSmoothing)
+    {
+        robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(X, Y, rotation, applySpeedMultiplier, applyMoveSmoothing));
+    }
+
     double[] moveRobotPowers(double X, double Y, double rotation, boolean applySpeedMultiplier, boolean applyMoveSmoothing)
     {
         if(applyMoveSmoothing)

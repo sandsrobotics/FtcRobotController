@@ -11,6 +11,8 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import java.util.List;
+
 
 @Config
 public class Robot
@@ -187,6 +189,9 @@ public class Robot
         return XY;
     }
 
+    /////////
+    //other//
+    /////////
     void delay(long ms){
         long last = System.currentTimeMillis();
         while(System.currentTimeMillis() - last < ms)

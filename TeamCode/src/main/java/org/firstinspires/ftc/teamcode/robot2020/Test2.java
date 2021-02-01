@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -20,7 +21,6 @@ public class Test2 extends LinearOpMode
         RobotUsage ru = new RobotUsage();
         ru.setAllToValue(false);
         ru.usePositionTracking = true;
-        ru.usePositionThread = true;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
@@ -33,12 +33,18 @@ public class Test2 extends LinearOpMode
 
         robot.start(false);
 
+        int[] pos;
+        PIDCoefficients pidCoefficients = new PIDCoefficients(5,0,0);
+        double maxPower = .2;
+        PID pidLoop = new PID(pidCoefficients,-maxPower, maxPower);
+        double power;
+
         while(opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1,new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
-            robot.addTelemetry("posX", robot.position.currentRobotPosition[0]);
-            robot.addTelemetry("posY", robot.position.currentRobotPosition[1]);
-            robot.addTelemetry("rot", robot.position.currentRobotPosition[2]);
+            pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+            power = pidLoop.updatePIDAndReturnValue(1 - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
+            robot.movement.moveRobot(0,0, power, false, false);
+            robot.addTelemetry("power", power);
             robot.sendTelemetry();
         }
     }
