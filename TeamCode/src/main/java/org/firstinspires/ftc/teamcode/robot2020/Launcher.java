@@ -194,7 +194,7 @@ public class Launcher {
         double RPM = getRPMFromCalibration(3, getDistanceToGoal(true));
         if(RPM == -1) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "unable to get RPM");
         else if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
-        else if(!robot.robotUsage.usePositionTracking) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
         else
         {
             setRPM(RPM);

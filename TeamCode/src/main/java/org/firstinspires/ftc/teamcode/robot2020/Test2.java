@@ -34,17 +34,22 @@ public class Test2 extends LinearOpMode
         robot.start(false);
 
         int[] pos;
-        PIDCoefficients pidCoefficients = new PIDCoefficients(5,0,0);
+        PIDCoefficients pidCoefficients = new PIDCoefficients(7.5,0,0);
         double maxPower = .2;
         PID pidLoop = new PID(pidCoefficients,-maxPower, maxPower);
         double power;
+        double rot = 0;
+        GamepadButtonManager button = new GamepadButtonManager(GamepadButtons.A);
 
         while(opModeIsActive())
         {
+            if(button.getButtonPressed(gamepad1)) rot++;
+
             pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
-            power = pidLoop.updatePIDAndReturnValue(1 - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
+            power = pidLoop.updatePIDAndReturnValue(rot - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
             robot.movement.moveRobot(0,0, power, false, false);
             robot.addTelemetry("power", power);
+            robot.addTelemetry("rot", rot);
             robot.sendTelemetry();
         }
     }

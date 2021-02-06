@@ -249,7 +249,7 @@ class PositionSettings
     double startRotation = 0; //in degrees from goal
 
     //odometry wheels
-    public static double ticksPerRotationX = 4120;
+    public static double ticksPerRotationX = 4115;
     public static double ticksPerRotationY = -7840;
     public static double ticksPerRotationY2 = 7850;
     protected final float ticksPerInch = (float)(1440 / (1.49606 * Math.PI));//the number of ticks per 1 inch of movement
