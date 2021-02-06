@@ -22,6 +22,7 @@ public class UltrasonicRangeTest extends LinearOpMode
 
         while(opModeIsActive())
         {
+            final long startLoop = System.nanoTime();
             //distSensor.measureRange();
             telemetry.addData("Distance CM", distSensor.getDistanceCm());
             telemetry.addData("Distance IN", distSensor.getDistanceIn());
@@ -29,6 +30,7 @@ public class UltrasonicRangeTest extends LinearOpMode
             telemetry.addData("Temperature C", distSensor.getTemperatureC());
             telemetry.addData("Config", (distSensor.readOneByte(DFR304Range.Register.CFG_INDEX) & 0xFF));
             telemetry.addData("Manufacturer", distSensor.getManufacturer());
+            final long duration = System.nanoTime() - startLoop;
             telemetry.update();
             idle();
         }
