@@ -11,28 +11,34 @@ public class UltrasonicRangeTest extends LinearOpMode
 {
     public void runOpMode()
     {
-        DFR304Range distSensor = hardwareMap.get(DFR304Range.class, "distSensor");
+        DFR304Range distSensor0 = hardwareMap.get(DFR304Range.class, "distSensor0");
+        DFR304Range distSensor1 = hardwareMap.get(DFR304Range.class, "distSensor1");
 
         DFR304Range.Parameters parameters = new DFR304Range.Parameters();
         parameters.maxRange = DFR304Range.MaxRange.CM500;
         parameters.measureMode = DFR304Range.MeasureMode.ACTIVE;
-        distSensor.initialize(parameters);
+        distSensor0.initialize(parameters);
+        distSensor1.initialize(parameters);
 
         waitForStart();
 
         while(opModeIsActive())
         {
-            final long startLoop = System.nanoTime();
             //distSensor.measureRange();
-            telemetry.addData("Distance CM", distSensor.getDistanceCm());
-            telemetry.addData("Distance IN", distSensor.getDistanceIn());
-            telemetry.addData("Temperature F", distSensor.getTemperatureF());
-            telemetry.addData("Temperature C", distSensor.getTemperatureC());
-            telemetry.addData("Config", (distSensor.readOneByte(DFR304Range.Register.CFG_INDEX) & 0xFF));
-            telemetry.addData("Manufacturer", distSensor.getManufacturer());
-            final long duration = System.nanoTime() - startLoop;
+            telemetry.addData("Distance 0 IN", distSensor0.getDistanceIn());
+            telemetry.addData("Distance 1 IN", distSensor1.getDistanceIn());
+            telemetry.addData("Distance 0 CM", distSensor0.getDistanceCm());
+            telemetry.addData("Distance 1 CM", distSensor1.getDistanceCm());
+            telemetry.addData("Temperature 0 F", distSensor0.getTemperatureF());
+            telemetry.addData("Temperature 1 F", distSensor1.getTemperatureF());
+            //telemetry.addData("Temperature0 C", distSensor0.getTemperatureC());
+            //telemetry.addData("Temperature1 C", distSensor1.getTemperatureC());
+            //telemetry.addData("Config0", (distSensor0.readOneByte(DFR304Range.Register.CFG_INDEX) & 0xFF));
+            //telemetry.addData("Config0", (distSensor1.readOneByte(DFR304Range.Register.CFG_INDEX) & 0xFF));
+            //telemetry.addData("Manufacturer0", distSensor0.getManufacturer());
+            //telemetry.addData("Manufacturer0", distSensor1.getManufacturer());
             telemetry.update();
-            idle();
+            //idle();
         }
 
     }
