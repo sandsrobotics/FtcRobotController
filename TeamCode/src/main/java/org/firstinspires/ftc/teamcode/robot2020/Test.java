@@ -8,7 +8,7 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
-@TeleOp(name = "test Tfod")
+@TeleOp(name = "test dist")
 public class Test extends LinearOpMode {
 
     Robot robot;
@@ -19,9 +19,8 @@ public class Test extends LinearOpMode {
 
         RobotUsage ru = new RobotUsage();
         ru.setAllToValue(false);
-        ru.useTensorFlow = true;
-        ru.useVuforia = true;
-        ru.useTensorFlowInTread = false;
+        ru.usePositionThread = true;
+        ru.usePositionTracking = true;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
@@ -30,26 +29,18 @@ public class Test extends LinearOpMode {
 
         robot.start(true);
 
-        robot.vision.tofdActivationSequence();
-        robot.vision.startDashboardCameraStream(24,false);
-
         while (opModeIsActive())
         {
-            robot.vision.findAllTfodObjects();
-            if(robot.vision.anyTfodObjectsFound)
-            {
-                telemetry.addData("# Object Detected", robot.vision.tfodCurrentRecognitions.size());
-                // step through the list of recognitions and display boundary info.
-                int i = 0;
-                for (Recognition recognition : robot.vision.tfodCurrentRecognitions) {
-                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                            recognition.getLeft(), recognition.getTop());
-                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                            recognition.getRight(), recognition.getBottom());
-                }
-            }
-            robot.sendTelemetry();
+           robot.movement.moveForTeleOp(gamepad1, new GamepadButtonManager(GamepadButtons.A), false);
+           /*
+           if(robot.position.distances != null) {
+               for (int i = 0; i < robot.robotHardware.distSensors.size(); i++) {
+                   robot.addTelemetry("dis" + i, robot.position.distances[i]);
+               }
+           }
+
+            */
+           //robot.sendTelemetry();
         }
     }
 }

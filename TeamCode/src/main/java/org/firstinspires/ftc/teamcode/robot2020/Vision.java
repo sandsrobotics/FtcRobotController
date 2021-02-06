@@ -290,7 +290,7 @@ public class Vision extends Thread
     void tofdActivationSequence()
     {
         activateTfod();
-        tfod.setZoom(1.1, (double)16/(double)9);
+        tfod.setZoom(3, (double)16/(double)9);
     }
 
     Recognition getHighestConfidence()

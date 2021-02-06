@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robot2020.persistence.Movement.MovementEntity;
 
@@ -72,7 +73,7 @@ public class ComplexMovement {
     void startRecording()
     {
         resetRecording();
-        robot.robotHardware.setMotorsToCoastList(robot.robotHardware.driveMotors);
+        robot.robotHardware.setMotorsZeroPowerBehaviorList(robot.robotHardware.driveMotors, DcMotor.ZeroPowerBehavior.FLOAT);
         isRecording = true;
     }
 
@@ -231,7 +232,7 @@ public class ComplexMovement {
             double[] curLoadedVelocities = new double[4];
             int[] motorStartPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
             boolean start = true;
-            robot.robotHardware.setMotorsToBrakeList(robot.robotHardware.driveMotors);
+            robot.robotHardware.setMotorsZeroPowerBehaviorList(robot.robotHardware.driveMotors, DcMotor.ZeroPowerBehavior.BRAKE);
 
             double startMs = System.currentTimeMillis();
 
@@ -244,7 +245,7 @@ public class ComplexMovement {
                 }
                 if (start) {
                     robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors,1);
-                    robot.robotHardware.setMotorsToRunToPositionList(robot.robotHardware.driveMotors);
+                    robot.robotHardware.setMotorsRunModeList(robot.robotHardware.driveMotors, DcMotor.RunMode.RUN_TO_POSITION);
                     start = false;
                 }
                 if (curInstruction == loaded_Positions.size() || robot.stop()) break;
@@ -254,9 +255,9 @@ public class ComplexMovement {
                 }
             }
             while(!robot.robotHardware.motorPositionsInToleranceList(robot.robotHardware.driveMotors, 5) && !stopIfTimeIsMoreThanMoveTime){if(robot.stop()) break;}
-            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
-            robot.robotHardware.setMotorsToRunWithEncodersList(robot.robotHardware.driveMotors);
-            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
+            robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
+            robot.robotHardware.setMotorsRunModeList(robot.robotHardware.driveMotors, DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
         }
         else if(robot.robotSettings.debug_methods) robot.addTelemetry("warning in ComplexMovement.RunMoveV2: ", "no loaded move!");
     }

@@ -34,11 +34,19 @@ public class RobotHardware
     protected List<Servo> grabberServos;
     protected DigitalChannel grabberLimitSwitch;
 
+    /*
     //Odometry wheels
     protected List<DcMotorEx> odometryWheels;
     protected DcMotorEx XOdometryWheel;
     protected DcMotorEx YOdometryWheel;
     protected DcMotorEx Y2OdometryWheel;
+     */
+
+    //ultrasonic
+    protected List<DFR304Range> distSensors;
+    protected DFR304Range distSensorX;
+    //protected DFR304Range distSensorX2;
+    protected DFR304Range distSensorY;
 
     //other class
     Robot robot;
@@ -121,6 +129,7 @@ public class RobotHardware
         robot.robotHardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
+    /*
     public void initOdometryWheels()
     {
         XOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.XOdometryWheelMotorNum);
@@ -130,18 +139,25 @@ public class RobotHardware
 
         for(int i = 0; i < odometryWheels.size(); i++) if(hardwareSettings.flipOdometryWheelDir[i]) odometryWheels.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
         resetMotorEncodersList(odometryWheels);
-        setMotorsToRunWithEncodersList(odometryWheels);
+        setMotorsRunModeList(odometryWheels, DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+     */
+
+    public void initUltrasonicSensors()
+    {
+        distSensorX = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.XUltrasonicNum);
+       // distSensorX2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.X2UltrasonicNum);
+        distSensorY = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.YUltrasonicNum);
+        //distSensors = Arrays.asList(distSensorX,distSensorX2,distSensorY);
+        distSensors = Arrays.asList(distSensorX, distSensorY);
+
+        DFR304Range.Parameters parameters = new DFR304Range.Parameters();
+        parameters.maxRange = DFR304Range.MaxRange.CM500;
+        parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
+        for(DFR304Range distSen : distSensors) { distSen.initialize(parameters); }
     }
 
-    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
-    {
-        for(DcMotorEx motor:motors)
-        {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setZeroPowerBehavior(zeroPowerBehavior);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
+    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior) { for(DcMotorEx motor:motors) initMotorSettings(motor, zeroPowerBehavior); }
 
     public void initMotorSettings(DcMotorEx motor, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
     {
@@ -161,57 +177,13 @@ public class RobotHardware
     ///////////////////
     //set motor modes//
     ///////////////////
-    public void setMotorsToCoastList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
-    }
+    public void setMotorsZeroPowerBehaviorList(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior) { for(DcMotorEx motor: motors) motor.setZeroPowerBehavior(zeroPowerBehavior); }
 
-    public void setMotorsToBrakeList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-    }
-
-    public void setMotorsToRunWithoutEncodersList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        }
-    }
-
-    public void setMotorsToRunWithEncodersList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-
-    public void setMotorsToRunToPositionList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
+    public void setMotorsRunModeList(List<DcMotorEx> motors, DcMotor.RunMode runMode) { for(DcMotorEx motor: motors) motor.setMode(runMode); }
 
     ///////////////
     //motor power//
     ///////////////
-    public void stopMotorsList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setPower(0);
-        }
-    }
-
     public void setMotorsToPowerList(List<DcMotorEx> motors, double power)
     {
         for(DcMotorEx motor: motors)
@@ -228,18 +200,6 @@ public class RobotHardware
             motor.setPower(powers[i]);
             i++;
         }
-    }
-
-    public double[] getMotorPowersList(List<DcMotorEx> motors)
-    {
-        double[] arr = new double[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getPower();
-            i++;
-        }
-        return arr;
     }
 
     ///////////////
@@ -307,46 +267,21 @@ public class RobotHardware
         }
         return arr;
     }
-    public int[] getMotorSetPositions(List<DcMotorEx> motors)
-    {
-        int[] arr = new int[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getCurrentPosition();
-            i++;
-        }
-        return arr;
-    }
-
-    ////////////////////
-    //motor velocities//
-    ////////////////////
-    public double[] getMotorVelocitiesList(List<DcMotorEx> motors)
-    {
-        double[] arr = new double[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getVelocity();
-            i++;
-        }
-        return arr;
-    }
-
-    void setMotorVelocitiesList(List<DcMotorEx> motors, double[] velocities)
-    {
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            motor.setVelocity(velocities[i]);
-            i++;
-        }
-    }
 
     /////////
     //other//
     /////////
+    public int[] getDistancesList(List<DFR304Range> distSensors)
+    {
+        int[] arr = new int[distSensors.size()];
+        for(int i = 0; i < distSensors.size(); i++)
+        {
+            distSensors.get(i).measureRange();
+            arr[i] = distSensors.get(i).getDistanceIn();
+        }
+        return arr;
+    }
+
     public void waitForMotorsToFinishList(List<DcMotorEx> motors)
     {
         int totalMotorsDone = 0;
@@ -395,11 +330,18 @@ class HardwareSettings
     protected String grabberRightServoNum = "2B";
     protected String limitSwitchName = "digital0B";
 
-    //onmi wheel motors
-    protected  boolean[] flipOdometryWheelDir = {true, true, false};
+    /*
+    //odometry wheel encoders
+    protected boolean[] flipOdometryWheelDir = {true, true, false};
     protected String XOdometryWheelMotorNum = "3B";
     protected String YOdometryWheelMotorNum = "2B";
     protected String Y2OdometryWheelMotorNum = "1B";
+     */
+
+    //ultrasonic
+    protected String XUltrasonicNum = "0";
+    protected String X2UltrasonicNum = "2";
+    protected String YUltrasonicNum = "1";
 
     HardwareSettings(){}
 }

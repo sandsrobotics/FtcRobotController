@@ -45,10 +45,10 @@ public class Test2 extends LinearOpMode
         {
             if(button.getButtonPressed(gamepad1)) rot++;
 
-            pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
-            power = pidLoop.updatePIDAndReturnValue(rot - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
-            robot.movement.moveRobot(0,0, power, false, false);
-            robot.addTelemetry("power", power);
+            //pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+            //power = pidLoop.updatePIDAndReturnValue(rot - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
+            //robot.movement.moveRobot(0,0, power, false, false);
+            //robot.addTelemetry("power", power);
             robot.addTelemetry("rot", rot);
             robot.sendTelemetry();
         }

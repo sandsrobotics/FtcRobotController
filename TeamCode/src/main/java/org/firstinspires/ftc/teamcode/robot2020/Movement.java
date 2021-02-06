@@ -54,7 +54,7 @@ public class Movement
 
                 maxRuntime--;
             }
-            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
+            robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
         }
     }
 
@@ -133,7 +133,7 @@ public class Movement
                     }
                 }
             }
-            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
+            robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
         }
         else if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Movement.moveToPosition: ", "robot can not move to position because it does not know its position");
     }
@@ -165,7 +165,7 @@ public class Movement
     {
         if(breakButton.getButtonHeld(gamepad))
         {
-            robot.robotHardware.stopMotorsList(robot.robotHardware.driveMotors);
+            robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
         }
         else robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));

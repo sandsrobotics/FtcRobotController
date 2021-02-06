@@ -74,7 +74,11 @@ public class Robot
         if(robotUsage.useLauncher) robotHardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
         if(robotUsage.useGrabber) robotHardware.initGrabberHardware();
-        if(robotUsage.usePositionTracking) robotHardware.initOdometryWheels();
+        if(robotUsage.usePositionTracking)
+        {
+            //robotHardware.initOdometryWheels();
+            //robotHardware.initUltrasonicSensors();
+        }
     }
 
     void initHardware()
@@ -200,7 +204,7 @@ public class Robot
         }
     }
 
-    boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || !opMode.opModeIsActive(); }
+    boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || opMode.isStopRequested(); }
 }
 
 enum GamepadButtons

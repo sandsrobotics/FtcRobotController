@@ -19,14 +19,20 @@ public class Position extends Thread
     protected volatile double[] currentRobotPosition;
 
     //wheels
-    protected int[] lastMotorPos;
-    protected int[] currMotorPos;
+    private int[] lastMotorPos;
+    private int[] currMotorPos;
 
     //odometry
-    protected int[] lastOdometryPos;
-    protected int[] currOdometryPos;
-    protected int[] odometryPosDiff;
-    protected double rotationDiff;
+//    private int[] lastOdometryPos;
+//    private int[] currOdometryPos;
+//    private int[] odometryPosDiff;
+//    private double rotationDiff;
+
+    //distance sensors
+//    protected volatile int[] distances;
+//    protected volatile int[] lastDistances;
+//    private int measureDelay = 50;
+//    private long lastMeasureTime = System.currentTimeMillis();
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
@@ -108,6 +114,7 @@ public class Position extends Thread
         currentRobotPosition[2] = currentRotation;
     }
 
+/*
     void getOdometryDiff()
     {
         lastOdometryPos = currOdometryPos;
@@ -120,6 +127,7 @@ public class Position extends Thread
 
         rotationDiff = currentRotation - currentRobotPosition[2];
     }
+
 
     void getPosFrom2Odometry()
     {
@@ -137,6 +145,8 @@ public class Position extends Thread
     {
 
     }
+
+ */
 
     void updatePositionFromVuforia()
     {
@@ -188,13 +198,30 @@ public class Position extends Thread
     void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
      */
 
+    ///////////////////
+    //distance sensor//
+    ///////////////////
+    /*
+    void updateDistanceSensor()
+    {
+        if(System.currentTimeMillis() - lastMeasureTime > measureDelay)
+        {
+            lastMeasureTime = System.currentTimeMillis();
+            lastDistances = distances;
+            distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        }
+    }
+
+     */
+
     //////////////////
     //runs in thread//
     //////////////////
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+        //currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+        //distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
     }
 
     void updateAll()
@@ -214,10 +241,11 @@ public class Position extends Thread
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
-                //getPosFromEncoder();
-                getPosFrom2Odometry();
+                getPosFromEncoder();
+                //getPosFrom2Odometry();
                 //if(robot.robotUsage.logPosition) addCurrentPosition(true);
                 //updatePositionFromVuforia();
+                //updateDistanceSensor();
             }
         }
     }
