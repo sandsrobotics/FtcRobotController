@@ -30,8 +30,7 @@ public class Autonomous extends LinearOpMode {
     double[] tolLose = {2, 2, 5};
 
     //other
-    int servoMoveTime = 150;
-    int timesRingRecognitionReq = 10; //how many times does tfod have to see a certain number of rings to call it good
+    int timesRingRecognitionReq = 50; //how many times does tfod have to see a certain number of rings to call it good
 
     ///////////////////
     //other variables//
@@ -42,6 +41,8 @@ public class Autonomous extends LinearOpMode {
     //tfod
     int timesRingsRecognized = 0;
     int lastNumOfRings = -1;
+
+    int calculatedNumOfRings;
     int finalNumOfRings = -1; //what is the final say on the number of rings
 
     //other
@@ -56,13 +57,15 @@ public class Autonomous extends LinearOpMode {
     {
         RobotUsage ru = new RobotUsage();
         ru.useComplexMovement = false;
-        ru.useVuforiaInThread = false;
         ru.useTensorFlowInTread = false;
         ru.useOpenCV = false;
+        ru.useVuforiaInThread = false;
 
         robot = new Robot(this, ru);
+        robot.vision.tofdActivationSequence();
+        robot.startTelemetry();
 
-        while(!isStarted())
+        while(!isStarted() && !isStopRequested())
         {
             if(closeButton.getButtonPressed(gamepad1))
             {
@@ -70,12 +73,18 @@ public class Autonomous extends LinearOpMode {
                 if(closed) robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, false);
                 else robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
             }
-            finalNumOfRings = getNumOfRings();
-            if(finalNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
-            else robot.addTelemetry("rings", finalNumOfRings);
-        }
 
-        robot.start();
+            calculatedNumOfRings = getNumOfRings();
+            if(calculatedNumOfRings == -1) robot.addTelemetry("rings", " calculating...");
+            else
+            {
+                finalNumOfRings = calculatedNumOfRings;
+                robot.addTelemetry("rings", finalNumOfRings);
+            }
+            robot.sendTelemetry();
+        }
+        //if(true) return;
+        robot.start(false);
 
         robot.launcher.setRPM(3700);
            if(finalNumOfRings == 0)
@@ -110,11 +119,11 @@ public class Autonomous extends LinearOpMode {
     }
     int getNumOfRings()
     {
-        int currentNumOfRings = robot.vision.RunTodSequenceForRings();
+        int currentNumOfRings = robot.vision.runTfodSequenceForRings();
         if(currentNumOfRings == lastNumOfRings)
         {
             timesRingsRecognized++;
-            if(timesRingsRecognized == timesRingRecognitionReq){ return currentNumOfRings;}
+            if(timesRingsRecognized >= timesRingRecognitionReq){ return currentNumOfRings;}
         }
         else
         {

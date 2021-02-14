@@ -50,10 +50,6 @@ public class Launcher {
         targetWheelRpm = launcherSettings.startRPM;
     }
 
-    void init()
-    {
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
-    }
 
     ///////////////
     //Calibration//
@@ -161,7 +157,7 @@ public class Launcher {
         if(launcherSettings.revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
-        if (runWheelOnTrigger) robot.hardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
+        if (runWheelOnTrigger) robot.robotHardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
         else setRPM();
     }
 
@@ -176,7 +172,10 @@ public class Launcher {
         }
         if(moveIntakeMotorForward) intakeMotorPower = 1;
 
-        robot.hardware.launcherIntakeMotor.setPower(intakeMotorPower);
+        robot.robotHardware.launcherIntakeMotor.setPower(intakeMotorPower);
+
+        if(intakeMotorPower != 0) robot.robotHardware.launcherIntakeServo.setPower(1);
+        else robot.robotHardware.launcherIntakeServo.setPower(0);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
@@ -195,7 +194,7 @@ public class Launcher {
         double RPM = getRPMFromCalibration(3, getDistanceToGoal(true));
         if(RPM == -1) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "unable to get RPM");
         else if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
-        else if(!robot.robotUsage.usePositionTracking) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
         else
         {
             setRPM(RPM);
@@ -252,7 +251,7 @@ public class Launcher {
 
     double getPRM()
     {
-        return  robot.hardware.launcherWheelMotor.getVelocity() * spinMultiplier;
+        return  robot.robotHardware.launcherWheelMotor.getVelocity() * spinMultiplier;
     }
 
     double getDistanceToGoal(boolean useMinLaunchDistance)
@@ -273,7 +272,7 @@ public class Launcher {
     void setRPM(double RPM)
     {
         targetWheelRpm = RPM;
-        robot.hardware.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
+        robot.robotHardware.launcherWheelMotor.setVelocity(RPM / spinMultiplier);
     }
 
     void setRPM()
@@ -302,9 +301,9 @@ public class Launcher {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;
         }
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoLaunchAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoLaunchAngle);
         robot.delay(actuatorTime);
-        robot.hardware.launcherServo.setPosition(launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoRestAngle);
     }
 
     void moveLaunchServo()

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @Config
-public class Hardware
+public class RobotHardware
 {
 
     /////////
@@ -24,7 +25,8 @@ public class Hardware
 
     //launcher
     protected DcMotorEx launcherWheelMotor, launcherIntakeMotor;
-    protected Servo launcherServo;
+    protected Servo launcherLaunchServo;
+    protected CRServo launcherIntakeServo;
 
     //grabber
     protected DcMotorEx grabberLifterMotor;
@@ -32,16 +34,30 @@ public class Hardware
     protected List<Servo> grabberServos;
     protected DigitalChannel grabberLimitSwitch;
 
+    /*
+    //Odometry wheels
+    protected List<DcMotorEx> odometryWheels;
+    protected DcMotorEx XOdometryWheel;
+    protected DcMotorEx YOdometryWheel;
+    protected DcMotorEx Y2OdometryWheel;
+     */
+
+    //ultrasonic
+    protected List<DFR304Range> distSensors;
+    protected DFR304Range distSensorX;
+    //protected DFR304Range distSensorX2;
+    protected DFR304Range distSensorY;
+
     //other class
     Robot robot;
     HardwareSettings hardwareSettings;
 
-    public Hardware(Robot robot)
+    public RobotHardware(Robot robot)
     {
         hardwareSettings = new HardwareSettings();
         this.robot = robot;
     }
-    public Hardware(Robot robot, HardwareSettings hardwareSettings)
+    public RobotHardware(Robot robot, HardwareSettings hardwareSettings)
     {
         this.hardwareSettings = hardwareSettings;
         this.robot = robot;
@@ -74,14 +90,21 @@ public class Hardware
         launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, HardwareSettings.launcherWheelMotorPID);
         launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
-        launcherServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherServoNum);
+        launcherLaunchServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherLaunchServoNum);
+        launcherIntakeServo = robot.hardwareMap.crservo.get("servo" + hardwareSettings.launcherIntakeServoNum);
 
         if(hardwareSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
-        if(hardwareSettings.flipLauncherMotorDir[2]) launcherServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[2]) launcherLaunchServo.setDirection(Servo.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[3]) launcherIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         initMotorSettings(launcherWheelMotor, DcMotor.ZeroPowerBehavior.FLOAT);
-        initMotorSettings(launcherIntakeMotor, DcMotor.ZeroPowerBehavior.BRAKE);
+
+        launcherIntakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launcherIntakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        robot.robotHardware.launcherLaunchServo.setPosition(robot.launcher.launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherIntakeServo.setPower(0);
     }
 
     public void initGrabberHardware()
@@ -98,23 +121,43 @@ public class Hardware
         grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         grabberLifterMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        robot.hardware.grabberLifterMotor.setTargetPosition(0);
-        robot.hardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
-        robot.hardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.robotHardware.grabberLifterMotor.setTargetPosition(0);
+        robot.robotHardware.grabberLifterMotor.setPower(robot.grabber.grabberSettings.motorPower);
+        robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        robot.hardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
-        robot.hardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
+        robot.robotHardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
+        robot.robotHardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
 
-    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
+    /*
+    public void initOdometryWheels()
     {
-        for(DcMotorEx motor:motors)
-        {
-            motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            motor.setZeroPowerBehavior(zeroPowerBehavior);
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
+        XOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.XOdometryWheelMotorNum);
+        YOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.YOdometryWheelMotorNum);
+        Y2OdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.Y2OdometryWheelMotorNum);
+        odometryWheels = Arrays.asList(XOdometryWheel, YOdometryWheel, Y2OdometryWheel);
+
+        for(int i = 0; i < odometryWheels.size(); i++) if(hardwareSettings.flipOdometryWheelDir[i]) odometryWheels.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
+        resetMotorEncodersList(odometryWheels);
+        setMotorsRunModeList(odometryWheels, DcMotor.RunMode.RUN_USING_ENCODER);
     }
+     */
+
+    public void initUltrasonicSensors()
+    {
+        distSensorX = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.XUltrasonicNum);
+       // distSensorX2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.X2UltrasonicNum);
+        distSensorY = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.YUltrasonicNum);
+        //distSensors = Arrays.asList(distSensorX,distSensorX2,distSensorY);
+        distSensors = Arrays.asList(distSensorX, distSensorY);
+
+        DFR304Range.Parameters parameters = new DFR304Range.Parameters();
+        parameters.maxRange = DFR304Range.MaxRange.CM500;
+        parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
+        for(DFR304Range distSen : distSensors) { distSen.initialize(parameters); }
+    }
+
+    public void initMotorSettings(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior) { for(DcMotorEx motor:motors) initMotorSettings(motor, zeroPowerBehavior); }
 
     public void initMotorSettings(DcMotorEx motor, DcMotor.ZeroPowerBehavior zeroPowerBehavior)
     {
@@ -134,57 +177,13 @@ public class Hardware
     ///////////////////
     //set motor modes//
     ///////////////////
-    public void setMotorsToCoastList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        }
-    }
+    public void setMotorsZeroPowerBehaviorList(List<DcMotorEx> motors, DcMotor.ZeroPowerBehavior zeroPowerBehavior) { for(DcMotorEx motor: motors) motor.setZeroPowerBehavior(zeroPowerBehavior); }
 
-    public void setMotorsToBrakeList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        }
-    }
-
-    public void setMotorsToRunWithoutEncodersList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        }
-    }
-
-    public void setMotorsToRunWithEncodersList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        }
-    }
-
-    public void setMotorsToRunToPositionList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        }
-    }
+    public void setMotorsRunModeList(List<DcMotorEx> motors, DcMotor.RunMode runMode) { for(DcMotorEx motor: motors) motor.setMode(runMode); }
 
     ///////////////
     //motor power//
     ///////////////
-    public void stopMotorsList(List<DcMotorEx> motors)
-    {
-        for(DcMotorEx motor: motors)
-        {
-            motor.setPower(0);
-        }
-    }
-
     public void setMotorsToPowerList(List<DcMotorEx> motors, double power)
     {
         for(DcMotorEx motor: motors)
@@ -201,18 +200,6 @@ public class Hardware
             motor.setPower(powers[i]);
             i++;
         }
-    }
-
-    public double[] getMotorPowersList(List<DcMotorEx> motors)
-    {
-        double[] arr = new double[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getPower();
-            i++;
-        }
-        return arr;
     }
 
     ///////////////
@@ -280,46 +267,21 @@ public class Hardware
         }
         return arr;
     }
-    public int[] getMotorSetPositions(List<DcMotorEx> motors)
-    {
-        int[] arr = new int[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getCurrentPosition();
-            i++;
-        }
-        return arr;
-    }
-
-    ////////////////////
-    //motor velocities//
-    ////////////////////
-    public double[] getMotorVelocitiesList(List<DcMotorEx> motors)
-    {
-        double[] arr = new double[motors.size()];
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            arr[i] = motor.getVelocity();
-            i++;
-        }
-        return arr;
-    }
-
-    void setMotorVelocitiesList(List<DcMotorEx> motors, double[] velocities)
-    {
-        int i = 0;
-        for(DcMotorEx motor: motors)
-        {
-            motor.setVelocity(velocities[i]);
-            i++;
-        }
-    }
 
     /////////
     //other//
     /////////
+    public int[] getDistancesList(List<DFR304Range> distSensors)
+    {
+        int[] arr = new int[distSensors.size()];
+        for(int i = 0; i < distSensors.size(); i++)
+        {
+            distSensors.get(i).measureRange();
+            arr[i] = distSensors.get(i).getDistanceIn();
+        }
+        return arr;
+    }
+
     public void waitForMotorsToFinishList(List<DcMotorEx> motors)
     {
         int totalMotorsDone = 0;
@@ -352,18 +314,34 @@ class HardwareSettings
     protected String leftBottomMotorNum = "2";
     protected String rightTopMotorNum = "1";
     protected String rightBottomMotorNum = "3";
+
     //launcher motors
-    protected boolean[] flipLauncherMotorDir = {true, true, false};
+    protected boolean[] flipLauncherMotorDir = {true, true, false, false};
     protected String launcherWheelMotorNum = "0B";
     public static PIDFCoefficients launcherWheelMotorPID = new PIDFCoefficients(10,3,0,0);
     protected String launcherIntakeMotorNum = "1B";
-    protected String launcherServoNum = "0B";
+    protected String launcherLaunchServoNum = "0B";
+    protected String launcherIntakeServoNum = "4B";
+
     //grabber motors
     protected boolean[] flipGrabberMotorDir = {true, false, false};
     protected String grabberLifterMotorNum = "2B";
     protected String grabberLeftServoNum = "1B";
     protected String grabberRightServoNum = "2B";
     protected String limitSwitchName = "digital0B";
+
+    /*
+    //odometry wheel encoders
+    protected boolean[] flipOdometryWheelDir = {true, true, false};
+    protected String XOdometryWheelMotorNum = "3B";
+    protected String YOdometryWheelMotorNum = "2B";
+    protected String Y2OdometryWheelMotorNum = "1B";
+     */
+
+    //ultrasonic
+    protected String XUltrasonicNum = "0";
+    protected String X2UltrasonicNum = "2";
+    protected String YUltrasonicNum = "1";
 
     HardwareSettings(){}
 }

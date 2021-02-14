@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import com.acmerobotics.dashboard.config.Config;
+
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
@@ -15,8 +17,22 @@ public class Position extends Thread
     ///////////////////
     //robot position
     protected volatile double[] currentRobotPosition;
-    protected int[] lastMotorPos;
-    protected int[] currMotorPos;
+
+    //wheels
+    private int[] lastMotorPos;
+    private int[] currMotorPos;
+
+    //odometry
+//    private int[] lastOdometryPos;
+//    private int[] currOdometryPos;
+//    private int[] odometryPosDiff;
+//    private double rotationDiff;
+
+    //distance sensors
+//    protected volatile int[] distances;
+//    protected volatile int[] lastDistances;
+//    private int measureDelay = 50;
+//    private long lastMeasureTime = System.currentTimeMillis();
 
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
@@ -56,7 +72,7 @@ public class Position extends Thread
         }
         else
         {
-            currentRobotPosition = new double[]{0,0,0};
+            currentRobotPosition = new double[]{0, 0, 0};
             rotationOffset = 0;
         }
     }
@@ -81,7 +97,7 @@ public class Position extends Thread
     {
         //get difference
         lastMotorPos = currMotorPos;
-        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
+        currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
         int[] diff = new int[4];
         for(int i = 0; i < 4; i++)
         {
@@ -97,6 +113,40 @@ public class Position extends Thread
         currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
         currentRobotPosition[2] = currentRotation;
     }
+
+/*
+    void getOdometryDiff()
+    {
+        lastOdometryPos = currOdometryPos;
+        currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+
+        for(int i = 0; i < 2; i++)
+        {
+            odometryPosDiff[i] = currOdometryPos[i] - lastOdometryPos[i];
+        }
+
+        rotationDiff = currentRotation - currentRobotPosition[2];
+    }
+
+
+    void getPosFrom2Odometry()
+    {
+        getOdometryDiff();
+
+        double XMove = (odometryPosDiff[0] - (positionSettings.ticksPerRotationX * rotationDiff)) / positionSettings.ticksPerInch;
+        double YMove = (odometryPosDiff[1] - (positionSettings.ticksPerRotationY * rotationDiff)) / positionSettings.ticksPerInch;
+
+        currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
+        currentRobotPosition[2] = currentRotation;
+    }
+
+    void getPosFrom3Odometry()
+    {
+
+    }
+
+ */
 
     void updatePositionFromVuforia()
     {
@@ -114,9 +164,10 @@ public class Position extends Thread
     ////////////
     //dataBase//
     ////////////
+    /*
     void setCurrentRun(boolean addOne)
     {
-        //currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
+        currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
         if(addOne) currentRun ++;
     }
 
@@ -124,12 +175,12 @@ public class Position extends Thread
     {
         RobotPositionEntity pos = new RobotPositionEntity(0, currentRobotPosition[0],currentRobotPosition[1],currentRotation, positionAccuracy);
         if(useCurrentRun) pos.runNumber = currentRun;
-        //robot.db.robotPositionEntityDAO().insertAll(pos);
+        robot.db.robotPositionEntityDAO().insertAll(pos);
     }
 
     void loadLastPos()
     {
-        /*
+
         RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
         if(last == null){ if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
         else
@@ -141,17 +192,36 @@ public class Position extends Thread
             rotationOffset = -last.rotation;
         }
 
-         */
+
     }
 
-    //void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
+    void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
+     */
+
+    ///////////////////
+    //distance sensor//
+    ///////////////////
+    /*
+    void updateDistanceSensor()
+    {
+        if(System.currentTimeMillis() - lastMeasureTime > measureDelay)
+        {
+            lastMeasureTime = System.currentTimeMillis();
+            lastDistances = distances;
+            distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        }
+    }
+
+     */
 
     //////////////////
     //runs in thread//
     //////////////////
     void initialize()
     {
-        currMotorPos = robot.hardware.getMotorPositionsList(robot.hardware.driveMotors);
+        currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
+        //currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+        //distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
     }
 
     void updateAll()
@@ -164,7 +234,7 @@ public class Position extends Thread
     @Override
     public void run()
     {
-        //if(robot.robotUsage.usePositionTracking) { initialize();}
+        if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
@@ -172,8 +242,10 @@ public class Position extends Thread
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
+                //getPosFrom2Odometry();
                 //if(robot.robotUsage.logPosition) addCurrentPosition(true);
-                updatePositionFromVuforia();
+                //updatePositionFromVuforia();
+                //updateDistanceSensor();
             }
         }
     }
@@ -192,6 +264,7 @@ public class Position extends Thread
     }
 }
 
+@Config
 class PositionSettings
 {
     //////////////////
@@ -202,6 +275,12 @@ class PositionSettings
     double startPositionX = -20; // in inches
     double startPositionY = -124; // in inches
     double startRotation = 0; //in degrees from goal
+
+    //odometry wheels
+    public static double ticksPerRotationX = 4115;
+    public static double ticksPerRotationY = -7840;
+    public static double ticksPerRotationY2 = 7850;
+    protected final float ticksPerInch = (float)(1440 / (1.49606 * Math.PI));//the number of ticks per 1 inch of movement
 
     PositionSettings(){}
 }

@@ -24,7 +24,7 @@ public class DriverControl extends LinearOpMode
 
         waitForStart();
 
-        robot.start();
+        robot.start(true);
 
 
         while (opModeIsActive())

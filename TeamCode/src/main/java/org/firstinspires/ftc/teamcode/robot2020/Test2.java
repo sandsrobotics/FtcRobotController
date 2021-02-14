@@ -4,6 +4,7 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -18,10 +19,10 @@ public class Test2 extends LinearOpMode
     public void runOpMode()
     {
         RobotUsage ru = new RobotUsage();
-        ru.setAllToValue(true);
-        ru.useVuforia = false;
-        RobotSettingsMain rs = new RobotSettingsMain();
-        rs.positionSettings.resetPos = false;
+        ru.setAllToValue(false);
+        ru.usePositionTracking = true;
+        ru.useDrive = true;
+
         robot = new Robot(this, ru);
 
         robot.startTelemetry();
@@ -30,25 +31,26 @@ public class Test2 extends LinearOpMode
 
         waitForStart();
 
-        robot.start();
+        robot.start(false);
 
-        robot.grabber.initGrabberPos();
+        int[] pos;
+        PIDCoefficients pidCoefficients = new PIDCoefficients(7.5,0,0);
+        double maxPower = .2;
+        PID pidLoop = new PID(pidCoefficients,-maxPower, maxPower);
+        double power;
+        double rot = 0;
+        GamepadButtonManager button = new GamepadButtonManager(GamepadButtons.A);
 
         while(opModeIsActive())
         {
-            robot.grabber.runForTeleOp(gamepad1, true);
-            robot.movement.moveForTeleOp(gamepad1,new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
-            /*
-            if(gamepad1.x)
-            {
-                robot.movement.moveToPosition(robot.position.getPositionWithOffset(10,0,0),new double[]{.1,.1,.1},100,7000,.3);
-            }
-            if(gamepad1.y)
-            {
-                robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,10,0),new double[]{.1,.1,.1},100,7000,.3);
-            }
+            if(button.getButtonPressed(gamepad1)) rot++;
 
-             */
+            //pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
+            //power = pidLoop.updatePIDAndReturnValue(rot - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
+            //robot.movement.moveRobot(0,0, power, false, false);
+            //robot.addTelemetry("power", power);
+            robot.addTelemetry("rot", rot);
+            robot.sendTelemetry();
         }
     }
 }
