@@ -90,3 +90,4 @@ lint/tmp/
 /.idea/codeStyles/Project.xml
 /.idea/runConfigurations.xml
 /.idea/.gitignore
+.idea/
