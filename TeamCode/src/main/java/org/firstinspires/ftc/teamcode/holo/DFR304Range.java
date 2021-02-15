@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.ControlSystem;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.I2cDeviceSynch;
@@ -11,10 +12,11 @@ import com.qualcomm.robotcore.util.TypeConversion;
 import androidx.annotation.NonNull;
 
 @SuppressWarnings("WeakerAccess")
+@Disabled
 @I2cDeviceType
-@DeviceProperties(name = "DFR Range Sensor",
-        description = "DFR Range Sensor",
-        xmlTag = "DFRURM09RangeV2",
+@DeviceProperties(name = "DFR Range Sensor tjk",
+        description = "DFR Range Sensor tjk",
+        xmlTag = "DFRURM09RangeV2tjk",
         compatibleControlSystems = ControlSystem.REV_HUB, builtIn = true)
 public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSynch, DFR304Range.Parameters>
 {

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import java.io.File;
  * Odometry system calibration. Run this OpMode to generate the necessary constants to calculate the robot's global position on the field.
  * The Global Positioning Algorithm will not function and will throw an error if this program is not run first
  */
+@Disabled
 @TeleOp(name = "Odometry System Calibration", group = "Calibration")
 public class OdometryCalibration extends LinearOpMode {
     final double PIVOT_SPEED = 0.5;

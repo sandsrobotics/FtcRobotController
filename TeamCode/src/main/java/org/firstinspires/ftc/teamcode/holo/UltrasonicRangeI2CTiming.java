@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.holo;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 /*
  * OpMode for testing DFRobotics Ultrasonic Distance sensor driver
  */
+@Disabled
 @Config
 @TeleOp(name = "Ultrasonic Range Timing", group = "Tests")
 public class UltrasonicRangeI2CTiming extends LinearOpMode

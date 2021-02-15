@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 /*
  * OpMode for testing DFRobotics Ultrasonic Distance sensor driver
  */
+@Disabled
 @TeleOp(name = "Ultrasonic Range Test", group = "Tests")
 public class UltrasonicRangeTest extends LinearOpMode
 {

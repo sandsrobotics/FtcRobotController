@@ -1,7 +1,8 @@
 package org.firstinspires.ftc.teamcode.holo;
+    import com.qualcomm.robotcore.eventloop.opmode.Disabled;
     import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
     import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
+@Disabled
 @TeleOp(name = "Demo Mobile Launch")
 public class DemoMobileLaunchMech extends LinearOpMode {
     SandsRobot robot;

@@ -1,9 +1,10 @@
 package org.firstinspires.ftc.teamcode.holo;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.holo.odometry.OdometryGlobalCoordinatePosition3e;
-
+@Disabled
 @TeleOp(name = "Demo Odometry", group = "")
 public class DemoOdometryPosition extends LinearOpMode {
     SandsRobot robot;
