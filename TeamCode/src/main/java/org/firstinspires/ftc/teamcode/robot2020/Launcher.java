@@ -1,14 +1,19 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import android.content.Context;
+import android.util.Log;
+
 import com.acmerobotics.dashboard.config.Config;
+import com.google.gson.Gson;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 @Config
 public class Launcher {
@@ -19,8 +24,7 @@ public class Launcher {
     double spinMultiplier;
 
     //calibration
-    protected ArrayList<List<Double>> calibrationValues;
-    protected ArrayList<List<Double>> formattedCalibrationValues;
+    AllCalibrationDataPoints calibrationData;
 
     //other
     boolean runWheelOnTrigger = true;
@@ -34,88 +38,28 @@ public class Launcher {
     {
         launcherSettings = new LauncherSettings();
         this.robot = robot;
-        spinMultiplier = 60 / launcherSettings.ticksPerRev * launcherSettings.gearRatio;
-        targetWheelRpm = launcherSettings.startRPM;
+        initData();
     }
 
     Launcher(Robot robot, LauncherSettings launcherSettings)
     {
         this.launcherSettings = launcherSettings;
         this.robot = robot;
+        initData();
+    }
+
+    void initData()
+    {
         spinMultiplier = 60 / launcherSettings.ticksPerRev * launcherSettings.gearRatio;
         targetWheelRpm = launcherSettings.startRPM;
+        calibrationData = AllCalibrationDataPoints.setCalibrationDataPoints(AppUtil.getDefContext(), launcherSettings.calibrationFileName);
     }
 
 
     ///////////////
     //Calibration//
     ///////////////
-    void getCalibration()
-    {
-        try
-        {
-            InputStream is = getClass().getClassLoader().getResourceAsStream(launcherSettings.calibrationFileDir + "/" + launcherSettings.calibrationFileName);
-            if(is == null) throw new Exception("file directory or name are incorrect");
-            calibrationValues = readFile(is);
-        }
-        catch (Exception e) {robot.addTelemetry("error", e.toString());}
-    }
 
-    ArrayList<List<Double>> readFile(InputStream is)
-    {
-        ArrayList<List<Double>> out = new ArrayList<>();
-        try
-        {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            String Line;
-            while ((Line = reader.readLine()) != null)
-            {
-                List<Double> values = new ArrayList<>();
-                boolean valid = true;
-                String[] elements = Line.split(",");
-                for(String element:elements)
-                {
-                    try { values.add(Double.parseDouble(element)); }
-                    catch (Exception e){ valid = false; }
-                }
-                if(valid) out.add(values);
-            }
-        }
-        catch (IOException e)
-        {
-            if(robot.robotSettings.debug_methods)robot.addTelemetry("error", e.toString());
-        }
-        return out;
-    }
-
-    double getRPMFromCalibration(int goalNum, double distance)
-    {
-        if(calibrationValues.size() == 0) robot.addTelemetry("error in Launcher.getRPMFromCalibration: ", "calibration values have not been loaded");
-        else if(goalNum < 1 || goalNum >  3) robot.addTelemetry("error in Launcher.getRPMFromCalibration: ", "goalNum has not been set correctly");
-        else
-        {
-            int row = 0;
-            for(int i = 0; i < calibrationValues.size(); i++)
-            {
-                if(calibrationValues.get(i).get(0) == distance) return calibrationValues.get(i).get(goalNum);
-                else if(calibrationValues.get(i).get(0) > distance) row = i;
-            }
-
-            double RPMPerInch;
-            if(row == 0)
-            {
-                RPMPerInch = calibrationValues.get(0).get(goalNum) / calibrationValues.get(0).get(0);
-            }
-            else
-            {
-                RPMPerInch = (calibrationValues.get(row).get(goalNum) - calibrationValues.get(row - 1).get(goalNum)) / (calibrationValues.get(row).get(0) - calibrationValues.get(row - 1).get(0));
-            }
-
-            return RPMPerInch*distance;
-        }
-
-        return -1;
-    }
 
     ///////////////////////////
     //launcher opmode control//
@@ -187,7 +131,7 @@ public class Launcher {
     ///////////////////////////////
     void autonomousLaunchDisk()
     {
-        double RPM = getRPMFromCalibration(3, getDistanceToGoal(true));
+        double RPM = calibrationData.getTargetRPMAtDistance(getDistanceToGoal(true), 3);
         if(RPM == -1) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "unable to get RPM");
         else if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
         else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
@@ -348,8 +292,7 @@ class LauncherSettings
     int servoMoveTime = 250;
 
     //calibration data
-    protected String calibrationFileDir = "assets";
-    protected String calibrationFileName =  "Launcher Config.csv";
+    protected String calibrationFileName =  "LauncherConfig.json";
 
     //other
     double startRPM = 3700;
@@ -363,4 +306,118 @@ class LauncherSettings
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     LauncherSettings(){}
+}
+
+
+
+class AllCalibrationDataPoints
+{
+    CalibrationDataPoint[] calibrationDataPoints;
+
+    public CalibrationDataPoint[] getCalibrationDataPoints() {
+        return calibrationDataPoints;
+    }
+
+    public void setCalibrationDataPoints(CalibrationDataPoint[] calibrationDataPoints) {
+        this.calibrationDataPoints = calibrationDataPoints;
+    }
+
+    public static AllCalibrationDataPoints setCalibrationDataPoints(Context context, String fileName)
+    {
+        Gson gson = new Gson();
+        return gson.fromJson(readFromFile(context, fileName), AllCalibrationDataPoints.class);
+    }
+
+    public int getTargetRPMAtDistance(double distance, int goalNum)
+    {
+        int row = -1;
+        goalNum--;
+        if (calibrationDataPoints != null && goalNum >= 0 && goalNum <=  2)
+        {
+            for(int i = 0; i < calibrationDataPoints.length; i++)
+            {
+                if(calibrationDataPoints[i].distance == distance) return calibrationDataPoints[i].goalRPMS[goalNum];
+                else if(calibrationDataPoints[i].distance > distance)
+                {
+                    row = i;
+                    break;
+                }
+            }
+
+            double RPMPerInch;
+            double b;
+            CalibrationDataPoint cdp;
+            CalibrationDataPoint cdpPrevious;
+
+            if(row == -1) {
+                cdp = calibrationDataPoints[calibrationDataPoints.length - 1];
+                cdpPrevious = calibrationDataPoints[calibrationDataPoints.length - 2];
+            }
+            else {
+                 cdp = calibrationDataPoints[row];
+
+                if (row == 0) {
+                    cdpPrevious = calibrationDataPoints[row + 1];
+                } else {
+                    cdpPrevious = calibrationDataPoints[row - 1];
+                }
+            }
+            RPMPerInch = (cdp.goalRPMS[goalNum] - cdpPrevious.goalRPMS[goalNum]) / (cdp.distance - cdpPrevious.distance);
+            b = cdp.goalRPMS[goalNum] - (cdp.distance*RPMPerInch);
+            return (int)((RPMPerInch * distance) + b);
+        }
+        return -1;
+    }
+
+    private static String readFromFile(Context context, String fileName) {
+
+        String ret = null;
+
+        try {
+            InputStream inputStream = context.openFileInput(fileName);
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString;
+                StringBuilder stringBuilder = new StringBuilder();
+
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    stringBuilder.append("\n").append(receiveString);
+                }
+
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return ret;
+    }
+
+    class CalibrationDataPoint
+    {
+        double distance;
+        int[] goalRPMS;
+
+        public double getDistance() {
+            return distance;
+        }
+
+        public void setDistance(double distance) {
+            this.distance = distance;
+        }
+
+        public int[] getGoalRPMS() {
+            return goalRPMS;
+        }
+
+        public void setGoalRPMS(int[] goalRPMS) {
+            this.goalRPMS = goalRPMS;
+        }
+    }
 }
