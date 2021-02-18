@@ -24,18 +24,6 @@ public class Position extends Thread
     private int[] lastMotorPos;
     private int[] currMotorPos;
 
-    //odometry
-//    private int[] lastOdometryPos;
-//    private int[] currOdometryPos;
-//    private int[] odometryPosDiff;
-//    private double rotationDiff;
-
-    //distance sensors
-//    protected volatile int[] distances;
-//    protected volatile int[] lastDistances;
-//    private int measureDelay = 50;
-//    private long lastMeasureTime = System.currentTimeMillis();
-
     //rotation
     volatile Orientation currentAllAxisRotations = new Orientation();
     volatile double currentRotation;
@@ -116,90 +104,6 @@ public class Position extends Thread
         currentRobotPosition[2] = currentRotation;
     }
 
-/*
-    void getOdometryDiff()
-    {
-        lastOdometryPos = currOdometryPos;
-        currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
-
-        for(int i = 0; i < 2; i++)
-        {
-            odometryPosDiff[i] = currOdometryPos[i] - lastOdometryPos[i];
-        }
-
-        rotationDiff = currentRotation - currentRobotPosition[2];
-    }
-
-
-    void getPosFrom2Odometry()
-    {
-        getOdometryDiff();
-
-        double XMove = (odometryPosDiff[0] - (positionSettings.ticksPerRotationX * rotationDiff)) / positionSettings.ticksPerInch;
-        double YMove = (odometryPosDiff[1] - (positionSettings.ticksPerRotationY * rotationDiff)) / positionSettings.ticksPerInch;
-
-        currentRobotPosition[0] += YMove * Math.sin(currentRotation * Math.PI / 180) - XMove * Math.cos(currentRotation * Math.PI / 180);
-        currentRobotPosition[1] += XMove * Math.sin(currentRotation * Math.PI / 180) + YMove * Math.cos(currentRotation * Math.PI / 180);
-        currentRobotPosition[2] = currentRotation;
-    }
-
-    void getPosFrom3Odometry()
-    {
-
-    }
-
-
-
-    void updatePositionFromVuforia()
-    {
-        if(robot.robotUsage.useVuforia)
-        {
-            if (robot.vision.currentCalculatedRobotLocation != null)
-            {
-                positionAccuracy = 100;
-                //currentRobotPosition[0] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(0) - robot.vision.halfFieldWidth;
-                //currentRobotPosition[1] = robot.vision.currentCalculatedRobotLocation.getTranslation().get(1);
-            }
-        }
-    }
-
-    ////////////
-    //dataBase//
-    ////////////
-
-    void setCurrentRun(boolean addOne)
-    {
-        currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
-        if(addOne) currentRun ++;
-    }
-
-    void addCurrentPosition(boolean useCurrentRun)
-    {
-        RobotPositionEntity pos = new RobotPositionEntity(0, currentRobotPosition[0],currentRobotPosition[1],currentRotation, positionAccuracy);
-        if(useCurrentRun) pos.runNumber = currentRun;
-        robot.db.robotPositionEntityDAO().insertAll(pos);
-    }
-
-    void loadLastPos()
-    {
-
-        RobotPositionEntity last = robot.db.robotPositionEntityDAO().getLastByTime();
-        if(last == null){ if(robot.robotSettings.debug_methods) robot.addTelemetry("error in Position.loadLastPos ", "there are no saved position to load from!");}
-        else
-        {
-            positionAccuracy = last.accuracy;
-            currentRobotPosition[0] = last.posX;
-            currentRobotPosition[1] = last.posY;
-            currentRobotPosition[2] = last.rotation;
-            rotationOffset = -last.rotation;
-        }
-
-
-    }
-
-    void deleteAll(){ robot.db.robotPositionEntityDAO().deleteAll();}
-     */
-
     ///////////////////
     //distance sensor//
     ///////////////////
@@ -227,8 +131,6 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        //currOdometryPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
-        //distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
     }
 
     void updateAll()
@@ -279,12 +181,6 @@ class PositionSettings
     double startPositionX = -20; // in inches from center of goal
     double startPositionY = -124; // in inches from front of goal
     double startRotation = 0; //in degrees from goal
-
-    //odometry wheels
-    public static double ticksPerRotationX = 4115;
-    public static double ticksPerRotationY = -7840;
-    public static double ticksPerRotationY2 = 7850;
-    protected final float ticksPerInch = (float)(1440 / (1.49606 * Math.PI));//the number of ticks per 1 inch of movement
 
     //ultra sonic
     int[][] distancesFromWall = new int[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles

@@ -34,14 +34,6 @@ public class RobotHardware
     protected List<Servo> grabberServos;
     protected DigitalChannel grabberLimitSwitch;
 
-    /*
-    //Odometry wheels
-    protected List<DcMotorEx> odometryWheels;
-    protected DcMotorEx XOdometryWheel;
-    protected DcMotorEx YOdometryWheel;
-    protected DcMotorEx Y2OdometryWheel;
-     */
-
     //ultrasonic
     protected List<DFR304Range> distSensors;
     protected DFR304Range distSensorX;
@@ -128,20 +120,6 @@ public class RobotHardware
         robot.robotHardware.grabberLimitSwitch = robot.hardwareMap.get(DigitalChannel.class, hardwareSettings.limitSwitchName);
         robot.robotHardware.grabberLimitSwitch.setMode(DigitalChannel.Mode.INPUT);
     }
-
-    /*
-    public void initOdometryWheels()
-    {
-        XOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.XOdometryWheelMotorNum);
-        YOdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.YOdometryWheelMotorNum);
-        Y2OdometryWheel = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.Y2OdometryWheelMotorNum);
-        odometryWheels = Arrays.asList(XOdometryWheel, YOdometryWheel, Y2OdometryWheel);
-
-        for(int i = 0; i < odometryWheels.size(); i++) if(hardwareSettings.flipOdometryWheelDir[i]) odometryWheels.get(i).setDirection(DcMotorSimple.Direction.REVERSE);
-        resetMotorEncodersList(odometryWheels);
-        setMotorsRunModeList(odometryWheels, DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-     */
 
     public void initUltrasonicSensors()
     {
@@ -329,14 +307,6 @@ class HardwareSettings
     protected String grabberLeftServoNum = "1B";
     protected String grabberRightServoNum = "2B";
     protected String limitSwitchName = "digital0B";
-
-    /*
-    //odometry wheel encoders
-    protected boolean[] flipOdometryWheelDir = {true, true, false};
-    protected String XOdometryWheelMotorNum = "3B";
-    protected String YOdometryWheelMotorNum = "2B";
-    protected String Y2OdometryWheelMotorNum = "1B";
-     */
 
     //ultrasonic
     protected String XUltrasonicNum = "0";
