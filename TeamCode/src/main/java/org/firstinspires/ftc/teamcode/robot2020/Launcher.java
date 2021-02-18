@@ -12,10 +12,6 @@ import java.util.List;
 
 @Config
 public class Launcher {
-
-
-
-
     ///////////////////
     //other variables//
     ///////////////////

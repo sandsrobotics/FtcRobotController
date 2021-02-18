@@ -12,11 +12,13 @@ import org.firstinspires.ftc.teamcode.robot2020.persistence.Position.RobotPositi
 public class Position extends Thread
 {
 
+
+
     ///////////////////
     //other variables//
     ///////////////////
     //robot position
-    protected volatile double[] currentRobotPosition;
+    protected volatile double[] currentRobotPosition; //position is based on the canter front of the goal to the center of the robot
 
     //wheels
     private int[] lastMotorPos;
@@ -146,7 +148,7 @@ public class Position extends Thread
 
     }
 
- */
+
 
     void updatePositionFromVuforia()
     {
@@ -164,7 +166,7 @@ public class Position extends Thread
     ////////////
     //dataBase//
     ////////////
-    /*
+
     void setCurrentRun(boolean addOne)
     {
         currentRun = robot.db.robotPositionEntityDAO().getLastRunNum();
@@ -201,18 +203,23 @@ public class Position extends Thread
     ///////////////////
     //distance sensor//
     ///////////////////
-    /*
-    void updateDistanceSensor()
+    void updatePosWithDistanceSensor()
     {
-        if(System.currentTimeMillis() - lastMeasureTime > measureDelay)
+        for (int i = -1; i < 3; i++)//runs through the 4 90 degree rotation increments
         {
-            lastMeasureTime = System.currentTimeMillis();
-            lastDistances = distances;
-            distances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+            if (Math.abs(currentRotation - (i * 90)) <= positionSettings.angleTolerance) //checks if the current angle is close enough to one of the 90 degree increments
+            {
+                int[] vals = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+                for (int b = 0; b < 2; b++) //does the math for both x and y axis
+                {
+                    double dis = positionSettings.distancesFromWall[i][b];
+                    if (positionSettings.operations[i][b] == MathSign.ADD) { dis += vals[b] * Math.cos(currentRotation); }
+                    else { dis -= vals[b] * Math.cos(currentRotation); }
+                    currentRobotPosition[b] = dis;
+                }
+            }
         }
     }
-
-     */
 
     //////////////////
     //runs in thread//
@@ -242,10 +249,7 @@ public class Position extends Thread
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                //getPosFrom2Odometry();
-                //if(robot.robotUsage.logPosition) addCurrentPosition(true);
-                //updatePositionFromVuforia();
-                //updateDistanceSensor();
+                updatePosWithDistanceSensor();
             }
         }
     }
@@ -272,8 +276,8 @@ class PositionSettings
     //////////////////
     //position start
     boolean resetPos = true;
-    double startPositionX = -20; // in inches
-    double startPositionY = -124; // in inches
+    double startPositionX = -20; // in inches from center of goal
+    double startPositionY = -124; // in inches from front of goal
     double startRotation = 0; //in degrees from goal
 
     //odometry wheels
@@ -282,5 +286,28 @@ class PositionSettings
     public static double ticksPerRotationY2 = 7850;
     protected final float ticksPerInch = (float)(1440 / (1.49606 * Math.PI));//the number of ticks per 1 inch of movement
 
+    //ultra sonic
+    int[][] distancesFromWall = new int[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles
+    {
+        new int[]{0,0}, // for 0 degrees
+        new int[]{0,0}, // for 90 degrees
+        new int[]{0,0}, // for 180 degrees
+        new int[]{0,0}  // for -90/270 degrees
+    };
+    MathSign[][] operations = new MathSign[][] //whether the distance from the ultrasonic sensor should be added or removed
+    {
+        new MathSign[]{MathSign.ADD, MathSign.ADD},
+        new MathSign[]{MathSign.ADD, MathSign.ADD},
+        new MathSign[]{MathSign.ADD, MathSign.ADD},
+        new MathSign[]{MathSign.ADD, MathSign.ADD}
+    };
+    double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
+
     PositionSettings(){}
+}
+
+enum MathSign
+{
+    ADD,
+    SUBTRACT
 }
