@@ -195,9 +195,27 @@ public class Launcher {
         {
             setRPM(RPM);
             goToShootingPos();
-            waitForRPMInTolerance(1000);
-            autoLaunch();
+            for(int i = 0; i < 3; i++) {
+                waitForRPMInTolerance(1000);
+                autoLaunch();
+            }
         }
+    }
+
+    void autoLaunchDiskFromLine()
+    {
+        if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
+        else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else
+        {
+            setRPM(launcherSettings.autoLaunchRPM);
+            robot.movement.moveToPosition(new double[]{0, launcherSettings.minLaunchDistance, launcherSettings.autoLaunchAngle}, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
+            for(int i = 0; i < 3; i++) {
+                waitForRPMInTolerance(1000);
+                autoLaunch();
+            }
+        }
+        setRPM(0);
     }
 
     void goToShootingPos()
@@ -232,23 +250,11 @@ public class Launcher {
         return getAngleToPointToPosition(0,0,0, true);
     }
 
-    boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance, double maxRPMAcceleration)
-    {
-        double lastRPM = getPRM();
-        robot.delay(10);
-        double RPM = getPRM();
-        return Math.abs(RPM - targetWheelRpm) <= RPMTolerance && Math.abs(lastRPM - RPM) * 100 <= maxRPMAcceleration;
-    }
+    boolean isRPMInTolerance(double targetWheelRpm, double RPMTolerance) { return Math.abs(getPRM() - targetWheelRpm) <= RPMTolerance; }
 
-    boolean isRPMInTolerance()
-    {
-        return isRPMInTolerance(targetWheelRpm, launcherSettings.RPMTolerance, launcherSettings.maxRPMAcceleration);
-    }
+    boolean isRPMInTolerance() { return isRPMInTolerance(targetWheelRpm, launcherSettings.RPMTolerance); }
 
-    double getPRM()
-    {
-        return  robot.robotHardware.launcherWheelMotor.getVelocity() * spinMultiplier;
-    }
+    double getPRM() { return  robot.robotHardware.launcherWheelMotor.getVelocity() * spinMultiplier; }
 
     double getDistanceToGoal(boolean useMinLaunchDistance)
     {
@@ -276,18 +282,18 @@ public class Launcher {
         setRPM(targetWheelRpm);
     }
 
-    void waitForRPMInTolerance(long maxMs, double targetWheelRpm, double RPMTolerance, double maxRPMVelocity)
+    void waitForRPMInTolerance(long maxMs, double targetWheelRpm, double RPMTolerance)
     {
         long startTime = System.currentTimeMillis();
         while(!robot.stop() && System.currentTimeMillis() - startTime < maxMs)
         {
-            if(isRPMInTolerance(targetWheelRpm, RPMTolerance, maxRPMVelocity)) break;
+            if(isRPMInTolerance(targetWheelRpm, RPMTolerance)) break;
         }
     }
 
     void waitForRPMInTolerance(long maxMs)
     {
-        waitForRPMInTolerance(maxMs, targetWheelRpm, launcherSettings.RPMTolerance, launcherSettings.maxRPMAcceleration);
+        waitForRPMInTolerance(maxMs, targetWheelRpm, launcherSettings.RPMTolerance);
     }
 
     void moveLaunchServo(long actuatorTime)
@@ -343,14 +349,18 @@ class LauncherSettings
 
     //calibration data
     protected String calibrationFileDir = "assets";
-    protected String calibrationFileName =  "Launcher Config - Test.csv";
+    protected String calibrationFileName =  "Launcher Config.csv";
 
     //other
     double startRPM = 3700;
     double RPMIncrements = 50;
     double RPMTolerance = 40;
-    double maxRPMAcceleration = 10; // acceleration measured in RPM/s
+
+    //auto launch
     double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double autoLaunchRPM = 3700; //RPM to launch from line
+    double autoLaunchAngle = 0; // angle offset to launch from line
+    double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     LauncherSettings(){}
 }

@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 public class DriverControl extends LinearOpMode
 {
     Robot robot;
+    GamepadButtonManager autoLaunchButton = new GamepadButtonManager(gamepad1, GamepadButtons.dpadUP);
+
+    short mode = 0;
 
     @Override
     public void runOpMode()
@@ -16,9 +19,7 @@ public class DriverControl extends LinearOpMode
         RobotUsage ru = new RobotUsage();
         ru.useVuforia = false;
         ru.useComplexMovement = false;
-        ru.useVuforiaInThread = false;
         ru.useTensorFlow = false;
-        ru.useTensorFlowInTread = false;
 
         robot = new Robot(this,ru);
 
@@ -26,13 +27,21 @@ public class DriverControl extends LinearOpMode
 
         robot.start(true);
 
-
         while (opModeIsActive())
         {
-            robot.movement.moveForTeleOp(gamepad1, new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
-            robot.grabber.runForTeleOp(gamepad1, true);
-            robot.launcher.runForTeleOp(gamepad2,true);
-            robot.sendTelemetry();
+            if(mode == 0)
+            {
+                robot.movement.moveForTeleOp(gamepad1, new GamepadButtonManager(GamepadButtons.leftBUMPER), true);
+                robot.grabber.runForTeleOp(gamepad1, true);
+                robot.launcher.runForTeleOp(gamepad2,true);
+                if(autoLaunchButton.getButtonHeld()) mode = 1;
+                robot.sendTelemetry();
+            }
+            else if(mode == 1)
+            {
+                robot.launcher.autoLaunchDiskFromLine();
+                mode = 0;
+            }
         }
     }
 }

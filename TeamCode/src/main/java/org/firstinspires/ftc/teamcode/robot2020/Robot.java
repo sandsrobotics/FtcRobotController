@@ -74,11 +74,7 @@ public class Robot
         if(robotUsage.useLauncher) robotHardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
         if(robotUsage.useGrabber) robotHardware.initGrabberHardware();
-        if(robotUsage.usePositionTracking)
-        {
-            //robotHardware.initOdometryWheels();
-            //robotHardware.initUltrasonicSensors();
-        }
+        if(robotUsage.usePositionTracking) { robotHardware.initUltrasonicSensors(); }
     }
 
     void initHardware()
@@ -243,12 +239,15 @@ class GamepadButtonManager
 {
     boolean wasButtonPressed = false;
     long lastButtonRelease = System.currentTimeMillis();
+    Gamepad gamepad;
     GamepadButtons gamepadButton;
 
-    GamepadButtonManager(GamepadButtons gamepadButton)
+    GamepadButtonManager(Gamepad gamepad, GamepadButtons gamepadButton)
     {
+        this.gamepad = gamepad;
         this.gamepadButton = gamepadButton;
     }
+    GamepadButtonManager(GamepadButtons gamepadButton) { this.gamepadButton = gamepadButton; }
 
     boolean getButtonHeld(Gamepad gamepad)
     {
@@ -272,6 +271,7 @@ class GamepadButtonManager
 
         return false;
     }
+    boolean getButtonHeld(){return getButtonHeld(gamepad);}
 
     boolean getButtonHeld(Gamepad gamepad, int time)
     {
@@ -282,6 +282,7 @@ class GamepadButtonManager
         else lastButtonRelease = System.currentTimeMillis();
         return false;
     }
+    boolean getButtonHeld(int time){return getButtonHeld(gamepad, time);}
 
     boolean getButtonPressed(Gamepad gamepad)
     {
@@ -296,6 +297,7 @@ class GamepadButtonManager
         else wasButtonPressed = false;
         return false;
     }
+    boolean getButtonPressed(){return getButtonPressed(gamepad);}
 
     boolean getButtonReleased(Gamepad gamepad)
     {
@@ -307,6 +309,7 @@ class GamepadButtonManager
         }
         return false;
     }
+    boolean getButtonReleased(){return getButtonReleased(gamepad);}
 
     float getSliderValue(Gamepad gamepad)
     {
@@ -321,6 +324,7 @@ class GamepadButtonManager
 
         return 0;
     }
+    float getSliderValue(){return getSliderValue(gamepad);}
 
 }
 
