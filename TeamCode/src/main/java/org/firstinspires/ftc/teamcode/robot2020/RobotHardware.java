@@ -123,9 +123,9 @@ public class RobotHardware
 
     public void initUltrasonicSensors()
     {
-        distSensor1 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.XUltrasonicNum);
+        distSensor1 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.Ultrasonic1Num);
        // distSensorX2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.X2UltrasonicNum);
-        distSensor2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.YUltrasonicNum);
+        distSensor2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.Ultrasonic2Num);
         //distSensors = Arrays.asList(distSensor1,distSensorX2,distSensor2);
         distSensors = Arrays.asList(distSensor1, distSensor2);
 
@@ -321,9 +321,9 @@ class HardwareSettings
     protected String limitSwitchName = "digital0B";
 
     //ultrasonic
-    protected String XUltrasonicNum = "0";
+    protected String Ultrasonic1Num = "1";
     protected String X2UltrasonicNum = "2";
-    protected String YUltrasonicNum = "1";
+    protected String Ultrasonic2Num = "0";
 
     HardwareSettings(){}
 }

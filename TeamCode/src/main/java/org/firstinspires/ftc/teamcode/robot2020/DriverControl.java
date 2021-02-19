@@ -20,6 +20,7 @@ public class DriverControl extends LinearOpMode
         ru.useVuforia = false;
         ru.useComplexMovement = false;
         ru.useTensorFlow = false;
+        ru.useDistanceSensors = false;
 
         robot = new Robot(this,ru);
 

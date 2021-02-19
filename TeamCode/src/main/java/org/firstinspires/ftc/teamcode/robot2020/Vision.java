@@ -615,7 +615,7 @@ public class Vision extends Thread
             Mat process = input;
 
             Imgproc.cvtColor(process,process,Imgproc.COLOR_RGB2HSV);
-            Core.inRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
+            Core.inMeasuringRange(process, new Scalar(lower[0], lower[1], lower[2], 0), new Scalar(upper[0], upper[1], upper[2], 0), process);
 
             Rect rect = new Rect(upperLeftPoint, new Size(50,50));
 

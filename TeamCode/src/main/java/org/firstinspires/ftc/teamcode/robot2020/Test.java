@@ -8,10 +8,12 @@ import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 
 // test
 @Config
-@TeleOp(name = "test dist")
+@TeleOp(name = "test position tracking")
 public class Test extends LinearOpMode {
 
     Robot robot;
+    GamepadButtonManager brake = new GamepadButtonManager(GamepadButtons.A);
+    GamepadButtonManager resetAngle = new GamepadButtonManager(GamepadButtons.dpadUP);
 
     @Override
     public void runOpMode()
@@ -21,6 +23,7 @@ public class Test extends LinearOpMode {
         ru.setAllToValue(false);
         ru.usePositionThread = true;
         ru.usePositionTracking = true;
+        ru.useDistanceSensors = true;
         ru.useDrive = true;
 
         robot = new Robot(this, ru);
@@ -31,16 +34,15 @@ public class Test extends LinearOpMode {
 
         while (opModeIsActive())
         {
-           robot.movement.moveForTeleOp(gamepad1, new GamepadButtonManager(GamepadButtons.A), false);
-           /*
-           if(robot.position.distances != null) {
-               for (int i = 0; i < robot.robotHardware.distSensors.size(); i++) {
-                   robot.addTelemetry("dis" + i, robot.position.distances[i]);
-               }
-           }
-
-            */
-           //robot.sendTelemetry();
+           robot.movement.moveForTeleOp(gamepad1, brake, false);
+           robot.addTelemetry("X", robot.position.currentRobotPosition[0]);
+           int[] vals = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+           robot.addTelemetry("dis 1", vals[0]);
+           robot.addTelemetry("Y", robot.position.currentRobotPosition[1]);
+           robot.addTelemetry("dis 2", vals[1]);
+           robot.addTelemetry("rot" , robot.position.currentRobotPosition[2]);
+           if(resetAngle.getButtonPressed(gamepad1)) robot.position.rotationOffset += robot.position.currentRotation;
+           robot.sendTelemetry();
         }
     }
 }

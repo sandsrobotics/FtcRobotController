@@ -163,7 +163,8 @@ public class Movement
 
     void moveForTeleOp(Gamepad gamepad, GamepadButtonManager breakButton, boolean useTelemetry)
     {
-        if(breakButton.getButtonHeld(gamepad))
+        if(breakButton.gamepad == null) breakButton.gamepad = gamepad;
+        if(breakButton.getButtonHeld())
         {
             robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
             lastMovePowers[0] = 0; lastMovePowers[1] = 0; lastMovePowers[2] = 0;
@@ -256,9 +257,9 @@ class MovementSettings
     public static PIDCoefficients turnPID = new PIDCoefficients(.04,0,0);
     public static PIDCoefficients moveXPID = new PIDCoefficients(.06,0,0);
     public static PIDCoefficients moveYPID = new PIDCoefficients(.06,0,0);
-    public static double moveXSmoothingSteps = .125;
-    public static double moveYSmoothingSteps = .125;
-    public static double rotationSmoothingSteps = .125;
+    public static double moveXSmoothingSteps = 1;
+    public static double moveYSmoothingSteps = 1;
+    public static double rotationSmoothingSteps = 1;
 
     protected double speedMultiplier = 1;
     protected final double speedMultiplierMin = .2;
