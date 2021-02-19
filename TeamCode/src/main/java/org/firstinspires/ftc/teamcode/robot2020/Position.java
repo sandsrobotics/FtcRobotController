@@ -7,7 +7,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.robot2020.persistence.Position.RobotPositionEntity;
 
 public class Position extends Thread
 {
@@ -111,13 +110,23 @@ public class Position extends Thread
     {
         for (int i = -1; i < 3; i++)//runs through the 4 90 degree rotation increments
         {
+            int arrayPos = i;
+            if(i == -1) arrayPos = 3;
             if (Math.abs(currentRotation - (i * 90)) <= positionSettings.angleTolerance) //checks if the current angle is close enough to one of the 90 degree increments
             {
                 int[] vals = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+
+                if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
+                {
+                    int val = vals[0];
+                    vals[0] = vals[1];
+                    vals[1] = val;
+                }
+
                 for (int b = 0; b < 2; b++) //does the math for both x and y axis
                 {
-                    double dis = positionSettings.distancesFromWall[i][b];
-                    if (positionSettings.operations[i][b] == MathSign.ADD) { dis += vals[b] * Math.cos(currentRotation); }
+                    double dis = positionSettings.distancesFromWall[arrayPos][b];
+                    if (positionSettings.operations[arrayPos][b] == MathSign.ADD) { dis += vals[b] * Math.cos(currentRotation); }
                     else { dis -= vals[b] * Math.cos(currentRotation); }
                     currentRobotPosition[b] = dis;
                 }
@@ -190,12 +199,19 @@ class PositionSettings
         new int[]{0,0}, // for 180 degrees
         new int[]{0,0}  // for -90/270 degrees
     };
-    MathSign[][] operations = new MathSign[][] //whether the distance from the ultrasonic sensor should be added or removed
+    SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
-        new MathSign[]{MathSign.ADD, MathSign.ADD},
-        new MathSign[]{MathSign.ADD, MathSign.ADD},
-        new MathSign[]{MathSign.ADD, MathSign.ADD},
-        new MathSign[]{MathSign.ADD, MathSign.ADD}
+        SensorNum.ONE, // for 0 degrees
+        SensorNum.ONE, // for 90 degrees
+        SensorNum.ONE, // for 180 degrees
+        SensorNum.ONE  // for -90/270 degrees
+    };
+    MathSign[][] operations = new MathSign[][] //whether the distance from the ultrasonic sensor should be added or removed for each 90 degree increment
+    {
+        new MathSign[]{MathSign.ADD, MathSign.ADD}, // for 0 degrees
+        new MathSign[]{MathSign.ADD, MathSign.ADD}, // for 90 degrees
+        new MathSign[]{MathSign.ADD, MathSign.ADD}, // for 180 degrees
+        new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
 
@@ -206,4 +222,9 @@ enum MathSign
 {
     ADD,
     SUBTRACT
+}
+enum SensorNum
+{
+    ONE,
+    TWO
 }

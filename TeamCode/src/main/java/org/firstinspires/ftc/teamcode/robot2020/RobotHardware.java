@@ -36,9 +36,9 @@ public class RobotHardware
 
     //ultrasonic
     protected List<DFR304Range> distSensors;
-    protected DFR304Range distSensorX;
+    protected DFR304Range distSensor1;
     //protected DFR304Range distSensorX2;
-    protected DFR304Range distSensorY;
+    protected DFR304Range distSensor2;
 
     //other class
     Robot robot;
@@ -123,11 +123,11 @@ public class RobotHardware
 
     public void initUltrasonicSensors()
     {
-        distSensorX = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.XUltrasonicNum);
+        distSensor1 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.XUltrasonicNum);
        // distSensorX2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.X2UltrasonicNum);
-        distSensorY = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.YUltrasonicNum);
-        //distSensors = Arrays.asList(distSensorX,distSensorX2,distSensorY);
-        distSensors = Arrays.asList(distSensorX, distSensorY);
+        distSensor2 = robot. hardwareMap.get(DFR304Range.class, "distSensor" + hardwareSettings.YUltrasonicNum);
+        //distSensors = Arrays.asList(distSensor1,distSensorX2,distSensor2);
+        distSensors = Arrays.asList(distSensor1, distSensor2);
 
         DFR304Range.Parameters parameters = new DFR304Range.Parameters();
         parameters.maxRange = DFR304Range.MaxRange.CM500;
