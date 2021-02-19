@@ -74,7 +74,7 @@ public class Robot
         if(robotUsage.useLauncher) robotHardware.initLauncherMotors();
         if(robotUsage.useOpenCV || robotUsage.useVuforia) vision.initAll();
         if(robotUsage.useGrabber) robotHardware.initGrabberHardware();
-        if(robotUsage.usePositionTracking) { robotHardware.initUltrasonicSensors(); }
+        if(robotUsage.usePositionTracking && robotUsage.useDistanceSensors) { robotHardware.initUltrasonicSensors(); }
     }
 
     void initHardware()
@@ -391,16 +391,17 @@ class PID
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, logPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
+    boolean useDrive, usePositionTracking, useDistanceSensors, logPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean logPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean useDistanceSensors, boolean logPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
+        this.useDistanceSensors = useDistanceSensors;
         this.logPosition = logPosition;
         this.usePositionThread = usePositionThread;
         this.useComplexMovement = useComplexMovement;

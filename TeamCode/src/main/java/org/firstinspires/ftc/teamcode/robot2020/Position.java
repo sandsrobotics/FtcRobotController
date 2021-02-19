@@ -114,7 +114,7 @@ public class Position extends Thread
             if(i == -1) arrayPos = 3;
             if (Math.abs(currentRotation - (i * 90)) <= positionSettings.angleTolerance) //checks if the current angle is close enough to one of the 90 degree increments
             {
-                int[] vals = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+                int[] vals = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
 
                 if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
                 {
@@ -156,11 +156,12 @@ public class Position extends Thread
         while (!this.isInterrupted() && robot.opMode.opModeIsActive())
         {
             //put run stuff in here
+            if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors) {robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);}
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                updatePosWithDistanceSensor();
+                if(robot.robotUsage.useDistanceSensors) updatePosWithDistanceSensor();
             }
         }
     }

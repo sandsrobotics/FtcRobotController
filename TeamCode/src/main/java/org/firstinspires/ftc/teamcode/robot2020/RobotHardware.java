@@ -260,6 +260,18 @@ public class RobotHardware
         return arr;
     }
 
+    public void setSensorsToMeasure(List<DFR304Range> distSensors)
+    {
+        for(int i = 0; i < distSensors.size(); i++) { distSensors.get(i).measureRange();}
+    }
+
+    public int[] getDistancesAfterMeasure(List<DFR304Range> distSensors)
+    {
+        int[] arr = new int[distSensors.size()];
+        for(int i = 0; i < distSensors.size(); i++) { arr[i] = distSensors.get(i).getDistanceIn(); }
+        return arr;
+    }
+
     public void waitForMotorsToFinishList(List<DcMotorEx> motors)
     {
         int totalMotorsDone = 0;

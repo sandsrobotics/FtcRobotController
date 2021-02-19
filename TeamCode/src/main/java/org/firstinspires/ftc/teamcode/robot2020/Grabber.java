@@ -133,7 +133,7 @@ public class Grabber {
         setServoPositions[0] = servoPos[0];
         setServoPositions[1] = servoPos[1];
         moveServos();
-        robot.delay(grabberSettings.servoCloseTime);
+        if(waitForServos) robot.delay(grabberSettings.servoCloseTime);
     }
 }
 
