@@ -36,7 +36,7 @@ public class Test extends LinearOpMode {
         {
            robot.movement.moveForTeleOp(gamepad1, brake, false);
            robot.addTelemetry("X", robot.position.currentRobotPosition[0]);
-           int[] vals = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+           float[] vals = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
            robot.addTelemetry("dis 1", vals[0]);
            robot.addTelemetry("Y", robot.position.currentRobotPosition[1]);
            robot.addTelemetry("dis 2", vals[1]);

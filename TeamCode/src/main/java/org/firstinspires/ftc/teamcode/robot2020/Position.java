@@ -29,7 +29,8 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //distance sensor position
-    int[] lastDistance;
+    float[] lastDistances;
+    float[] currentDistances;
     long lastSensorReadingTime = System.currentTimeMillis();
     int inMeasuringRange = -2;
 
@@ -121,20 +122,27 @@ public class Position extends Thread
     {
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
-        int[] vals = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+
+        float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+        lastDistances = currentDistances;
+
+        for(int i = 0; i < temp.length; i++){if(Math.abs(temp[i] - lastDistances[i]) > positionSettings.maxDistanceSensorChange) return;}
+
+        lastSensorReadingTime = System.currentTimeMillis();
+        currentDistances = temp;
 
         if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
         {
-            int val = vals[0];
-            vals[0] = vals[1];
-            vals[1] = val;
+            float val = temp[0];
+            temp[0] = temp[1];
+            temp[1] = val;
         }
 
         for (int b = 0; b < 2; b++) //does the math for both x and y axis
         {
             double dis = positionSettings.distancesFromWall[arrayPos][b];
-            if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += vals[b];// * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            else dis -= vals[b];// * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+            if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+            else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
             currentRobotPosition[b] = dis;
         }
     }
@@ -145,7 +153,7 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        lastDistance = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
     }
 
     void updateAll()
@@ -159,14 +167,13 @@ public class Position extends Thread
     public void run()
     {
         if(robot.robotUsage.usePositionTracking) { initialize();}
-        while (!this.isInterrupted() && robot.opMode.opModeIsActive())
+        while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
             if(System.currentTimeMillis() - lastSensorReadingTime >= positionSettings.minMeasureDelay) inMeasuringRange = isRobotInRotationRange();
             else inMeasuringRange = -2;
             if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors && inMeasuringRange > -2)
             {
-                lastSensorReadingTime = System.currentTimeMillis();
                 robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
             }
             updateAll();
@@ -205,12 +212,12 @@ class PositionSettings
     double startRotation = 0; //in degrees from goal
 
     //ultra sonic
-    int[][] distancesFromWall = new int[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles
+    float[][] distancesFromWall = new float[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles
     {
-        new int[]{-29,-126}, // for 0 degrees
-        new int[]{-29,0}, // for 90 degrees
-        new int[]{52,0}, // for 180 degrees
-        new int[]{52,-126}  // for -90/270 degrees
+        new float[]{-28.346457f,-127.16536f}, // for 0 degrees
+        new float[]{-28.740158f,1.5748031f}, // for 90 degrees
+        new float[]{52,0}, // for 180 degrees
+        new float[]{52,-126}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
@@ -227,8 +234,8 @@ class PositionSettings
         new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
-    int minMeasureDelay = 100; //how long before the sensors can measure again in ms
-    double maxWheelAndSensorDifference = .2; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
+    int minMeasureDelay = 0; //how long before the sensors can measure again in ms
+    float maxDistanceSensorChange = 10; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
 
     PositionSettings(){}
 }

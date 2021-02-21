@@ -249,13 +249,13 @@ public class RobotHardware
     /////////
     //other//
     /////////
-    public int[] getDistancesList(List<DFR304Range> distSensors)
+    public float[] getDistancesList(List<DFR304Range> distSensors)
     {
-        int[] arr = new int[distSensors.size()];
+        float[] arr = new float[distSensors.size()];
         for(int i = 0; i < distSensors.size(); i++)
         {
             distSensors.get(i).measureRange();
-            arr[i] = distSensors.get(i).getDistanceIn();
+            arr[i] = (float)distSensors.get(i).getDistanceCm() / Constants.cmPerInch;
         }
         return arr;
     }
@@ -265,10 +265,10 @@ public class RobotHardware
         for(int i = 0; i < distSensors.size(); i++) { distSensors.get(i).measureRange();}
     }
 
-    public int[] getDistancesAfterMeasure(List<DFR304Range> distSensors)
+    public float[] getDistancesAfterMeasure(List<DFR304Range> distSensors)
     {
-        int[] arr = new int[distSensors.size()];
-        for(int i = 0; i < distSensors.size(); i++) { arr[i] = distSensors.get(i).getDistanceIn(); }
+        float[] arr = new float[distSensors.size()];
+        for(int i = 0; i < distSensors.size(); i++) { arr[i] = (float)distSensors.get(i).getDistanceCm() / Constants.cmPerInch; }
         return arr;
     }
 

@@ -254,9 +254,9 @@ class MovementSettings
     //////////////////
     public static double ticksPerInchForward = 44;
     public static double ticksPerInchSideways = 51.3;
-    public static PIDCoefficients turnPID = new PIDCoefficients(.04,0,0);
-    public static PIDCoefficients moveXPID = new PIDCoefficients(.06,0,0);
-    public static PIDCoefficients moveYPID = new PIDCoefficients(.06,0,0);
+    public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
+    public static PIDCoefficients moveXPID = new PIDCoefficients(.04,0,0);
+    public static PIDCoefficients moveYPID = new PIDCoefficients(.04,0,0);
     public static double moveXSmoothingSteps = 1;
     public static double moveYSmoothingSteps = 1;
     public static double rotationSmoothingSteps = 1;

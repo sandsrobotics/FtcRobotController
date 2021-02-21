@@ -23,14 +23,17 @@ public class Autonomous extends LinearOpMode {
     //double[] CPosLose = {-20,-124,0};
 
     double[] launchPos = {0, -65, 4};
+    double[] secondGoalPos = {-2, -120, 0};
     double[] parkPos = {0,-53,0};
 
     //tolerances
     double[] tolFinal = {1, 1, .5};
     double[] tolLose = {2, 2, 5};
 
+    double maxSpeed = 1;
+
     //other
-    int timesRingRecognitionReq = 50; //how many times does tfod have to see a certain number of rings to call it good
+    int timesRingRecognitionReq = 10; //how many times does tfod have to see a certain number of rings to call it good
 
     ///////////////////
     //other variables//
@@ -62,11 +65,13 @@ public class Autonomous extends LinearOpMode {
         ru.useVuforiaInThread = false;
 
         robot = new Robot(this, ru);
+
         robot.vision.tofdActivationSequence();
         robot.startTelemetry();
 
         while(!isStarted() && !isStopRequested())
         {
+            robot.addTelemetry("stop",!isStopRequested());
             if(closeButton.getButtonPressed(gamepad1))
             {
                 closed = !closed;
@@ -87,35 +92,23 @@ public class Autonomous extends LinearOpMode {
         robot.start(false);
 
         robot.launcher.setRPM(3700);
-           if(finalNumOfRings == 0)
-           {
-               //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-               robot.movement.moveToPosition(APos,tolFinal,15,7000,.5);
-           }
-           else if(finalNumOfRings == 1)
-           {
-               //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-               robot.movement.moveToPosition(BPos,tolFinal,15,7000,.5);
-           }
-           else if(finalNumOfRings == 4)
-           {
-               //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
-               robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-               robot.movement.moveToPosition(CPos,tolFinal,15,7000,.5);
-           }
 
-           robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+        goToDropZone(finalNumOfRings);
 
-           robot.movement.moveToPosition(launchPos, tolFinal,15,7000,.5);
-           for(int i = 0; i < 4; i++)
-           {
-           robot.launcher.waitForRPMInTolerance(2500);
-           robot.launcher.moveLaunchServo();
-           }
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
-           robot.movement.moveToPosition(parkPos, tolFinal,1,7000,.5);
+        robot.movement.moveToPosition(launchPos, tolFinal,15,7000,maxSpeed);
+        for(int i = 0; i < 4; i++)
+        {
+           //robot.launcher.waitForRPMInTolerance(2500);
+           //robot.launcher.moveLaunchServo();
+        }
+
+        robot.movement.moveToPosition(secondGoalPos, tolFinal,1,7000,maxSpeed);
+
+        goToDropZone(finalNumOfRings);
+
+        robot.movement.moveToPosition(parkPos, tolFinal,1,7000,maxSpeed);
     }
     int getNumOfRings()
     {
@@ -131,6 +124,27 @@ public class Autonomous extends LinearOpMode {
             lastNumOfRings = currentNumOfRings;
         }
         return -1;
+    }
+    void goToDropZone(int pos)
+    {
+        if(pos == 0)
+        {
+            //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
+            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+            robot.movement.moveToPosition(APos,tolFinal,15,7000,maxSpeed);
+        }
+        else if(pos == 1)
+        {
+            //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
+            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+            robot.movement.moveToPosition(BPos,tolFinal,15,7000,maxSpeed);
+        }
+        else if(pos == 4)
+        {
+            //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
+            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+            robot.movement.moveToPosition(CPos,tolFinal,15,7000,maxSpeed);
+        }
     }
 }
 

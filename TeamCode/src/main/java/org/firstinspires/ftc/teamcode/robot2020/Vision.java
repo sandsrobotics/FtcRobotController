@@ -42,9 +42,6 @@ public class Vision extends Thread
     ////////////////////
     // other variables//
     ////////////////////
-    //converting inch to mm
-    protected final float mmPerInch = 25.4f; //just to convert mm to in
-
     // object location
     protected volatile OpenGLMatrix[] lastTrackablesLocations = new OpenGLMatrix[5]; //stores the last known position of trackables
     protected volatile OpenGLMatrix[] currentTrackablesLocations = new OpenGLMatrix[5]; //stores the current position of trackables if they are visible
@@ -191,7 +188,7 @@ public class Vision extends Thread
     
     void setTrackableTransform(int posInTrackables, float[] position, float[] angles) //sets the position for a single trackable // position is in inches and rotation is in deg with order XYZ
     {
-        for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
+        for(int i = 0; i < position.length; i++) position[i] *= Constants.mmPerInch;
 
         trackables.get(posInTrackables).setLocation(OpenGLMatrix
                 .translation(position[0], position[1], position[2])
@@ -200,7 +197,7 @@ public class Vision extends Thread
 
     void setPhoneTransform(float[] position, float[] angles) //sets the phone transform // positions is in INCHES: X is INCHES left from center line, Y is INCHES above ground, Z is INCHES forward from center line. rotation is in order XYZ in deg
     {
-        for(int i = 0; i < position.length; i++) position[i] *= mmPerInch;
+        for(int i = 0; i < position.length; i++) position[i] *= Constants.mmPerInch;
 
         if (visionSettings.CAMERA_CHOICE_V == BACK)
         {
@@ -290,7 +287,7 @@ public class Vision extends Thread
     void tofdActivationSequence()
     {
         activateTfod();
-        tfod.setZoom(3, (double)16/(double)9);
+        tfod.setZoom(4, (double)16/(double)9);
     }
 
     Recognition getHighestConfidence()
@@ -638,7 +635,7 @@ public class Vision extends Thread
         if(robot.robotUsage.useVuforiaInThread)activateVuforia();
         if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) tofdActivationSequence();
 
-        while(!this.isInterrupted() && robot.opMode.opModeIsActive())
+        while(!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             if(robot.robotUsage.useVuforiaInThread)findAllTrackables();
             if(robot.robotUsage.useTensorFlow && robot.robotUsage.useTensorFlowInTread) findAllTfodObjects();

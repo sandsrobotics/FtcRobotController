@@ -118,8 +118,14 @@ public class Robot
     {
         startTelemetry();
         if(robotUsage.usePositionThread)position.start();
-        if(robotUsage.useVuforia && (robotUsage.useVuforiaInThread || (robotUsage.useTensorFlow && robotUsage.useTensorFlowInTread))) vision.start();
-        if(robotUsage.useGrabber && resetGrabberPos) grabber.initGrabberPos();
+        if(robotUsage.useVuforia) {
+            if(robotUsage.useVuforiaInThread || (robotUsage.useTensorFlow && robotUsage.useTensorFlowInTread)) vision.start();
+        }
+        if(robotUsage.useGrabber && resetGrabberPos)
+        {
+            grabber.setServosToPos(grabber.grabberSettings.servoRestPositions, false);
+            grabber.initGrabberPos();
+        }
     }
 
     /////////////
@@ -418,6 +424,7 @@ class RobotUsage
     {
         this.useDrive = value;
         this.usePositionTracking = value;
+        this.useDistanceSensors = value;
         this.logPosition = value;
         this.usePositionThread = value;
         this.useComplexMovement = value;
@@ -478,4 +485,10 @@ class RobotSettingsMain
         this.positionSettings = positionSettings;
         this.visionSettings = visionSettings;
     }
+}
+
+class Constants
+{
+    public static final float mmPerInch = 25.4f;
+    public static final float cmPerInch = 2.54f;
 }
