@@ -1,19 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.google.gson.Gson;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 
 @Config
 public class Launcher {
@@ -325,7 +318,7 @@ class AllCalibrationDataPoints
     public static AllCalibrationDataPoints setCalibrationDataPoints(Context context, String fileName)
     {
         Gson gson = new Gson();
-        return gson.fromJson(readFromFile(context, fileName), AllCalibrationDataPoints.class);
+        return gson.fromJson(Utils.fileManager.readFromFile(context, fileName), AllCalibrationDataPoints.class);
     }
 
     public int getTargetRPMAtDistance(double distance, int goalNum)
@@ -367,36 +360,6 @@ class AllCalibrationDataPoints
             return (int)((RPMPerInch * distance) + b);
         }
         return -1;
-    }
-
-    private static String readFromFile(Context context, String fileName) {
-
-        String ret = null;
-
-        try {
-            InputStream inputStream = context.openFileInput(fileName);
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString;
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append("\n").append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        return ret;
     }
 
     class CalibrationDataPoint

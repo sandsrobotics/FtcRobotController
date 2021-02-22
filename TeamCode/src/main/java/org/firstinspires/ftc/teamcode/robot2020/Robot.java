@@ -7,11 +7,8 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDCoefficients;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-
-import java.util.List;
 
 
 @Config
@@ -209,206 +206,20 @@ public class Robot
     boolean stop() { return emergencyStop || gamepad1.back || gamepad2.back || opMode.isStopRequested(); }
 }
 
-enum GamepadButtons
-{
-    dpadUP,
-    dpadDOWN,
-    dpadLEFT,
-    dpadRIGHT,
-
-    A,
-    B,
-    X,
-    Y,
-
-    START,
-    BACK,
-    leftBUMPER,
-    rightBUMPER,
-
-    leftJoyStickX,
-    leftJoyStickY,
-    leftJoyStickBUTTON,
-    leftTRIGGER,
-
-    rightJoyStickX,
-    rightJoyStickY,
-    rightJoyStickBUTTON,
-    rightTRIGGER,
-    combinedTRIGGERS;
-
-    boolean wasButtonPressed = false;
-    long lastButtonRelease = System.currentTimeMillis();
-}
-
-class GamepadButtonManager
-{
-    boolean wasButtonPressed = false;
-    long lastButtonRelease = System.currentTimeMillis();
-    Gamepad gamepad;
-    GamepadButtons gamepadButton;
-
-    GamepadButtonManager(Gamepad gamepad, GamepadButtons gamepadButton)
-    {
-        this.gamepad = gamepad;
-        this.gamepadButton = gamepadButton;
-    }
-    GamepadButtonManager(GamepadButtons gamepadButton) { this.gamepadButton = gamepadButton; }
-
-    boolean getButtonHeld(Gamepad gamepad)
-    {
-        if(gamepadButton == GamepadButtons.A) return gamepad.a;
-        if(gamepadButton == GamepadButtons.B) return gamepad.b;
-        if(gamepadButton == GamepadButtons.X) return gamepad.x;
-        if(gamepadButton == GamepadButtons.Y) return gamepad.y;
-
-        if(gamepadButton == GamepadButtons.dpadUP) return gamepad.dpad_up;
-        if(gamepadButton == GamepadButtons.dpadDOWN) return gamepad.dpad_down;
-        if(gamepadButton == GamepadButtons.dpadLEFT) return gamepad.dpad_left;
-        if(gamepadButton == GamepadButtons.dpadRIGHT) return gamepad.dpad_right;
-
-        if(gamepadButton == GamepadButtons.leftJoyStickBUTTON) return gamepad.left_stick_button;
-        if(gamepadButton == GamepadButtons.rightJoyStickBUTTON) return gamepad.right_stick_button;
-        if(gamepadButton == GamepadButtons.leftBUMPER) return gamepad.left_bumper;
-        if(gamepadButton == GamepadButtons.rightBUMPER) return gamepad.right_bumper;
-
-        if(gamepadButton == GamepadButtons.START) return gamepad.start;
-        if(gamepadButton == GamepadButtons.BACK) return gamepad.back;
-
-        return false;
-    }
-    boolean getButtonHeld(){return getButtonHeld(gamepad);}
-
-    boolean getButtonHeld(Gamepad gamepad, int time)
-    {
-        if(getButtonHeld(gamepad))
-        {
-            return System.currentTimeMillis() - lastButtonRelease > time;
-        }
-        else lastButtonRelease = System.currentTimeMillis();
-        return false;
-    }
-    boolean getButtonHeld(int time){return getButtonHeld(gamepad, time);}
-
-    boolean getButtonPressed(Gamepad gamepad)
-    {
-        if(getButtonHeld(gamepad))
-        {
-            if(!wasButtonPressed)
-            {
-                wasButtonPressed = true;
-                return true;
-            }
-        }
-        else wasButtonPressed = false;
-        return false;
-    }
-    boolean getButtonPressed(){return getButtonPressed(gamepad);}
-
-    boolean getButtonReleased(Gamepad gamepad)
-    {
-        if(getButtonHeld(gamepad)) wasButtonPressed = true;
-        else if(wasButtonPressed)
-        {
-            wasButtonPressed = false;
-            return true;
-        }
-        return false;
-    }
-    boolean getButtonReleased(){return getButtonReleased(gamepad);}
-
-    float getSliderValue(Gamepad gamepad)
-    {
-        if(gamepadButton == GamepadButtons.leftJoyStickX) return gamepad.left_stick_x;
-        if(gamepadButton == GamepadButtons.leftJoyStickY) return gamepad.left_stick_y;
-        if(gamepadButton == GamepadButtons.rightJoyStickX) return gamepad.right_stick_x;
-        if(gamepadButton == GamepadButtons.rightJoyStickY) return gamepad.right_stick_y;
-
-        if(gamepadButton == GamepadButtons.leftTRIGGER) return gamepad.left_trigger;
-        if(gamepadButton == GamepadButtons.rightTRIGGER) return gamepad.right_trigger;
-        if(gamepadButton == GamepadButtons.combinedTRIGGERS) return gamepad.right_trigger - gamepad.left_trigger;
-
-        return 0;
-    }
-    float getSliderValue(){return getSliderValue(gamepad);}
-
-}
-
-class PID
-{
-    PIDCoefficients PIDs;
-    double maxClamp;
-    double minClamp;
-    double value;
-
-    double totalError;
-    double lastError;
-    double currentError;
-    long lastTime;
-
-    PID(){}
-    PID(PIDCoefficients PIDs, double minClamp, double maxClamp)
-    {
-        this.PIDs = PIDs;
-        this.minClamp = minClamp;
-        this.maxClamp = maxClamp;
-    }
-
-    void updatePID(double error)
-    {
-        lastError = currentError;
-        currentError = error;
-        totalError += error;
-
-        double calculatedI = (totalError * PIDs.i);
-        if(calculatedI > maxClamp) calculatedI = maxClamp;
-        else if(calculatedI < minClamp) calculatedI = minClamp;
-
-        double calculatedD = (((currentError - lastError) * PIDs.d) / (System.currentTimeMillis() - lastTime));
-
-        value = (error * PIDs.p);// + calculatedI - calculatedD;
-
-        lastTime = System.currentTimeMillis();
-    }
-
-    void resetErrors()
-    {
-        totalError = 0;
-        lastError = 0;
-        currentError = 0;
-    }
-
-    double updatePIDAndReturnValue(double error)
-    {
-        updatePID(error);
-        return returnValue();
-    }
-
-    double returnValue()
-    {
-        return Math.min(Math.max(value, minClamp), maxClamp);
-    }
-
-    double returnUncappedValue()
-    {
-        return value;
-    }
-}
-
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, useDistanceSensors, logPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
+    boolean useDrive, usePositionTracking, useDistanceSensors, logLastPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean useDistanceSensors, boolean logPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean useDistanceSensors, boolean logLastPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
         this.useDistanceSensors = useDistanceSensors;
-        this.logPosition = logPosition;
+        this.logLastPosition = logLastPosition;
         this.usePositionThread = usePositionThread;
         this.useComplexMovement = useComplexMovement;
         this.useLauncher = useLauncher;
@@ -425,7 +236,7 @@ class RobotUsage
         this.useDrive = value;
         this.usePositionTracking = value;
         this.useDistanceSensors = value;
-        this.logPosition = value;
+        this.logLastPosition = value;
         this.usePositionThread = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
@@ -486,6 +297,7 @@ class RobotSettingsMain
         this.visionSettings = visionSettings;
     }
 }
+
 
 class Constants
 {

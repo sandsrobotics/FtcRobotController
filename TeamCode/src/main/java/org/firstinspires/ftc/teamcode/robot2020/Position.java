@@ -81,6 +81,10 @@ public class Position extends Thread
         return angles;
     }
 
+    void resetAngle()
+    {
+        rotationOffset += currentRotation;
+    }
 
     ////////////////////
     //position finding//

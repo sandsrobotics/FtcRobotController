@@ -4,8 +4,6 @@ import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
-
 // test
 @Config
 @TeleOp(name = "test position tracking")
@@ -41,7 +39,7 @@ public class Test extends LinearOpMode {
            robot.addTelemetry("Y", robot.position.currentRobotPosition[1]);
            robot.addTelemetry("dis 2", vals[1]);
            robot.addTelemetry("rot" , robot.position.currentRobotPosition[2]);
-           if(resetAngle.getButtonPressed(gamepad1)) robot.position.rotationOffset += robot.position.currentRotation;
+           if(resetAngle.getButtonPressed(gamepad1)) robot.position.resetAngle();
            robot.sendTelemetry();
         }
     }
