@@ -146,7 +146,7 @@ public class Launcher {
         else
         {
             setRPM(launcherSettings.autoLaunchRPM);
-            robot.movement.moveToPosition(new double[]{0, launcherSettings.minLaunchDistance, launcherSettings.autoLaunchAngle}, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
+            goToLine();
             for(int i = 0; i < 3; i++) {
                 waitForRPMInTolerance(1000);
                 autoLaunch();
@@ -162,6 +162,11 @@ public class Launcher {
             if (robot.position.currentRobotPosition[1] > launcherSettings.minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], launcherSettings.minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .75); }
             else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000, .75); }
         }
+    }
+
+    void goToLine()
+    {
+        robot.movement.moveToPosition(new double[]{0, launcherSettings.minLaunchDistance, launcherSettings.autoLaunchAngle}, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
     }
 
     ////////////////
@@ -235,7 +240,7 @@ public class Launcher {
 
     void moveLaunchServo(long actuatorTime)
     {
-        if(robot.robotUsage.useGrabber && robot.grabber.setEncoderPos <= 10 && !robot.grabber.clawClosed)
+        if(robot.robotUsage.useGrabber && robot.grabber.setEncoderPos <= 20 && !robot.grabber.clawClosed)
         {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;

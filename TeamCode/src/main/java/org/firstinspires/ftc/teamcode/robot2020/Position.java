@@ -176,10 +176,7 @@ public class Position extends Thread
             //put run stuff in here
             if(System.currentTimeMillis() - lastSensorReadingTime >= positionSettings.minMeasureDelay) inMeasuringRange = isRobotInRotationRange();
             else inMeasuringRange = -2;
-            if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors && inMeasuringRange > -2)
-            {
-                robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
-            }
+            if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors && inMeasuringRange > -2) { robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors); }
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
