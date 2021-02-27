@@ -15,7 +15,7 @@ public class Grabber {
 
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
-    protected boolean clawClosed = false;
+    protected boolean clawClosed = true;
     protected boolean motorStopped = false;
 
     Grabber(Robot robot)

@@ -22,6 +22,7 @@ public class Launcher {
     //other
     boolean runWheelOnTrigger = true;
     boolean moveIntakeMotorForward = false;
+    boolean gateOpen = false;
     float intakeMotorPower = 0;
     double targetWheelRpm;
     Robot robot;
@@ -65,11 +66,17 @@ public class Launcher {
         robot.addTelemetry("Set RPM", targetWheelRpm);
     }
 
-    void setLauncherServo(Gamepad gamepad)
+    void setLauncherServos(Gamepad gamepad)
     {
 
         if(launcherSettings.launchButton.getButtonHeld(gamepad,launcherSettings.buttonHoldTime)) autoLaunch();
         else if(launcherSettings.launchButton.getButtonReleased(gamepad)) moveLaunchServo();
+
+        if(launcherSettings.gateButton.getButtonPressed(gamepad))
+        {
+            if(gateOpen) { closeGateServo(); }
+            else { openGateServo(0); }
+        }
     }
 
     void setLauncherWheelMotor(Gamepad gamepad)
@@ -107,13 +114,13 @@ public class Launcher {
 
         robot.robotHardware.launcherIntakeMotor.setPower(intakeMotorPower);
 
-        if(intakeMotorPower != 0) robot.robotHardware.launcherIntakeServo.setPower(1);
-        else robot.robotHardware.launcherIntakeServo.setPower(0);
+        //if(intakeMotorPower != 0) robot.robotHardware.launcherIntakeServo.setPower(1);
+        //else robot.robotHardware.launcherIntakeServo.setPower(0);
     }
 
     void runForTeleOp(Gamepad gamepad, boolean telemetry)
     {
-        setLauncherServo(gamepad);
+        setLauncherServos(gamepad);
         setLauncherWheelMotor(gamepad);
         setLauncherIntakeMotor(gamepad);
         if(telemetry)telemetryDataOut();
@@ -245,22 +252,38 @@ public class Launcher {
             robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
             robot.grabber.clawClosed = true;
         }
-        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoLaunchAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.launcherServoLaunchAngle);
         robot.delay(actuatorTime);
-        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.servoRestAngle);
+        robot.robotHardware.launcherLaunchServo.setPosition(launcherSettings.launcherServoRestAngle);
+    }
+
+    void openGateServo(long actuatorTime)
+    {
+        gateOpen = true;
+        robot.robotHardware.launcherGateServo.setPosition(launcherSettings.gateServoLaunchAngle);
+        robot.delay(actuatorTime);
+    }
+
+    void openGateServo(){openGateServo(launcherSettings.gateServoMoveTime);}
+
+    void closeGateServo()
+    {
+        robot.robotHardware.launcherGateServo.setPosition(launcherSettings.gateServoRestAngle);
+        gateOpen = false;
     }
 
     void moveLaunchServo()
     {
-        moveLaunchServo(launcherSettings.servoMoveTime);
+        moveLaunchServo(launcherSettings.launcherServoMoveTime);
     }
 
     void autoLaunch()
     {
         if(isRPMInTolerance())
         {
+            if(!gateOpen) openGateServo();
             moveLaunchServo();
-            robot.delay(launcherSettings.servoMoveTime);
+            robot.delay(launcherSettings.launcherServoMoveTime);
         }
     }
 }// class end
@@ -271,31 +294,43 @@ class LauncherSettings
     //user variables//
     //////////////////
     //controls
+    //rev
     GamepadButtonManager revIncreaseButton = new GamepadButtonManager(GamepadButtons.B);
     GamepadButtonManager revDecreaseButton = new GamepadButtonManager(GamepadButtons.X);
     GamepadButtonManager revPowerSlide = new GamepadButtonManager(GamepadButtons.leftTRIGGER);
     GamepadButtonManager revModeButton = new GamepadButtonManager(GamepadButtons.Y);
+    //launch
     GamepadButtonManager launchButton = new GamepadButtonManager(GamepadButtons.A);
+    GamepadButtonManager gateButton = new GamepadButtonManager(GamepadButtons.dpadDOWN);
+    //intake
     GamepadButtonManager intakeInButton = new GamepadButtonManager(GamepadButtons.rightBUMPER);
     GamepadButtonManager intakeOutSlider = new GamepadButtonManager(GamepadButtons.rightTRIGGER);
-    double sliderTolerance = .1;
+
+    double sliderTolerance = .05;
     int buttonHoldTime = 500;
 
-    //servo and motor config
+    //motor config
     double ticksPerRev = 28;
     double gearRatio = 1;
     double maxRPM = 6000;
-    double servoRestAngle = 0;
-    double servoLaunchAngle = 1;
-    int servoMoveTime = 250;
+
+    //launcher servo
+    double launcherServoRestAngle = 0;
+    double launcherServoLaunchAngle = 1;
+    int launcherServoMoveTime = 200;
+
+    //gate servo
+    double gateServoRestAngle = 0;
+    double gateServoLaunchAngle = 1;
+    int gateServoMoveTime = 300;
 
     //calibration data
     protected String calibrationFileName =  "LauncherConfig.json";
 
     //other
-    double startRPM = 3700;
+    double startRPM = 3500;
     double RPMIncrements = 50;
-    double RPMTolerance = 40;
+    double RPMTolerance = 1000;
 
     //auto launch
     double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!

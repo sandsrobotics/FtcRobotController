@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 @Config
-@TeleOp(name = "driver control")
+@TeleOp(name = "driver control v2")
 public class DriverControl extends LinearOpMode
 {
     Robot robot;

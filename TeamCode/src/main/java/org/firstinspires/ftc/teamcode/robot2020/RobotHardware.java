@@ -26,7 +26,8 @@ public class RobotHardware
     //launcher
     protected DcMotorEx launcherWheelMotor, launcherIntakeMotor;
     protected Servo launcherLaunchServo;
-    protected CRServo launcherIntakeServo;
+    protected Servo launcherGateServo;
+    //protected CRServo launcherIntakeServo;
 
     //grabber
     protected DcMotorEx grabberLifterMotor;
@@ -83,20 +84,23 @@ public class RobotHardware
         launcherIntakeMotor = robot.hardwareMap.get(DcMotorEx.class, "motor" + hardwareSettings.launcherIntakeMotorNum);
 
         launcherLaunchServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherLaunchServoNum);
-        launcherIntakeServo = robot.hardwareMap.crservo.get("servo" + hardwareSettings.launcherIntakeServoNum);
+        launcherGateServo = robot.hardwareMap.servo.get("servo" + hardwareSettings.launcherGateServoNum);
+        //launcherIntakeServo = robot.hardwareMap.crservo.get("servo" + hardwareSettings.launcherIntakeServoNum);
 
         if(hardwareSettings.flipLauncherMotorDir[0]) launcherWheelMotor.setDirection(DcMotor.Direction.REVERSE);
         if(hardwareSettings.flipLauncherMotorDir[1]) launcherIntakeMotor.setDirection(DcMotor.Direction.REVERSE);
         if(hardwareSettings.flipLauncherMotorDir[2]) launcherLaunchServo.setDirection(Servo.Direction.REVERSE);
-        if(hardwareSettings.flipLauncherMotorDir[3]) launcherIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
+        if(hardwareSettings.flipLauncherMotorDir[3]) launcherGateServo.setDirection(Servo.Direction.REVERSE);
+        //if(hardwareSettings.flipLauncherMotorDir[3]) launcherIntakeServo.setDirection(DcMotorSimple.Direction.REVERSE);
 
         initMotorSettings(launcherWheelMotor, DcMotor.ZeroPowerBehavior.FLOAT);
 
         launcherIntakeMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         launcherIntakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        robot.robotHardware.launcherLaunchServo.setPosition(robot.launcher.launcherSettings.servoRestAngle);
-        robot.robotHardware.launcherIntakeServo.setPower(0);
+        launcherLaunchServo.setPosition(robot.launcher.launcherSettings.launcherServoRestAngle);
+        launcherGateServo.setPosition(robot.launcher.launcherSettings.gateServoRestAngle);
+        //launcherIntakeServo.setPower(0);
     }
 
     public void initGrabberHardware()
@@ -311,7 +315,8 @@ class HardwareSettings
     public static PIDFCoefficients launcherWheelMotorPID = new PIDFCoefficients(10,3,0,0);
     protected String launcherIntakeMotorNum = "1B";
     protected String launcherLaunchServoNum = "0B";
-    protected String launcherIntakeServoNum = "4B";
+    protected String launcherGateServoNum = "4B";
+    //protected String launcherIntakeServoNum = "4B";
 
     //grabber motors
     protected boolean[] flipGrabberMotorDir = {true, false, false};
@@ -321,9 +326,9 @@ class HardwareSettings
     protected String limitSwitchName = "digital0B";
 
     //ultrasonic
-    protected String Ultrasonic1Num = "1";
+    protected String Ultrasonic1Num = "0B";
     protected String X2UltrasonicNum = "2";
-    protected String Ultrasonic2Num = "0";
+    protected String Ultrasonic2Num = "1B";
 
     HardwareSettings(){}
 }

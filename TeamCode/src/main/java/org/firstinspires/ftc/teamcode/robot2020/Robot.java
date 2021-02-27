@@ -120,7 +120,7 @@ public class Robot
         }
         if(robotUsage.useGrabber && resetGrabberPos)
         {
-            grabber.setServosToPos(grabber.grabberSettings.servoRestPositions, false);
+            grabber.setServosToPos(grabber.grabberSettings.servoGrabPositions, false);
             grabber.initGrabberPos();
         }
     }
