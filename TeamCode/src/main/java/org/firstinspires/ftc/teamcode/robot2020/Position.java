@@ -236,10 +236,10 @@ class PositionSettings
     };
     MathSign[][] operations = new MathSign[][] //whether the distance from the ultrasonic sensor should be added or removed for each 90 degree increment
     {
-        new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}, // for 0 degrees
-        new MathSign[]{MathSign.SUBTRACT, MathSign.SUBTRACT}, // for 90 degrees
-        new MathSign[]{MathSign.ADD, MathSign.SUBTRACT}, // for 180 degrees
-        new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
+        new MathSign[]{MathSign.ADD, MathSign.SUBTRACT}, // for 0 degrees
+        new MathSign[]{MathSign.ADD, MathSign.ADD}, // for 90 degrees
+        new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}, // for 180 degrees
+        new MathSign[]{MathSign.SUBTRACT, MathSign.SUBTRACT}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms

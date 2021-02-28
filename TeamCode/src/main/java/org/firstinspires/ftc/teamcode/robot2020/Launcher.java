@@ -144,6 +144,7 @@ public class Launcher {
                 autoLaunch();
             }
         }
+        setRPM(0);
     }
 
     void autoLaunchDiskFromLine()
