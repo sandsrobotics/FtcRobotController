@@ -103,7 +103,7 @@ public class Autonomous extends LinearOpMode {
         for(int i = 0; i < 4; i++)
         {
            robot.launcher.waitForRPMInTolerance(2500);
-           robot.launcher.moveLaunchServo();
+           robot.launcher.autoLaunch();
         }
 
         robot.movement.moveToPosition(secondGoalPos, tolFinal,1,7000,maxSpeed);
