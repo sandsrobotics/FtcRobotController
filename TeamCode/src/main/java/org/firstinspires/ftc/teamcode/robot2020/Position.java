@@ -222,10 +222,10 @@ class PositionSettings
     //ultra sonic
     float[][] distancesFromWall = new float[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles
     {
-        new float[]{28.740158f, -1.968504f}, // for 0 degrees
-        new float[]{52.362202f, 1.968504f}, // for 90 degrees
-        new float[]{-51.574802f, 126.77165f}, // for 180 degrees
-        new float[]{-29.13386f,  -125.98425f}  // for -90/270 degrees
+        new float[]{-28.740158f, 1.968504f}, // for 0 degrees
+        new float[]{-52.362202f, -1.968504f}, // for 90 degrees
+        new float[]{51.574802f, -126.77165f}, // for 180 degrees
+        new float[]{29.13386f,  125.98425f}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
