@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.PIDCoefficients;
 @TeleOp(name = "test debug")
 public class Test2 extends LinearOpMode
 {
-
     Robot robot;
 
     @Override
