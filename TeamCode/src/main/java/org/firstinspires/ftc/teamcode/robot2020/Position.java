@@ -33,6 +33,7 @@ public class Position extends Thread
     float[] currentDistances;
     long lastSensorReadingTime = 0;
     int inMeasuringRange = -2;
+    int lastInMeasuringRange = inMeasuringRange;
 
     //other
     volatile double positionAccuracy = 0;
@@ -174,9 +175,12 @@ public class Position extends Thread
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
+            lastInMeasuringRange = inMeasuringRange;
             if(System.currentTimeMillis() - lastSensorReadingTime >= positionSettings.minMeasureDelay) inMeasuringRange = isRobotInRotationRange();
             else inMeasuringRange = -2;
             if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors && inMeasuringRange > -2) { robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors); }
+            if(lastInMeasuringRange != inMeasuringRange && inMeasuringRange > -2) lastDistances = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
