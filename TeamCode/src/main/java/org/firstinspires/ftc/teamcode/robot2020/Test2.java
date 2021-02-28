@@ -16,8 +16,8 @@ public class Test2 extends LinearOpMode
     {
         RobotUsage ru = new RobotUsage();
         ru.setAllToValue(false);
+        ru.useDistanceSensors = true;
         ru.usePositionTracking = true;
-        ru.useDrive = true;
 
         robot = new Robot(this, ru);
 
@@ -29,23 +29,11 @@ public class Test2 extends LinearOpMode
 
         robot.start(false);
 
-        int[] pos;
-        PIDCoefficients pidCoefficients = new PIDCoefficients(7.5,0,0);
-        double maxPower = .2;
-        PID pidLoop = new PID(pidCoefficients,-maxPower, maxPower);
-        double power;
-        double rot = 0;
-        GamepadButtonManager button = new GamepadButtonManager(GamepadButtons.A);
-
         while(opModeIsActive())
         {
-            if(button.getButtonPressed(gamepad1)) rot++;
-
-            //pos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.odometryWheels);
-            //power = pidLoop.updatePIDAndReturnValue(rot - (pos[0]/robot.position.positionSettings.ticksPerRotationX));
-            //robot.movement.moveRobot(0,0, power, false, false);
-            //robot.addTelemetry("power", power);
-            robot.addTelemetry("rot", rot);
+            float[] vals = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+            robot.addTelemetry("dis 1:", vals[0]);
+            robot.addTelemetry("dis 2:", vals[1]);
             robot.sendTelemetry();
         }
     }
