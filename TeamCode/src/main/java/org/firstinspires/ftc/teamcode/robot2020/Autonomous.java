@@ -91,17 +91,19 @@ public class Autonomous extends LinearOpMode {
         //if(true) return;
         robot.start(false);
 
-        robot.launcher.setRPM(3700);
+        robot.launcher.setRPM(3500);
 
         goToDropZone(finalNumOfRings);
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
         robot.movement.moveToPosition(launchPos, tolFinal,15,7000,maxSpeed);
+
+        robot.launcher.openGateServo();
         for(int i = 0; i < 4; i++)
         {
-           //robot.launcher.waitForRPMInTolerance(2500);
-           //robot.launcher.moveLaunchServo();
+           robot.launcher.waitForRPMInTolerance(2500);
+           robot.launcher.moveLaunchServo();
         }
 
         robot.movement.moveToPosition(secondGoalPos, tolFinal,1,7000,maxSpeed);
