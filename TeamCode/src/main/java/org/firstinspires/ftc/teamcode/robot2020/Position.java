@@ -31,7 +31,7 @@ public class Position extends Thread
     //distance sensor position
     float[] lastDistances;
     float[] currentDistances;
-    long lastSensorReadingTime = System.currentTimeMillis();
+    long lastSensorReadingTime = 0;
     int inMeasuringRange = -2;
 
     //other
@@ -216,9 +216,9 @@ class PositionSettings
     float[][] distancesFromWall = new float[][] //these are the distances that the ultra sonic sensors are at while the robot is at the 0 point and at specific angles
     {
         new float[]{28.740158f, -1.968504f}, // for 0 degrees
-        new float[]{51.968506f, 1.968504f}, // for 90 degrees
-        new float[]{51.574802f, 126.77165f}, // for 180 degrees
-        new float[]{29.13386f,  125.98425f}  // for -90/270 degrees
+        new float[]{52.362202f, 1.968504f}, // for 90 degrees
+        new float[]{-51.574802f, 126.77165f}, // for 180 degrees
+        new float[]{-29.13386f,  125.98425f}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
@@ -236,7 +236,7 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 0; //how long before the sensors can measure again in ms
-    float maxDistanceSensorChange = 10; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
+    float maxDistanceSensorChange = 15; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
 
     PositionSettings(){}
 }
