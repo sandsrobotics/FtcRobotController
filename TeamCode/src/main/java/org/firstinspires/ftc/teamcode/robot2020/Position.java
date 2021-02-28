@@ -130,7 +130,7 @@ public class Position extends Thread
         float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
         lastDistances = currentDistances;
 
-        for(int i = 0; i < temp.length; i++){if(Math.abs(temp[i] - lastDistances[i]) > positionSettings.maxDistanceSensorChange) return;}
+        for(int i = 0; i < temp.length; i++){if( lastDistances[i] - temp[i] > positionSettings.maxDistanceSensorChange) return;}
 
         lastSensorReadingTime = System.currentTimeMillis();
         currentDistances = temp;
@@ -235,7 +235,7 @@ class PositionSettings
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
-    int minMeasureDelay = 0; //how long before the sensors can measure again in ms
+    int minMeasureDelay = 50; //how long before the sensors can measure again in ms
     float maxDistanceSensorChange = 25; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
 
     PositionSettings(){}
