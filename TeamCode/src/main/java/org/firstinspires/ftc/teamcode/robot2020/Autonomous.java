@@ -21,8 +21,8 @@ public class Autonomous extends LinearOpMode {
         {-16,-58,-90}
     };
     double[][] BPositions = {
-        {2,-35,-90},
-        {7,-45,-90}
+        {-4,-40,-90},
+        {4,-47.5,-90}
     };
     double[][] CPositions ={
         {-16,-4,-90},
@@ -34,8 +34,8 @@ public class Autonomous extends LinearOpMode {
 
     //settings
     // tol, time to stay in tol, max loops, max speed
-    MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, 1);
-    MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, 1);
+    MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, .3);
+    MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, .3);
 
     double maxSpeed = 1;
 

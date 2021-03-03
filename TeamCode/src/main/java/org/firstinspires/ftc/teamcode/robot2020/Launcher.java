@@ -175,7 +175,7 @@ public class Launcher {
 
     void goToLine()
     {
-        robot.movement.moveToPosition(new double[]{0, launcherSettings.minLaunchDistance, launcherSettings.autoLaunchAngle}, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
+        robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
     }
 
     ////////////////
@@ -333,11 +333,11 @@ class LauncherSettings
     double startRPM = 3500;
     double RPMIncrements = 50;
     double RPMTolerance = 300;
+    double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
     //auto launch
-    double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double[] autoLaunchPos = {0, minLaunchDistance, 5}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double autoLaunchRPM = 3500; //RPM to launch from line
-    double autoLaunchAngle = 0; // angle offset to launch from line
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     LauncherSettings(){}
