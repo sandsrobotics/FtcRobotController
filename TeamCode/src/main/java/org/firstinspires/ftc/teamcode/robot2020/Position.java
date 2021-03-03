@@ -225,7 +225,7 @@ class PositionSettings
         new float[]{-28.740158f, 1.968504f}, // for 0 degrees
         new float[]{-52.362202f, -1.968504f}, // for 90 degrees
         new float[]{51.574802f, -126.77165f}, // for 180 degrees
-        new float[]{29.13386f,  125.98425f}  // for -90/270 degrees
+        new float[]{29.13386f,  -125.98425f}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
@@ -239,7 +239,7 @@ class PositionSettings
         new MathSign[]{MathSign.ADD, MathSign.SUBTRACT}, // for 0 degrees
         new MathSign[]{MathSign.ADD, MathSign.ADD}, // for 90 degrees
         new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}, // for 180 degrees
-        new MathSign[]{MathSign.SUBTRACT, MathSign.SUBTRACT}  // for -90/270 degrees
+        new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms
