@@ -125,17 +125,11 @@ public class Position extends Thread
 
     private void updatePosWithDistanceSensor()
     {
+        double[] calPos = new double[2];
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
 
-        //float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
         float[] temp = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-        //lastDistances = currentDistances;
-
-        //for(int i = 0; i < temp.length; i++){if( lastDistances[i] - temp[i] > positionSettings.maxDistanceSensorChange) return;}
-
-        lastSensorReadingTime = System.currentTimeMillis();
-        //currentDistances = temp;
 
         if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
         {
@@ -149,7 +143,13 @@ public class Position extends Thread
             double dis = positionSettings.distancesFromWall[arrayPos][b];
             if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
             else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            currentRobotPosition[b] = dis;
+            calPos[b] = dis;
+        }
+
+        if(Math.abs(calPos[0] - currentRobotPosition[0]) <= positionSettings.maxDistanceSensorChange[0] && Math.abs(calPos[1] - currentRobotPosition[1]) <= positionSettings.maxDistanceSensorChange[1]){
+            currentRobotPosition[0] = calPos[0];
+            currentRobotPosition[1] = calPos[1];
+            lastSensorReadingTime = System.currentTimeMillis();
         }
     }
 
@@ -175,15 +175,9 @@ public class Position extends Thread
         if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
-            //put run stuff in here
-            //lastInMeasuringRange = inMeasuringRange;
             if(System.currentTimeMillis() - lastSensorReadingTime >= positionSettings.minMeasureDelay) inMeasuringRange = isRobotInRotationRange();
             else inMeasuringRange = -2;
-            //if(inMeasuringRange > -2 && robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors) {
-               // robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
-                //robot.delay(40);
-                //if (lastInMeasuringRange != inMeasuringRange) currentDistances = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
-            //}
+
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
@@ -243,7 +237,7 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms
-    //float maxDistanceSensorChange = 10; //how off can the sensor be from the wheels before it is invalid
+    float[] maxDistanceSensorChange = {10, 10}; //how off can the sensor be from the wheels before it is invalid
 
     PositionSettings(){}
 }
