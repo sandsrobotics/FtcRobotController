@@ -29,15 +29,16 @@ public class Autonomous extends LinearOpMode {
         {-16,-4,-90}
     };
 
-    double[] secondGoalPos = {-2, -110, 0};
+    double[][] secondGoalPositions = {
+        {10, -80, 0},
+        {0, -110, 0}
+    };
     double[] parkPos = {0,-53,0};
 
     //settings
     // tol, time to stay in tol, max loops, max speed
     MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, .3);
     MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, .3);
-
-    double maxSpeed = 1;
 
     //other
     int timesRingRecognitionReq = 10; //how many times does tfod have to see a certain number of rings to call it good
@@ -117,9 +118,11 @@ public class Autonomous extends LinearOpMode {
 
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
 
-        robot.movement.moveToPosition(secondGoalPos, finalPosSettings);
+        robot.movement.moveToPosition(secondGoalPositions[0], losePosSettings);
 
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, false);
+        robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
+
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
 

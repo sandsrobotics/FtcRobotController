@@ -335,7 +335,7 @@ class LauncherSettings
     double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
     //auto launch
-    double[] autoLaunchPos = {0, minLaunchDistance, 5}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double[] autoLaunchPos = {0, minLaunchDistance, 0}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double autoLaunchRPM = 3500; //RPM to launch from line
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
