@@ -107,7 +107,7 @@ public class Autonomous extends LinearOpMode {
         //main program//
         ////////////////
         goToDropZone(finalNumOfRings, 1);
-//
+
         robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);

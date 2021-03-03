@@ -14,7 +14,7 @@ public class Position extends Thread
     //other variables//
     ///////////////////
     //robot position
-    protected volatile double[] currentRobotPosition; //position is based on the canter front of the goal to the center of the robot
+    protected volatile double[] currentRobotPosition = new double[3]; //position is based on the canter front of the goal to the center of the robot
 
     //wheels
     private int[] lastMotorPos;
@@ -30,7 +30,7 @@ public class Position extends Thread
 
     //distance sensor position
     long lastSensorReadingTime = 0;
-    int inMeasuringRange = -2;
+    int inMeasuringRange = 0;
     float[] lastSensorReadings = new float[2];
     float[] curSensorReadings = new float[2];
 
@@ -242,8 +242,8 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms
-    float[] maxSensorOffsetFromEncoder = {25, 25}; //how off can the sensor be from the wheels before it is invalid
-    float[] maxSensorDistanceChange = {10,10};
+    float[] maxSensorOffsetFromEncoder = {50, 50}; //how off can the sensor be from the wheels before it is invalid
+    float[] maxSensorDistanceChange = {15,15};
 
     PositionSettings(){}
 }
