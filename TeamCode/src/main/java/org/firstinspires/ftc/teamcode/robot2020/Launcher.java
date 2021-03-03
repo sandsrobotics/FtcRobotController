@@ -153,6 +153,7 @@ public class Launcher {
         else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
         else
         {
+            openGateServo();
             setRPM(launcherSettings.autoLaunchRPM);
             goToLine();
             for(int i = 0; i < 3; i++) {
@@ -331,11 +332,11 @@ class LauncherSettings
     //other
     double startRPM = 3500;
     double RPMIncrements = 50;
-    double RPMTolerance = 1000;
+    double RPMTolerance = 300;
 
     //auto launch
     double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
-    double autoLaunchRPM = 3700; //RPM to launch from line
+    double autoLaunchRPM = 3500; //RPM to launch from line
     double autoLaunchAngle = 0; // angle offset to launch from line
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 

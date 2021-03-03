@@ -15,20 +15,28 @@ public class Autonomous extends LinearOpMode {
     GamepadButtonManager closeButton = new GamepadButtonManager(GamepadButtons.A);
 
     //positions
-    double[] APos = {-16,-58,-90};
-    //double[] APosLose = {-20,-124,0};
-    double[] BPos = {2,-30,-90};
-    //double[] BPosLose = {-20,-124,0};
-    double[] CPos = {-16,-4,-90};
-    //double[] CPosLose = {-20,-124,0};
+    double[] basePos = {-16, -70, 0};
+    double[][] APositions = {
+        {-16,-58,-90},
+        {-16,-58,-90}
+    };
+    double[][] BPositions = {
+        {2,-30,-90},
+        {2,-30,-90}
+    };
+    double[][] CPositions ={
+        {-16,-4,-90},
+        {-16,-4,-90}
+    };
 
     double[] launchPos = {0, -65, 4};
     double[] secondGoalPos = {-2, -120, 0};
     double[] parkPos = {0,-53,0};
 
-    //tolerances
-    double[] tolFinal = {1, 1, .5};
-    double[] tolLose = {2, 2, 5};
+    //settings
+    // tol, time to stay in tol, max loops, max speed
+    MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, 1);
+    MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, 1);
 
     double maxSpeed = 1;
 
@@ -64,6 +72,9 @@ public class Autonomous extends LinearOpMode {
         ru.useOpenCV = false;
         ru.useVuforiaInThread = false;
 
+        /////////
+        //start//
+        /////////
         robot = new Robot(this, ru);
 
         robot.vision.tofdActivationSequence();
@@ -88,30 +99,35 @@ public class Autonomous extends LinearOpMode {
             }
             robot.sendTelemetry();
         }
-        //if(true) return;
+
+        if(isStopRequested()) return;
+
         robot.start(false);
 
-        robot.launcher.setRPM(3500);
+        ////////////////
+        //main program//
+        ////////////////
+        goToDropZone(finalNumOfRings, 1);
 
-        goToDropZone(finalNumOfRings);
+        robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
-        robot.movement.moveToPosition(launchPos, tolFinal,15,7000,maxSpeed);
+        robot.movement.moveToPosition(launchPos, finalPosSettings);
 
-        robot.launcher.openGateServo();
-        for(int i = 0; i < 4; i++)
-        {
-           robot.launcher.waitForRPMInTolerance(2500);
-           robot.launcher.autoLaunch();
-        }
+        robot.launcher.autoLaunchDiskFromLine();
 
-        robot.movement.moveToPosition(secondGoalPos, tolFinal,1,7000,maxSpeed);
+        robot.movement.moveToPosition(secondGoalPos, finalPosSettings);
 
-        goToDropZone(finalNumOfRings);
+        goToDropZone(finalNumOfRings, 2);
 
-        robot.movement.moveToPosition(parkPos, tolFinal,1,7000,maxSpeed);
+        robot.movement.moveToPosition(parkPos,finalPosSettings);
     }
+
+
+    ///////////
+    //methods//
+    ///////////
     int getNumOfRings()
     {
         int currentNumOfRings = robot.vision.runTfodSequenceForRings();
@@ -127,26 +143,17 @@ public class Autonomous extends LinearOpMode {
         }
         return -1;
     }
-    void goToDropZone(int pos)
+
+    void goToDropZone(int pos, int goalNum, Runnable doBetweenPositions)
     {
-        if(pos == 0)
-        {
-            //robot.movement.moveToPosition(APosLose, tolLose,1,7000,1);
-            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-            robot.movement.moveToPosition(APos,tolFinal,15,7000,maxSpeed);
-        }
-        else if(pos == 1)
-        {
-            //robot.movement.moveToPosition(BPosLose, tolLose,1,7000,1);
-            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-            robot.movement.moveToPosition(BPos,tolFinal,15,7000,maxSpeed);
-        }
-        else if(pos == 4)
-        {
-            //robot.movement.moveToPosition(CPosLose, tolLose,1,7000,1);
-            robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-            robot.movement.moveToPosition(CPos,tolFinal,15,7000,maxSpeed);
-        }
+        robot.movement.moveToPosition(basePos, losePosSettings);
+        robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+        if(doBetweenPositions != null)doBetweenPositions.run();
+
+        if(pos == 0) { robot.movement.moveToPosition(APositions[goalNum - 1], finalPosSettings); }
+        else if(pos == 1) { robot.movement.moveToPosition(BPositions[goalNum - 1], finalPosSettings); }
+        else if(pos == 4) { robot.movement.moveToPosition(CPositions[goalNum - 1], finalPosSettings); }
     }
+    void goToDropZone(int pos, int goalNum) { goToDropZone(pos, goalNum); }
 }
 

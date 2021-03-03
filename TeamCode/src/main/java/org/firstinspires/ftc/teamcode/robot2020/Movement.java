@@ -140,6 +140,12 @@ public class Movement
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, movementSettings.moveXPID, movementSettings.moveYPID, movementSettings.turnPID, maxSpeed); }
 
+    void moveToPosition(double[] targetPos, MoveToPosSettings mtps)
+    {
+        if(mtps.isPIDValid()) moveToPosition(targetPos, mtps.getTol(), mtps.getTimesInTol(), mtps.getMaxRuntime(), mtps.getxPID(), mtps.getyPID(), mtps.getTurnPID(), mtps.getMaxPower());
+        else moveToPosition(targetPos, mtps.getTol(), mtps.getTimesInTol(), mtps.getMaxRuntime(), mtps.getMaxPower());
+    }
+
     //////////
     //teleOp//
     //////////
@@ -271,4 +277,96 @@ class MovementSettings
     GamepadButtonManager RotMoveStick = new GamepadButtonManager(GamepadButtons.rightJoyStickX);
 
     MovementSettings(){}
+}
+
+class MoveToPosSettings
+{
+    private double[] tol;
+    private int timesInTol;
+    private int maxRuntime;
+    private double maxPower;
+    private PIDCoefficients turnPID;
+    private PIDCoefficients xPID;
+    private PIDCoefficients yPID;
+
+    MoveToPosSettings(){}
+    MoveToPosSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower)
+    {
+        this.tol = tol;
+        this.timesInTol = timesInTol;
+        this.maxRuntime = maxRuntime;
+        this.maxPower = maxPower;
+    }
+
+    MoveToPosSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower, PIDCoefficients xPID, PIDCoefficients yPID, PIDCoefficients turnPID)
+    {
+        this.tol = tol;
+        this.timesInTol = timesInTol;
+        this.maxRuntime = maxRuntime;
+        this.maxPower = maxPower;
+        this.xPID = xPID;
+        this.yPID = yPID;
+        this.turnPID = turnPID;
+    }
+
+    public double[] getTol() {
+        return tol;
+    }
+
+    public void setTol(double[] tol) {
+        this.tol = tol;
+    }
+
+    public int getTimesInTol() {
+        return timesInTol;
+    }
+
+    public void setTimesInTol(int timesInTol) {
+        this.timesInTol = timesInTol;
+    }
+
+    public int getMaxRuntime() {
+        return maxRuntime;
+    }
+
+    public void setMaxRuntime(int maxRuntime) {
+        this.maxRuntime = maxRuntime;
+    }
+
+    public double getMaxPower() {
+        return maxPower;
+    }
+
+    public void setMaxPower(double maxPower) {
+        this.maxPower = maxPower;
+    }
+
+    public PIDCoefficients getTurnPID() {
+        return turnPID;
+    }
+
+    public void setTurnPID(PIDCoefficients turnPID) {
+        this.turnPID = turnPID;
+    }
+
+    public PIDCoefficients getxPID() {
+        return xPID;
+    }
+
+    public void setxPID(PIDCoefficients xPID) {
+        this.xPID = xPID;
+    }
+
+    public PIDCoefficients getyPID() {
+        return yPID;
+    }
+
+    public void setyPID(PIDCoefficients yPID) {
+        this.yPID = yPID;
+    }
+
+    public boolean isPIDValid()
+    {
+        return this.getTurnPID() != null && this.getxPID() != null && this.getyPID() != null;
+    }
 }
