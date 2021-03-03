@@ -147,7 +147,7 @@ public class Launcher {
         setRPM(0);
     }
 
-    void autoLaunchDiskFromLine()
+    void autoLaunchDiskFromLine(double maxPower)
     {
         if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
         else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
@@ -155,7 +155,7 @@ public class Launcher {
         {
             openGateServo();
             setRPM(launcherSettings.autoLaunchRPM);
-            goToLine();
+            goToLine(maxPower);
             for(int i = 0; i < 4; i++) {
                 waitForRPMInTolerance(1000);
                 autoLaunch();
@@ -163,20 +163,19 @@ public class Launcher {
         }
         setRPM(0);
     }
+    void autoLaunchDiskFromLine(){autoLaunchDiskFromLine(1);}
 
     void goToShootingPos()
     {
         if(robot.robotUsage.usePositionTracking && robot.movement != null)
         {
             if (robot.position.currentRobotPosition[1] > launcherSettings.minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], launcherSettings.minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .75); }
-            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 20000, .75); }
+            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 1000, .75); }
         }
     }
 
-    void goToLine()
-    {
-        robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 20000, 1);
-    }
+    void goToLine(double maxPower) { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 1000, maxPower); }
+    void goToLine(){goToLine(1);}
 
     ////////////////
     //calculations//

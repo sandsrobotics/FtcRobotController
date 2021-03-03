@@ -21,8 +21,8 @@ public class Autonomous extends LinearOpMode {
         {-16,-58,-90}
     };
     double[][] BPositions = {
-        {-4,-40,-90},
-        {4,-47.5,-90}
+        {2,-40,-90},
+        {7,-47.5,-90}
     };
     double[][] CPositions ={
         {-16,-4,-90},
@@ -113,7 +113,7 @@ public class Autonomous extends LinearOpMode {
 
         //robot.movement.moveToPosition(launchPos, finalPosSettings);
 
-        robot.launcher.autoLaunchDiskFromLine();
+        robot.launcher.autoLaunchDiskFromLine(.3);
 
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
 
