@@ -180,7 +180,7 @@ public class Position extends Thread
             else inMeasuringRange = -2;
             if(inMeasuringRange > -2 && robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors) {
                 robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
-
+                robot.delay(40);
                 //if (lastInMeasuringRange != inMeasuringRange) currentDistances = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
             }
             updateAll();
@@ -242,7 +242,7 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms
-    //float maxDistanceSensorChange = 10; //how off can the sensor be from the wheels before it is invalid(scale of 0 to 1)
+    //float maxDistanceSensorChange = 10; //how off can the sensor be from the wheels before it is invalid
 
     PositionSettings(){}
 }
