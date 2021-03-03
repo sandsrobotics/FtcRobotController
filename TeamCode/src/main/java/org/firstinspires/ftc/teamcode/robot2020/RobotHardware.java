@@ -135,7 +135,8 @@ public class RobotHardware
 
         DFR304Range.Parameters parameters = new DFR304Range.Parameters();
         parameters.maxRange = DFR304Range.MaxRange.CM500;
-        parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
+        //parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
+        parameters.measureMode = DFR304Range.MeasureMode.ACTIVE;
         for(DFR304Range distSen : distSensors) { distSen.initialize(parameters); }
     }
 

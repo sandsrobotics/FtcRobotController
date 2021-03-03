@@ -128,7 +128,8 @@ public class Position extends Thread
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
 
-        float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+        //float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
+        float[] temp = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
         //lastDistances = currentDistances;
 
         //for(int i = 0; i < temp.length; i++){if( lastDistances[i] - temp[i] > positionSettings.maxDistanceSensorChange) return;}
@@ -178,11 +179,11 @@ public class Position extends Thread
             //lastInMeasuringRange = inMeasuringRange;
             if(System.currentTimeMillis() - lastSensorReadingTime >= positionSettings.minMeasureDelay) inMeasuringRange = isRobotInRotationRange();
             else inMeasuringRange = -2;
-            if(inMeasuringRange > -2 && robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors) {
-                robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
-                robot.delay(40);
+            //if(inMeasuringRange > -2 && robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors) {
+               // robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
+                //robot.delay(40);
                 //if (lastInMeasuringRange != inMeasuringRange) currentDistances = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
-            }
+            //}
             updateAll();
             if(robot.robotUsage.usePositionTracking)
             {
