@@ -29,11 +29,10 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //distance sensor position
-    //float[] lastDistances;
-    //float[] currentDistances;
     long lastSensorReadingTime = 0;
     int inMeasuringRange = -2;
-    //int lastInMeasuringRange = inMeasuringRange;
+    float[] lastSensorReadings = new float[2];
+    float[] curSensorReadings = new float[2];
 
     //other
     volatile double positionAccuracy = 0;
@@ -47,21 +46,23 @@ public class Position extends Thread
     {
         positionSettings = new PositionSettings();
         this.robot = robot;
-        initVals();
     }
     Position(Robot robot, PositionSettings positionSettings)
     {
         this.positionSettings = positionSettings;
         this.robot = robot;
-        initVals();
     }
 
     void initVals()
     {
-        if(positionSettings.resetPos)
+        if(positionSettings.resetPos == 2)
         {
             currentRobotPosition = new double[]{positionSettings.startPositionX, positionSettings.startPositionY, positionSettings.startRotation};
             rotationOffset = -positionSettings.startRotation;
+        }
+        else if(positionSettings.resetPos == 1)
+        {
+            if(robot.robotUsage.useDistanceSensors && robot.robotHardware.distSensors != null)updatePosWithDistanceSensor(false);
         }
         else
         {
@@ -123,30 +124,33 @@ public class Position extends Thread
 
     private double distanceFromClosestIncrement() { return Math.abs(currentRotation - (inMeasuringRange * 90)); }
 
-    private void updatePosWithDistanceSensor()
+    private void updatePosWithDistanceSensor(boolean useCorrection)
     {
         double[] calPos = new double[2];
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
 
-        float[] temp = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        lastSensorReadings = curSensorReadings;
+        curSensorReadings = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
 
         if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
         {
-            float val = temp[0];
-            temp[0] = temp[1];
-            temp[1] = val;
+            float val = curSensorReadings[0];
+            curSensorReadings[0] = curSensorReadings[1];
+            curSensorReadings[1] = val;
         }
 
         for (int b = 0; b < 2; b++) //does the math for both x and y axis
         {
             double dis = positionSettings.distancesFromWall[arrayPos][b];
-            if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+            if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += curSensorReadings[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+            else dis -= curSensorReadings[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
             calPos[b] = dis;
         }
 
-        if(Math.abs(calPos[0] - currentRobotPosition[0]) <= positionSettings.maxDistanceSensorChange[0] && Math.abs(calPos[1] - currentRobotPosition[1]) <= positionSettings.maxDistanceSensorChange[1]){
+        if(!useCorrection ||
+                (Math.abs(calPos[0] - currentRobotPosition[0]) <= positionSettings.maxSensorOffsetFromEncoder[0] && Math.abs(calPos[1] - currentRobotPosition[1]) <= positionSettings.maxSensorOffsetFromEncoder[1]) &&
+                Math.abs(lastSensorReadings[0] - curSensorReadings[0]) <= positionSettings.maxSensorDistanceChange[0] && Math.abs(lastSensorReadings[1] - curSensorReadings[1]) <= positionSettings.maxSensorDistanceChange[1]){
             currentRobotPosition[0] = calPos[0];
             currentRobotPosition[1] = calPos[1];
             lastSensorReadingTime = System.currentTimeMillis();
@@ -159,7 +163,8 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        //if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        if(robot.robotUsage.useDistanceSensors) curSensorReadings = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        initVals();
     }
 
     void updateAll()
@@ -182,7 +187,7 @@ public class Position extends Thread
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
-                if(robot.robotUsage.useDistanceSensors && inMeasuringRange > -2) updatePosWithDistanceSensor();
+                if(robot.robotUsage.useDistanceSensors && inMeasuringRange > -2) updatePosWithDistanceSensor(true);
             }
         }
     }
@@ -208,7 +213,7 @@ class PositionSettings
     //user variables//
     //////////////////
     //position start
-    boolean resetPos = true;
+    int resetPos = 1; //0 is no rest, 1 is using distance sensor, and 2 is using hard coded value
     double startPositionX = -20; // in inches from center of goal
     double startPositionY = -124; // in inches from front of goal
     double startRotation = 0; //in degrees from goal
@@ -237,7 +242,8 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     int minMeasureDelay = 50; //how long before the sensors can measure again in ms
-    float[] maxDistanceSensorChange = {10, 10}; //how off can the sensor be from the wheels before it is invalid
+    float[] maxSensorOffsetFromEncoder = {25, 25}; //how off can the sensor be from the wheels before it is invalid
+    float[] maxSensorDistanceChange = {10,10};
 
     PositionSettings(){}
 }

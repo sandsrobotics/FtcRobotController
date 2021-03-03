@@ -259,7 +259,9 @@ public class RobotHardware
         float[] arr = new float[distSensors.size()];
         for(int i = 0; i < distSensors.size(); i++)
         {
-            distSensors.get(i).measureRange();
+            if(distSensors.get(i).getParameters().measureMode == DFR304Range.MeasureMode.PASSIVE) {
+                distSensors.get(i).measureRange();
+            }
             arr[i] = (float)distSensors.get(i).getDistanceCm() / Constants.cmPerInch;
         }
         return arr;
