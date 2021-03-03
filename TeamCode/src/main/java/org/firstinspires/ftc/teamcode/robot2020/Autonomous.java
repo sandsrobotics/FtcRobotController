@@ -82,7 +82,6 @@ public class Autonomous extends LinearOpMode {
 
         while(!isStarted() && !isStopRequested())
         {
-            robot.addTelemetry("stop",!isStopRequested());
             if(closeButton.getButtonPressed(gamepad1))
             {
                 closed = !closed;
@@ -113,7 +112,7 @@ public class Autonomous extends LinearOpMode {
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
-        robot.movement.moveToPosition(launchPos, finalPosSettings);
+        //robot.movement.moveToPosition(launchPos, finalPosSettings);
 
         robot.launcher.autoLaunchDiskFromLine();
 
@@ -154,6 +153,6 @@ public class Autonomous extends LinearOpMode {
         else if(pos == 1) { robot.movement.moveToPosition(BPositions[goalNum - 1], finalPosSettings); }
         else if(pos == 4) { robot.movement.moveToPosition(CPositions[goalNum - 1], finalPosSettings); }
     }
-    void goToDropZone(int pos, int goalNum) { goToDropZone(pos, goalNum); }
+    void goToDropZone(int pos, int goalNum) { goToDropZone(pos, goalNum, null); }
 }
 
