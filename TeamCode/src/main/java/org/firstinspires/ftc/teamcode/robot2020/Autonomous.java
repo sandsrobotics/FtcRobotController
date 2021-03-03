@@ -21,16 +21,15 @@ public class Autonomous extends LinearOpMode {
         {-16,-58,-90}
     };
     double[][] BPositions = {
-        {2,-30,-90},
-        {2,-30,-90}
+        {2,-35,-90},
+        {7,-45,-90}
     };
     double[][] CPositions ={
         {-16,-4,-90},
         {-16,-4,-90}
     };
 
-    double[] launchPos = {0, -65, 4};
-    double[] secondGoalPos = {-2, -120, 0};
+    double[] secondGoalPos = {-2, -110, 0};
     double[] parkPos = {0,-53,0};
 
     //settings
@@ -116,9 +115,17 @@ public class Autonomous extends LinearOpMode {
 
         robot.launcher.autoLaunchDiskFromLine();
 
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
+
         robot.movement.moveToPosition(secondGoalPos, finalPosSettings);
 
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, false);
+
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
+
         goToDropZone(finalNumOfRings, 2);
+
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
         robot.movement.moveToPosition(parkPos,finalPosSettings);
     }

@@ -150,7 +150,7 @@ class GrabberSettings
     protected int capturePos = 1440; //position of grabber arm when grabbing a wobble goal
     protected int horizontalPos = 0; //position of grabber arm when in storage
     protected int putOverPos = 1000; //position of grabber arm to put the wobble goal over the wall
-    protected int restPos = 0; //position of grabber arm when at rest on the side of robot
+    protected int restPos = 1600; //position of grabber arm when at rest on the side of robot
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};

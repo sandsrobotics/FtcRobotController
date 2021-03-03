@@ -139,7 +139,7 @@ public class Launcher {
         {
             setRPM(RPM);
             goToShootingPos();
-            for(int i = 0; i < 3; i++) {
+            for(int i = 0; i < 4; i++) {
                 waitForRPMInTolerance(1000);
                 autoLaunch();
             }
@@ -335,7 +335,7 @@ class LauncherSettings
     double RPMTolerance = 300;
 
     //auto launch
-    double minLaunchDistance = -52; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double autoLaunchRPM = 3500; //RPM to launch from line
     double autoLaunchAngle = 0; // angle offset to launch from line
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
