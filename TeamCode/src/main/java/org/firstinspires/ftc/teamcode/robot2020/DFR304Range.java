@@ -21,7 +21,35 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // User Methods
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    public short getDistanceCm() { return readShort(Register.DIST_H_INDEX); }
+    public short getDistanceCm()
+    {
+        /*
+        lastDistance = currentDistance;
+        currentDistance = readShort(Register.DIST_H_INDEX);
+
+        lastMeasureTime = currentMeasureTime;
+        currentMeasureTime = System.currentTimeMillis();
+
+        if(currentDistance == -1)
+        {
+            setToOldVals();
+            return -1;
+        }
+        else if((float)(lastDistance - currentDistance) / ((float)(currentMeasureTime - lastMeasureTime) / 1000) <= maxDistancePerSecond){return currentDistance;}
+
+        setToOldVals();
+        return -2;
+
+         */
+        return readShort(Register.DIST_H_INDEX);
+    }
+    /*
+    private void setToOldVals()
+    {
+        currentDistance = lastDistance;
+        currentMeasureTime = lastMeasureTime;
+    }
+     */
     public short getTemperatureC() { return (short)(readShort(Register.TEMP_H_INDEX)/10); }
     public short getDistanceIn()
     {
@@ -130,6 +158,11 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x11);
     public final static byte CMD_DISTANCE_MEASURE = (0x01);
+    //public short lastDistance = 0;//in cm
+    //public short currentDistance = 0;//in cm
+    //public long lastMeasureTime = 0;//in ms
+    //public long currentMeasureTime = 0;//in ms
+    //public final float maxDistancePerSecond = 24 * 2.54f;//in cm
 
     public DFR304Range(I2cDeviceSynch deviceClient)
     {

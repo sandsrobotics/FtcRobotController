@@ -134,7 +134,7 @@ public class RobotHardware
         distSensors = Arrays.asList(distSensor1, distSensor2);
 
         DFR304Range.Parameters parameters = new DFR304Range.Parameters();
-        parameters.maxRange = DFR304Range.MaxRange.CM500;
+        parameters.maxRange = DFR304Range.MaxRange.CM300;
         //parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
         parameters.measureMode = DFR304Range.MeasureMode.ACTIVE;
         for(DFR304Range distSen : distSensors) { distSen.initialize(parameters); }

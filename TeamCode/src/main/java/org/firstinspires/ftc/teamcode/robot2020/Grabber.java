@@ -150,7 +150,7 @@ class GrabberSettings
     protected int capturePos = 1440; //position of grabber arm when grabbing a wobble goal
     protected int horizontalPos = 0; //position of grabber arm when in storage
     protected int putOverPos = 1000; //position of grabber arm to put the wobble goal over the wall
-    protected int restPos = 1600; //position of grabber arm when at rest on the side of robot
+    protected int restPos = 1500; //position of grabber arm when at rest on the side of robot
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
@@ -161,12 +161,12 @@ class GrabberSettings
     protected GamepadButtonManager moveGrabberStick = new GamepadButtonManager(GamepadButtons.combinedTRIGGERS);//manual adjust of grabber
     protected double stickTolerance = .03;
     protected double stickToTicksMultiplier = 20;
-    protected GamepadButtonManager grabButton = new GamepadButtonManager(GamepadButtons.Y);//open and close the grabber claws
+    protected GamepadButtonManager grabButton = new GamepadButtonManager(GamepadButtons.leftBUMPER);//open and close the grabber claws
     //preset positions
-    protected GamepadButtonManager captureButton = new GamepadButtonManager(GamepadButtons.A);
-    protected GamepadButtonManager horizontalButton = new GamepadButtonManager(GamepadButtons.B);
-    protected GamepadButtonManager putOverButton = new GamepadButtonManager(GamepadButtons.X);
-    protected GamepadButtonManager restPosButton = new GamepadButtonManager(GamepadButtons.B);
+    protected GamepadButtonManager captureButton = new GamepadButtonManager(GamepadButtons.dpadDOWN);
+    protected GamepadButtonManager horizontalButton = new GamepadButtonManager(GamepadButtons.dpadUP);
+    protected GamepadButtonManager putOverButton = new GamepadButtonManager(GamepadButtons.dpadLEFT);
+    protected GamepadButtonManager restPosButton = new GamepadButtonManager(GamepadButtons.dpadRIGHT);
 
     //homing
     int homingSpeed = 50;

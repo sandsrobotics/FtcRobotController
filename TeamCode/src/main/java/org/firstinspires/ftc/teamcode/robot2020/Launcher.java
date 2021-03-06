@@ -97,7 +97,7 @@ public class Launcher {
         if(launcherSettings.revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
 
         //setting motor
-        if (runWheelOnTrigger) robot.robotHardware.launcherWheelMotor.setPower(launcherSettings.revPowerSlide.getSliderValue(gamepad));
+        if (runWheelOnTrigger) robot.robotHardware.launcherWheelMotor.setPower(0);//launcherSettings.revPowerSlide.getSliderValue(gamepad));
         else setRPM();
     }
 
@@ -298,7 +298,7 @@ class LauncherSettings
     //rev
     GamepadButtonManager revIncreaseButton = new GamepadButtonManager(GamepadButtons.B);
     GamepadButtonManager revDecreaseButton = new GamepadButtonManager(GamepadButtons.X);
-    GamepadButtonManager revPowerSlide = new GamepadButtonManager(GamepadButtons.leftTRIGGER);
+    //GamepadButtonManager revPowerSlide = new GamepadButtonManager(GamepadButtons.leftTRIGGER);
     GamepadButtonManager revModeButton = new GamepadButtonManager(GamepadButtons.Y);
     //launch
     GamepadButtonManager launchButton = new GamepadButtonManager(GamepadButtons.A);
