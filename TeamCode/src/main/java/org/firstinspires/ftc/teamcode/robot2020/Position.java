@@ -200,7 +200,11 @@ public class Position extends Thread
 
             if(inMeasuringRange > -2) {
                 updateDistanceSensor(1);
-                if(inMeasuringRange != lastInMeasuringRange) { updatePosWithDistanceSensor(false); lastInMeasuringRange = inMeasuringRange;}
+                if(inMeasuringRange != lastInMeasuringRange) {
+                    updateDistanceSensor(2);
+                    updatePosWithDistanceSensor(false);
+                    lastInMeasuringRange = inMeasuringRange;
+                }
             }
 
             updateAll();
@@ -266,7 +270,7 @@ class PositionSettings
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 15; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
-    float[] maxPositionChange = {10,10}; //max distance travalable in one second(in inches)
+    float[] maxPositionChange = {15,15}; //max distance travalable in one second(in inches)
     int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
 
     PositionSettings(){}
