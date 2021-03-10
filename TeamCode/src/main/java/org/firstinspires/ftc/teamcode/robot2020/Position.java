@@ -34,6 +34,7 @@ public class Position extends Thread
     private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
+    private int lastInMeasuringRange = -2;
 
 
     //other class
@@ -189,9 +190,17 @@ public class Position extends Thread
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
+            lastInMeasuringRange = inMeasuringRange;
             inMeasuringRange = isRobotInRotationRange();
 
-            if(inMeasuringRange > -2) { updateDistanceSensor(1); }
+            if(inMeasuringRange > -2) {
+                if(lastInMeasuringRange != inMeasuringRange)
+                {
+                    currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+                    lastInMeasuringRange = inMeasuringRange;
+                }
+                updateDistanceSensor(1);
+            }
 
             updateAll();
 
@@ -202,7 +211,7 @@ public class Position extends Thread
                 {
                     updateDistanceSensor(2);
                     //updatePosWithDistanceSensor(true);
-                    updatePosWithDistanceSensor(false);
+                    updatePosWithDistanceSensor(true);
                 }
             }
         }
@@ -256,9 +265,9 @@ class PositionSettings
         new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}, // for 180 degrees
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
-    double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
+    double angleTolerance = 15; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     float[] maxDistanceSensorChange = {10,10}; //max distance travalable in one second(in inches)
-    int minDelayBetweenSensorReadings = 40; //how long it should wait to get the distance from last distance reading
+    int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
 
     PositionSettings(){}
 }
