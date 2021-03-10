@@ -23,8 +23,9 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public short getDistanceCm()
     {
-        updateDistances(readShort(Register.DIST_H_INDEX));
-        return getMax(distances);
+        //updateDistances(readShort(Register.DIST_H_INDEX));
+        //return getMax(distances);
+        return readShort(Register.DIST_H_INDEX);
     }
 
     public short getTemperatureC() { return (short)(readShort(Register.TEMP_H_INDEX)/10); }

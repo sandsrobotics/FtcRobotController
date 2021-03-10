@@ -206,7 +206,7 @@ public class Position extends Thread
                 if(inMeasuringRange > -2)
                 {
                     updateDistanceSensor(2);
-                    updatePosWithDistanceSensor(true);
+                    updatePosWithDistanceSensor(false);
                 }
             }
         }
