@@ -136,7 +136,7 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     public final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x11);
     public final static byte CMD_DISTANCE_MEASURE = (0x01);
 
-    private static final int numOfLastValues = 3; //how many distances should it keep to get highest value from (a higher value will be more accurate but cause more lag, default = 3)
+    private static final int numOfLastValues = 1; //how many distances should it keep to get highest value from (a higher value will be more accurate but cause more lag, default = 3)
     private short[] distances = new short[numOfLastValues];
 
     private void initDistances()
