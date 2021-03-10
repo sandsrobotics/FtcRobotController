@@ -266,7 +266,7 @@ public class RobotHardware
         return arr;
     }
 
-    public float getDistances(DFR304Range distSensor)
+    public float getDistance(DFR304Range distSensor)
     {
         if(distSensor.getParameters().measureMode == DFR304Range.MeasureMode.PASSIVE) { distSensor.measureRange(); }
         return distSensor.getDistanceIn();

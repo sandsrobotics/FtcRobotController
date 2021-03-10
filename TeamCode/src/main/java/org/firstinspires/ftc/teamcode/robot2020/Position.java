@@ -29,12 +29,10 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //distance sensor position
-    //private float[] lastDistances;
-    //private float[] currentDistances;
     private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = 0;
-    //private int lastInMeasuringRange = -2;
+    private int lastInMeasuringRange = -2;
 
 
     //other class
@@ -166,7 +164,7 @@ public class Position extends Thread
         if(timeTillNextRead > 0) {
             robot.sleep(timeTillNextRead);
         }
-        temp[sensor - 1] = robot.robotHardware.getDistances(robot.robotHardware.distSensors.get(sensor - 1));
+        temp[sensor - 1] = robot.robotHardware.getDistance(robot.robotHardware.distSensors.get(sensor - 1));
         lastSensorReadingTime = System.currentTimeMillis();
     }
 
@@ -177,11 +175,11 @@ public class Position extends Thread
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
         //if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-        if(robot.robotUsage.useDistanceSensors) {
-            updateDistanceSensor(1);
-            updateDistanceSensor(2);
-            updatePosWithDistanceSensor(false);
-        }
+        //if(robot.robotUsage.useDistanceSensors) {
+           // updateDistanceSensor(1);
+           // updateDistanceSensor(2);
+           // updatePosWithDistanceSensor(false);
+        //}
     }
 
     void updateAll()
@@ -198,16 +196,11 @@ public class Position extends Thread
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
-            //lastInMeasuringRange = inMeasuringRange;
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
-                //if(lastInMeasuringRange != inMeasuringRange)
-                //{
-                    //currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-                    //lastInMeasuringRange = inMeasuringRange;
-                //}
                 updateDistanceSensor(1);
+                if(inMeasuringRange != lastInMeasuringRange) { updatePosWithDistanceSensor(false); lastInMeasuringRange = inMeasuringRange;}
             }
 
             updateAll();
@@ -218,7 +211,6 @@ public class Position extends Thread
                 if(inMeasuringRange > -2)
                 {
                     updateDistanceSensor(2);
-                    //updatePosWithDistanceSensor(true);
                     updatePosWithDistanceSensor(true);
                 }
             }
