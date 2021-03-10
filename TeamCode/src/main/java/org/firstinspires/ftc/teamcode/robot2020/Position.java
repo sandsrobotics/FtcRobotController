@@ -33,7 +33,7 @@ public class Position extends Thread
     //private float[] currentDistances;
     private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
-    private int inMeasuringRange = -2;
+    private int inMeasuringRange = 0;
     //private int lastInMeasuringRange = -2;
 
 
