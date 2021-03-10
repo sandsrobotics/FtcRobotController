@@ -128,9 +128,6 @@ public class Position extends Thread
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
 
-        //lastDistances = currentDistances;
-
-
         if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
         {
             float val = temp[0];
@@ -174,12 +171,6 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        //if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-        //if(robot.robotUsage.useDistanceSensors) {
-           // updateDistanceSensor(1);
-           // updateDistanceSensor(2);
-           // updatePosWithDistanceSensor(false);
-        //}
     }
 
     void updateAll()
@@ -196,6 +187,7 @@ public class Position extends Thread
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
+            lastInMeasuringRange = inMeasuringRange;
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
@@ -203,7 +195,6 @@ public class Position extends Thread
                 if(inMeasuringRange != lastInMeasuringRange) {
                     updateDistanceSensor(2);
                     updatePosWithDistanceSensor(false);
-                    lastInMeasuringRange = inMeasuringRange;
                 }
             }
 
@@ -269,7 +260,7 @@ class PositionSettings
         new MathSign[]{MathSign.SUBTRACT, MathSign.ADD}, // for 180 degrees
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
-    double angleTolerance = 15; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
+    double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     float[] maxPositionChange = {15,15}; //max distance travalable in one second(in inches)
     int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
 
