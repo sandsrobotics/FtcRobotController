@@ -191,6 +191,7 @@ public class Position extends Thread
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
+                if(inMeasuringRange != lastInMeasuringRange) {robot.sleep(50);}
                 updateDistanceSensor(1);
                 if(inMeasuringRange != lastInMeasuringRange) {
                     updateDistanceSensor(2);
@@ -206,7 +207,7 @@ public class Position extends Thread
                 if(inMeasuringRange > -2)
                 {
                     updateDistanceSensor(2);
-                    updatePosWithDistanceSensor(false);
+                    updatePosWithDistanceSensor(true);
                 }
             }
         }
