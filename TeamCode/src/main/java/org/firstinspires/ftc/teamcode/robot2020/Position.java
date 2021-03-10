@@ -29,7 +29,7 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //distance sensor position
-    private float[] lastDistances;
+    //private float[] lastDistances;
     private float[] currentDistances;
     private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
@@ -130,16 +130,8 @@ public class Position extends Thread
         int arrayPos = inMeasuringRange;
         if(inMeasuringRange == -1) arrayPos = 3;
 
-        lastDistances = currentDistances;
+        //lastDistances = currentDistances;
 
-        if(useCorrection) {
-            for (int i = 0; i < temp.length; i++) {
-                if (Math.abs(temp[i] - lastDistances[i]) > positionSettings.maxDistanceSensorChange[i])
-                    return;
-            }
-        }
-
-        currentDistances = temp;
 
         if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
         {
@@ -148,13 +140,24 @@ public class Position extends Thread
             temp[1] = val;
         }
 
+        double[] calcDis = new double[2];
         for (int b = 0; b < 2; b++) //does the math for both x and y axis
         {
             double dis = positionSettings.distancesFromWall[arrayPos][b];
             if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
             else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            currentRobotPosition[b] = dis;
+            calcDis[b] = dis;
         }
+
+        if(useCorrection) {
+            for (int i = 0; i < 2; i++) {
+                if (Math.abs(calcDis[i] - currentRobotPosition[i]) > positionSettings.maxPositionChange[i])
+                    return;
+            }
+        }
+
+        currentRobotPosition[0] = calcDis[0];
+        currentRobotPosition[1] = calcDis[1];
     }
 
     private void updateDistanceSensor(int sensor)
@@ -266,7 +269,7 @@ class PositionSettings
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 15; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
-    float[] maxDistanceSensorChange = {10,10}; //max distance travalable in one second(in inches)
+    float[] maxPositionChange = {10,10}; //max distance travalable in one second(in inches)
     int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
 
     PositionSettings(){}
