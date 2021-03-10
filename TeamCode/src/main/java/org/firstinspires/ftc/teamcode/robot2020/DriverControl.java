@@ -38,12 +38,6 @@ public class DriverControl extends LinearOpMode
         {
             if(mode == 0)
             {
-                if(lastPIDF.p != PIDF.p || lastPIDF.i != PIDF.i || lastPIDF.d != PIDF.d || lastPIDF.f != PIDF.f)
-                {
-                    robot.robotHardware.launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, PIDF);
-                    robot.robotHardware.launcherWheelMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    lastPIDF = PIDF;
-                }
                 robot.movement.moveForTeleOp(gamepad1, breakButton, true);
                 robot.grabber.runForTeleOp(gamepad1, true);
                 robot.launcher.runForTeleOp(gamepad2,true);

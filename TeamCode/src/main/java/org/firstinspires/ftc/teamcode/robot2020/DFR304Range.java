@@ -23,37 +23,14 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public short getDistanceCm()
     {
-        /*
-        lastDistance = currentDistance;
-        currentDistance = readShort(Register.DIST_H_INDEX);
-
-        lastMeasureTime = currentMeasureTime;
-        currentMeasureTime = System.currentTimeMillis();
-
-        if(currentDistance == -1)
-        {
-            setToOldVals();
-            return -1;
-        }
-        else if((float)(lastDistance - currentDistance) / ((float)(currentMeasureTime - lastMeasureTime) / 1000) <= maxDistancePerSecond){return currentDistance;}
-
-        setToOldVals();
-        return -2;
-
-         */
-        return readShort(Register.DIST_H_INDEX);
+        updateDistances(readShort(Register.DIST_H_INDEX));
+        return getMax(distances);
     }
-    /*
-    private void setToOldVals()
-    {
-        currentDistance = lastDistance;
-        currentMeasureTime = lastMeasureTime;
-    }
-     */
+
     public short getTemperatureC() { return (short)(readShort(Register.TEMP_H_INDEX)/10); }
-    public short getDistanceIn()
+    public float getDistanceIn()
     {
-        return (short)(getDistanceCm() / 2.54);
+        return (getDistanceCm() / 2.54f);
     }
     public short getTemperatureF()
     {
@@ -158,11 +135,31 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public final static I2cAddr ADDRESS_I2C_DEFAULT = I2cAddr.create7bit(0x11);
     public final static byte CMD_DISTANCE_MEASURE = (0x01);
-    //public short lastDistance = 0;//in cm
-    //public short currentDistance = 0;//in cm
-    //public long lastMeasureTime = 0;//in ms
-    //public long currentMeasureTime = 0;//in ms
-    //public final float maxDistancePerSecond = 24 * 2.54f;//in cm
+
+    private static final int numOfLastValues = 3; //how many distances should it keep to get highest value from (a higher value will be more accurate but cause more lag, default = 3)
+    private short[] distances = new short[numOfLastValues];
+
+    private void initDistances()
+    {
+        for(int i = 0; i < distances.length; i++) distances[i] = 0;
+    }
+
+    private void updateDistances(short distance) {
+        for(int i = distances.length - 1; i > 0; i--) {
+            distances[i] = distances[i - 1];
+        }
+        distances[0] = distance;
+    }
+
+    private short getMax(short[] inputArray){
+        short maxValue = inputArray[0];
+        for(short i = 1; i < inputArray.length; i++){
+            if(inputArray[i] > maxValue){
+                maxValue = inputArray[i];
+            }
+        }
+        return maxValue;
+    }
 
     public DFR304Range(I2cDeviceSynch deviceClient)
     {
@@ -172,6 +169,7 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
         super.registerArmingStateCallback(false); // Deals with USB cables getting unplugged
         // Sensor starts off disengaged so we can change things like I2C address. Need to engage
         this.deviceClient.engage();
+        initDistances();
     }
 
     protected void setOptimalReadWindow()

@@ -134,9 +134,8 @@ public class RobotHardware
         distSensors = Arrays.asList(distSensor1, distSensor2);
 
         DFR304Range.Parameters parameters = new DFR304Range.Parameters();
-        parameters.maxRange = DFR304Range.MaxRange.CM300;
-        //parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
-        parameters.measureMode = DFR304Range.MeasureMode.ACTIVE;
+        parameters.maxRange = DFR304Range.MaxRange.CM500;
+        parameters.measureMode = DFR304Range.MeasureMode.PASSIVE;
         for(DFR304Range distSen : distSensors) { distSen.initialize(parameters); }
     }
 
@@ -262,9 +261,15 @@ public class RobotHardware
             if(distSensors.get(i).getParameters().measureMode == DFR304Range.MeasureMode.PASSIVE) {
                 distSensors.get(i).measureRange();
             }
-            arr[i] = (float)distSensors.get(i).getDistanceCm() / Constants.cmPerInch;
+            arr[i] = distSensors.get(i).getDistanceIn();
         }
         return arr;
+    }
+
+    public float getDistances(DFR304Range distSensor)
+    {
+        if(distSensor.getParameters().measureMode == DFR304Range.MeasureMode.PASSIVE) { distSensor.measureRange(); }
+        return distSensor.getDistanceIn();
     }
 
     public void setSensorsToMeasure(List<DFR304Range> distSensors)
@@ -275,7 +280,7 @@ public class RobotHardware
     public float[] getDistancesAfterMeasure(List<DFR304Range> distSensors)
     {
         float[] arr = new float[distSensors.size()];
-        for(int i = 0; i < distSensors.size(); i++) { arr[i] = (float)distSensors.get(i).getDistanceCm() / Constants.cmPerInch; }
+        for(int i = 0; i < distSensors.size(); i++) { arr[i] = distSensors.get(i).getDistanceIn(); }
         return arr;
     }
 

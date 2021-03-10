@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import static java.lang.Thread.currentThread;
+
 
 @Config
 public class Robot
@@ -200,6 +202,15 @@ public class Robot
         while(System.currentTimeMillis() - last < ms)
         {
             if(stop())break;
+        }
+    }
+
+    void sleep(long ms)
+    {
+        try {
+            currentThread().sleep(ms);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
