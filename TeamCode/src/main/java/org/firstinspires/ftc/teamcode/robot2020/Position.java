@@ -30,11 +30,11 @@ public class Position extends Thread
 
     //distance sensor position
     //private float[] lastDistances;
-    private float[] currentDistances;
+    //private float[] currentDistances;
     private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
-    private int lastInMeasuringRange = -2;
+    //private int lastInMeasuringRange = -2;
 
 
     //other class
@@ -176,7 +176,12 @@ public class Position extends Thread
     void initialize()
     {
         currMotorPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
-        if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        //if(robot.robotUsage.useDistanceSensors) currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+        if(robot.robotUsage.useDistanceSensors) {
+            updateDistanceSensor(1);
+            updateDistanceSensor(2);
+            updatePosWithDistanceSensor(false);
+        }
     }
 
     void updateAll()
@@ -193,15 +198,15 @@ public class Position extends Thread
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
             //put run stuff in here
-            lastInMeasuringRange = inMeasuringRange;
+            //lastInMeasuringRange = inMeasuringRange;
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
-                if(lastInMeasuringRange != inMeasuringRange)
-                {
-                    currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-                    lastInMeasuringRange = inMeasuringRange;
-                }
+                //if(lastInMeasuringRange != inMeasuringRange)
+                //{
+                    //currentDistances = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
+                    //lastInMeasuringRange = inMeasuringRange;
+                //}
                 updateDistanceSensor(1);
             }
 
