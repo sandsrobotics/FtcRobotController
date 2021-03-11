@@ -186,28 +186,19 @@ public class Position extends Thread
         if(robot.robotUsage.usePositionTracking) { initialize();}
         while (!this.isInterrupted() && !robot.opMode.isStopRequested())
         {
-            //put run stuff in here
-            lastInMeasuringRange = inMeasuringRange;
             inMeasuringRange = isRobotInRotationRange();
-
-            if(inMeasuringRange > -2) {
-                if(inMeasuringRange != lastInMeasuringRange) {robot.sleep(50);}
-                updateDistanceSensor(1);
-                if(inMeasuringRange != lastInMeasuringRange) {
-                    updateDistanceSensor(2);
-                    updatePosWithDistanceSensor(false);
-                }
+            if(robot.robotUsage.usePositionTracking && robot.robotUsage.useDistanceSensors && inMeasuringRange > -2)
+            {
+                robot.robotHardware.setSensorsToMeasure(robot.robotHardware.distSensors);
+                temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
             }
-
             updateAll();
-
             if(robot.robotUsage.usePositionTracking)
             {
                 getPosFromEncoder();
                 if(inMeasuringRange > -2)
                 {
-                    updateDistanceSensor(2);
-                    updatePosWithDistanceSensor(true);
+                    updatePosWithDistanceSensor(false);
                 }
             }
         }
@@ -245,7 +236,7 @@ class PositionSettings
         new float[]{-29.133f, 1.968f}, // for 0 degrees
         new float[]{52.755f, 1.968f}, // for 90 degrees
         new float[]{50.3932f, -127.165f}, // for 180 degrees
-        new float[]{-126.771f,  -30.314f}  // for -90/270 degrees
+        new float[]{-126.771f, -30.314f}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
@@ -263,7 +254,7 @@ class PositionSettings
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
     float[] maxPositionChange = {15,15}; //max distance travalable in one second(in inches)
-    int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
+    int minDelayBetweenSensorReadings = 0; //how long it should wait to get the distance from last distance reading
 
     PositionSettings(){}
 }

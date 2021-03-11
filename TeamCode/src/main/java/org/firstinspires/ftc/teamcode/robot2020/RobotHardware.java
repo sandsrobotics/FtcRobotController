@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import static java.lang.System.currentTimeMillis;
 
 import java.util.Arrays;
 import java.util.List;
@@ -274,7 +275,11 @@ public class RobotHardware
 
     public void setSensorsToMeasure(List<DFR304Range> distSensors)
     {
-        for(int i = 0; i < distSensors.size(); i++) { distSensors.get(i).measureRange();}
+        for(int i = 0; i < distSensors.size(); i++) {
+            distSensors.get(i).measureRange();
+            long start = currentTimeMillis();
+            while(currentTimeMillis() - start < 50){}
+        }
     }
 
     public float[] getDistancesAfterMeasure(List<DFR304Range> distSensors)
