@@ -357,7 +357,7 @@ class LauncherSettings
     protected String calibrationFileName =  "LauncherConfig.json";
 
     //other
-    double startRPM = 3500;
+    double startRPM = 3400;
     double RPMIncrements = 50;
     double RPMTolerance = 250;
     double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
@@ -368,7 +368,7 @@ class LauncherSettings
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     //power shots
-    double powerShotRPM = 3300; //RPM to launch from power shots
+    double powerShotRPM = 3100; //RPM to launch from power shots
     double[] powerShotXPos = {18, 25.5, 33}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double[] powerShotPosTol = {.5,.5,.5}; //the tolerance of position and angle required
 
