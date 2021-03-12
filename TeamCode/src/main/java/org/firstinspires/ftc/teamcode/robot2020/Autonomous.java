@@ -18,7 +18,7 @@ public class Autonomous extends LinearOpMode {
     double[] basePos = {-16, -80, 0};
 
     double[][] APositions = {
-        {-42,-66,-90},
+        {-35,-66,-90},
         {-24,-72,-90}
     };
     double[][] BPositions = {
