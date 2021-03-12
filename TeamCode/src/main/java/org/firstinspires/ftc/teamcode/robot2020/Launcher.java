@@ -174,7 +174,7 @@ public class Launcher {
         }
     }
 
-    void goToLine(double maxPower) { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 1000, maxPower); }
+    void goToLine(double maxPower) { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 7500, maxPower); }
     void goToLine(){goToLine(1);}
 
     ////////////////

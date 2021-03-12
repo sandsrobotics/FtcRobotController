@@ -13,8 +13,6 @@ public class DriverControl extends LinearOpMode
     Robot robot;
     GamepadButtonManager autoLaunchButton;
     GamepadButtonManager breakButton = new GamepadButtonManager(GamepadButtons.leftJoyStickBUTTON);
-    public static PIDFCoefficients PIDF = new PIDFCoefficients(10,3,0,0);
-    public PIDFCoefficients lastPIDF = new PIDFCoefficients(0,0,0,0);
 
     short mode = 0;
 
@@ -42,6 +40,7 @@ public class DriverControl extends LinearOpMode
                 robot.grabber.runForTeleOp(gamepad1, true);
                 robot.launcher.runForTeleOp(gamepad2,true);
                 if(autoLaunchButton.getButtonHeld()) mode = 1;
+
                 robot.sendTelemetry();
             }
             else if(mode == 1)

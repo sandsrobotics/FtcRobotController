@@ -29,7 +29,7 @@ public class Position extends Thread
     volatile AngularVelocity currentAngularVelocity = new AngularVelocity();
 
     //distance sensor position
-    private float[] temp = new float[2];
+   // private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
 
@@ -124,44 +124,54 @@ public class Position extends Thread
 
     private void updatePosWithDistanceSensor(boolean useCorrection)
     {
-        int arrayPos = inMeasuringRange;
-        if(inMeasuringRange == -1) arrayPos = 3;
+        if(inMeasuringRange > -2) {
+            sleepTillNextSensorReading();
+            float[] temp = robot.robotHardware.getDistancesAfterMeasure(robot.robotHardware.distSensors);
 
-        if(positionSettings.sensorPosition[arrayPos] == SensorNum.TWO)
-        {
-            float val = temp[0];
-            temp[0] = temp[1];
-            temp[1] = val;
-        }
+            int arrayPos = inMeasuringRange;
+            if (inMeasuringRange == -1) arrayPos = 3;
 
-        double[] calcDis = new double[2];
-        for (int b = 0; b < 2; b++) //does the math for both x and y axis
-        {
-            double dis = positionSettings.distancesFromWall[arrayPos][b];
-            if (positionSettings.operations[arrayPos][b] == MathSign.ADD) dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
-            calcDis[b] = dis;
-        }
-
-        if(useCorrection) {
-            for (int i = 0; i < 2; i++) {
-                if (Math.abs(calcDis[i] - currentRobotPosition[i]) > positionSettings.maxPositionChange[i])
-                    return;
+            if (positionSettings.sensorPosition[arrayPos] == SensorNum.TWO) {
+                float val = temp[0];
+                temp[0] = temp[1];
+                temp[1] = val;
             }
-        }
 
-        currentRobotPosition[0] = calcDis[0];
-        currentRobotPosition[1] = calcDis[1];
+            double[] calcDis = new double[2];
+            for (int b = 0; b < 2; b++) //does the math for both x and y axis
+            {
+                double dis = positionSettings.distancesFromWall[arrayPos][b];
+                if (positionSettings.operations[arrayPos][b] == MathSign.ADD)
+                    dis += temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+                else dis -= temp[b] * Math.cos(Math.toRadians(distanceFromClosestIncrement()));
+                calcDis[b] = dis;
+            }
+
+            if (useCorrection) {
+                for (int i = 0; i < 2; i++) {
+                    if (Math.abs(calcDis[i] - currentRobotPosition[i]) > positionSettings.maxPositionChange[i])
+                        return;
+                }
+            }
+
+            currentRobotPosition[0] = calcDis[0];
+            currentRobotPosition[1] = calcDis[1];
+        }
     }
 
     private void updateDistanceSensor(int sensor)
+    {
+        sleepTillNextSensorReading();
+        robot.robotHardware.distSensors.get(sensor - 1).measureRange();
+        lastSensorReadingTime = System.currentTimeMillis();
+    }
+
+    private void sleepTillNextSensorReading()
     {
         int timeTillNextRead = positionSettings.minDelayBetweenSensorReadings - (int)(System.currentTimeMillis() - lastSensorReadingTime);
         if(timeTillNextRead > 0) {
             robot.sleep(timeTillNextRead);
         }
-        temp[sensor - 1] = robot.robotHardware.getDistance(robot.robotHardware.distSensors.get(sensor - 1));
-        lastSensorReadingTime = System.currentTimeMillis();
     }
 
     //////////////////
@@ -196,10 +206,15 @@ public class Position extends Thread
 
             if(robot.robotUsage.usePositionTracking)
             {
-                getPosFromEncoder();
                 if(inMeasuringRange > -2)
                 {
                     updateDistanceSensor(2);
+                }
+
+                getPosFromEncoder();
+
+                if(inMeasuringRange > -2)
+                {
                     updatePosWithDistanceSensor(false);
                 }
             }
