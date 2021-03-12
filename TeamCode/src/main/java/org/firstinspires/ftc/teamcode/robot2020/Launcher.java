@@ -126,9 +126,9 @@ public class Launcher {
         if(telemetry)telemetryDataOut();
     }
 
-    ///////////////////////////////
-    //autonomous launcher control//
-    ///////////////////////////////
+    /////////////////////////////////////
+    //auto launcher control - main goal//
+    /////////////////////////////////////
     void autonomousLaunchDisk()
     {
         double RPM = calibrationData.getTargetRPMAtDistance(getDistanceToGoal(true), 3);
@@ -176,6 +176,34 @@ public class Launcher {
 
     void goToLine(double maxPower) { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 7500, maxPower); }
     void goToLine(){goToLine(1);}
+
+    //////////////////////////////////////
+    //auto launcher control - power shot//
+    //////////////////////////////////////
+    void goToPowerShot(int powerShot, double maxPower)
+    {
+        robot.movement.moveToPosition(new double[]{launcherSettings.powerShotXPos[powerShot - 1], launcherSettings.minLaunchDistance, 0}, launcherSettings.powerShotPosTol, 10, 7500, maxPower);
+    }
+    void goToPowerShot(int powerShot){goToPowerShot(powerShot, 1);}
+
+    void autoLaunchPowerShots(double maxPower)
+    {
+        if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
+        else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else
+        {
+            openGateServo();
+            setRPM(launcherSettings.powerShotRPM);
+            for(int i = 0; i < 3; i++) {
+                goToPowerShot(i + 1);
+                waitForRPMInTolerance(1000);
+                autoLaunch();
+            }
+        }
+        setRPM(0);
+    }
+    void autoLaunchPowerShots(){autoLaunchPowerShots(1);}
+
 
     ////////////////
     //calculations//
@@ -338,6 +366,11 @@ class LauncherSettings
     double[] autoLaunchPos = {3, minLaunchDistance, 0}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double autoLaunchRPM = 3500; //RPM to launch from line
     double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
+
+    //power shots
+    double powerShotRPM = 3500;
+    double[] powerShotXPos = {30, 35, 40}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double[] powerShotPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     LauncherSettings(){}
 }

@@ -31,7 +31,7 @@ public class Autonomous extends LinearOpMode {
     };
 
     double[] secondGoalPositions = {0, -112, 0};
-    double[] parkPos = {0,-53,0};
+    double[] parkPos = {0,-53,-90};
 
     //settings
     // tol, time to stay in tol, max loops, max speed
@@ -113,7 +113,7 @@ public class Autonomous extends LinearOpMode {
         robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
 
         //move to line and launch disks
-        robot.launcher.autoLaunchDiskFromLine(1);
+        robot.launcher.autoLaunchPowerShots(1);
 
         //drop goal one
         goToDropZone(finalNumOfRings, 1);
