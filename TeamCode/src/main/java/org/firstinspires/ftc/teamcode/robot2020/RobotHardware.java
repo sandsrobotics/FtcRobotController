@@ -284,10 +284,6 @@ public class RobotHardware
         return arr;
     }
 
-    public void clearDistanceSensorFilters(List<DFR304Range> distSensors) {
-        for(int i = 0; i < distSensors.size(); i++) { distSensors.get(i).initDistances(); }
-    }
-
     public void waitForMotorsToFinishList(List<DcMotorEx> motors)
     {
         int totalMotorsDone = 0;
