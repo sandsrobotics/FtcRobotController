@@ -15,7 +15,11 @@ public class Autonomous extends LinearOpMode {
     GamepadButtonManager closeButton = new GamepadButtonManager(GamepadButtons.A);
 
     //positions
-    double[] basePos = {-16, -70, 0};
+    double[][] basePos = {
+        {-16, -70, 0},
+        {-16, -70, 0}
+    };
+
     double[][] APositions = {
         {-16,-58,-90},
         {-16,-58,-90}
@@ -37,8 +41,8 @@ public class Autonomous extends LinearOpMode {
 
     //settings
     // tol, time to stay in tol, max loops, max speed
-    MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, .3);
-    MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, .3);
+    MoveToPosSettings finalPosSettings = new MoveToPosSettings(new double[]{1, 1, .5}, 10, 5000, 1);
+    MoveToPosSettings losePosSettings = new MoveToPosSettings(new double[]{4, 4, 7.5}, 1, 5000, 1);
 
     //other
     int timesRingRecognitionReq = 10; //how many times does tfod have to see a certain number of rings to call it good
@@ -112,11 +116,11 @@ public class Autonomous extends LinearOpMode {
 
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
-        robot.launcher.autoLaunchDiskFromLine(.3);
+        robot.launcher.autoLaunchDiskFromLine(1);
 
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
 
-        robot.movement.moveToPosition(basePos, losePosSettings);
+        robot.movement.moveToPosition(basePos[0], losePosSettings);
 
         robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
 
@@ -153,7 +157,7 @@ public class Autonomous extends LinearOpMode {
 
     void goToDropZone(int pos, int goalNum, Runnable doBetweenPositions)
     {
-        robot.movement.moveToPosition(basePos, losePosSettings);
+        robot.movement.moveToPosition(basePos[0], losePosSettings);
         robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
         if(doBetweenPositions != null)doBetweenPositions.run();
 
