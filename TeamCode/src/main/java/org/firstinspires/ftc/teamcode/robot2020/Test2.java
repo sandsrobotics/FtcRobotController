@@ -15,7 +15,7 @@ public class Test2 extends LinearOpMode
     Robot robot;
     GamepadButtonManager breakButton = new GamepadButtonManager(GamepadButtons.leftJoyStickBUTTON);
     GamepadButtonManager autoLaunchButton;
-    public static PIDFCoefficients PIDF = new PIDFCoefficients(1.3,.13,0,13);
+    public static PIDFCoefficients PIDF = new PIDFCoefficients(1.3,.13,0,12);
 
     short mode = 0;
 
