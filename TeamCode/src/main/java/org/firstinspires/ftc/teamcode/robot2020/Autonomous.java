@@ -15,7 +15,7 @@ public class Autonomous extends LinearOpMode {
     GamepadButtonManager closeButton = new GamepadButtonManager(GamepadButtons.A);
 
     //positions
-    double[] basePos = {-16, -80, 0};
+    double[] basePos = {-20, -80, 0};
 
     double[][] APositions = {
         {-25,-66,-90},
