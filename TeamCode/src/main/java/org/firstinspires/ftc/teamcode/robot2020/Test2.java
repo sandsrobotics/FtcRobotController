@@ -1,39 +1,58 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
-@TeleOp(name = "test debug")
+@TeleOp(name = "tune PIDF")
+@Config
 public class Test2 extends LinearOpMode
 {
     Robot robot;
+    GamepadButtonManager breakButton = new GamepadButtonManager(GamepadButtons.leftJoyStickBUTTON);
+    GamepadButtonManager autoLaunchButton;
+    public static PIDFCoefficients PIDF = new PIDFCoefficients(1.3,.13,0,13);
+
+    short mode = 0;
 
     @Override
     public void runOpMode()
     {
         RobotUsage ru = new RobotUsage();
-        ru.setAllToValue(false);
-        ru.useDistanceSensors = true;
-        ru.usePositionTracking = true;
+        ru.useVuforia = false;
+        ru.useComplexMovement = false;
+        ru.useTensorFlow = false;
+        ru.useDistanceSensors = false;
+        ru.useGrabber = false;
+        ru.useOpenCV = false;
 
-        robot = new Robot(this, ru);
-
-        robot.startTelemetry();
-        robot.addTelemetry("Robot: ", "ready :)");
-        robot.sendTelemetry();
+        robot = new Robot(this,ru);
 
         waitForStart();
 
-        robot.start(false);
+        autoLaunchButton = new GamepadButtonManager(gamepad1, GamepadButtons.dpadUP);
+        robot.start(true);
 
-        while(opModeIsActive())
+        while (opModeIsActive())
         {
-            float[] vals = robot.robotHardware.getDistancesList(robot.robotHardware.distSensors);
-            robot.addTelemetry("dis 1:", vals[0]);
-            robot.addTelemetry("dis 2:", vals[1]);
-            robot.sendTelemetry();
+            robot.robotHardware.launcherWheelMotor.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, PIDF);
+
+            if(mode == 0)
+            {
+                robot.movement.moveForTeleOp(gamepad1, breakButton, true);
+                robot.launcher.runForTeleOp(gamepad2,true);
+                if(autoLaunchButton.getButtonHeld()) mode = 1;
+                robot.sendTelemetry();
+            }
+            else if(mode == 1)
+            {
+                robot.launcher.goToLine();
+                mode = 0;
+            }
         }
     }
 }

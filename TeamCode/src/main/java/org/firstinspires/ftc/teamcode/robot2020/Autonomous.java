@@ -30,7 +30,7 @@ public class Autonomous extends LinearOpMode {
         {-16,-4,-90}
     };
 
-    double[] secondGoalPositions = {-2, -110, 0};
+    double[] secondGoalPositions = {-2, -112, 0};
     double[] parkPos = {0,-53,0};
 
     //settings
@@ -130,7 +130,7 @@ public class Autonomous extends LinearOpMode {
 
         //drop off second goal
         goToDropZone(finalNumOfRings, 2);
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, true);
         robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,-12, 0), losePosSettings);
 
         //park
