@@ -369,7 +369,7 @@ class LauncherSettings
 
     //power shots
     double powerShotRPM = 3500;
-    double[] powerShotXPos = {30, 35, 40}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double[] powerShotXPos = {25, 30, 35}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double[] powerShotPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     LauncherSettings(){}
