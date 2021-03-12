@@ -31,7 +31,7 @@ public class Autonomous extends LinearOpMode {
     };
 
     double[][] secondGoalPositions = {
-        {-10, - 112, 0},
+        {-10, - 102, 0},
         {0, -112, 0}
     };
 
