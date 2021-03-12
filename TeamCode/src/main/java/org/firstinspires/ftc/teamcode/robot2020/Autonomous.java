@@ -112,26 +112,27 @@ public class Autonomous extends LinearOpMode {
         //move to base pos
         robot.movement.moveToPosition(basePos, losePosSettings);
 
-        //drop goal one
+        //setup for launch
         robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+        robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
+
+        //launch power shot
+        robot.launcher.autoLaunchPowerShots(1);
+
+        //drop goal one
         goToDropZone(finalNumOfRings, 1);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
         robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,-7, 0), losePosSettings);
 
-        //launch power shot
-        robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
-        robot.launcher.autoLaunchPowerShots(1);
-
         //get ready and go to second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
-        robot.movement.moveToPosition(basePos, losePosSettings);
         robot.movement.moveToPosition(secondGoalPositions[0], losePosSettings);
         robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
 
         //grab second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 75, true);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 75, false);
 
         //drop off second goal
         goToDropZone(finalNumOfRings, 2);
