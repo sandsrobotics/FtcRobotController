@@ -110,28 +110,35 @@ public class Autonomous extends LinearOpMode {
         ////////////////
         //main program//
         ////////////////
-        goToDropZone(finalNumOfRings, 1);
 
-        robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
-
-        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
-
-        robot.launcher.autoLaunchDiskFromLine(1);
-
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
-
+        //move to base pos
         robot.movement.moveToPosition(basePos[0], losePosSettings);
 
-        robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
+        //get ready to launch
+        robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
+        robot.launcher.setRPM(robot.launcher.launcherSettings.autoLaunchRPM);
 
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
+        //move to line and launch disks
+        robot.launcher.autoLaunchDiskFromLine(1);
 
-        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
-
-        goToDropZone(finalNumOfRings, 2);
-
+        //drop goal one
+        goToDropZone(finalNumOfRings, 1);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
 
+        //get ready and go to second goal
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
+        robot.movement.moveToPosition(basePos[0], losePosSettings);
+        robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
+
+        //grab second goal
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
+
+        //drop off second goal
+        goToDropZone(finalNumOfRings, 2);
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+
+        //park
         robot.movement.moveToPosition(parkPos,finalPosSettings);
     }
 
@@ -155,16 +162,12 @@ public class Autonomous extends LinearOpMode {
         return -1;
     }
 
-    void goToDropZone(int pos, int goalNum, Runnable doBetweenPositions)
+    void goToDropZone(int pos, int goalNum)
     {
-        robot.movement.moveToPosition(basePos[0], losePosSettings);
-        robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
-        if(doBetweenPositions != null)doBetweenPositions.run();
-
         if(pos == 0) { robot.movement.moveToPosition(APositions[goalNum - 1], finalPosSettings); }
         else if(pos == 1) { robot.movement.moveToPosition(BPositions[goalNum - 1], finalPosSettings); }
         else if(pos == 4) { robot.movement.moveToPosition(CPositions[goalNum - 1], finalPosSettings); }
     }
-    void goToDropZone(int pos, int goalNum) { goToDropZone(pos, goalNum, null); }
+
 }
 
