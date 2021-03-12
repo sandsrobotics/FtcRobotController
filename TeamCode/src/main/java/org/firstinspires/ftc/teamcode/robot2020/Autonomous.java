@@ -18,8 +18,8 @@ public class Autonomous extends LinearOpMode {
     double[] basePos = {-16, -80, 0};
 
     double[][] APositions = {
-        {-20,-66,-90},
-        {-24,-70,-90}
+        {-42,-66,-90},
+        {-24,-72,-90}
     };
     double[][] BPositions = {
         {-1.1,-33.86,-90},
@@ -130,8 +130,8 @@ public class Autonomous extends LinearOpMode {
 
         //drop off second goal
         goToDropZone(finalNumOfRings, 2);
-        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, true);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
+        robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,-12, 0), losePosSettings);
 
         //park
         robot.movement.moveToPosition(parkPos,finalPosSettings);
