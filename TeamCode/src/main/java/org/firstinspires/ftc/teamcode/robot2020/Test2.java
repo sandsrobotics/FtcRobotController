@@ -45,6 +45,7 @@ public class Test2 extends LinearOpMode
             {
                 robot.movement.moveForTeleOp(gamepad1, breakButton, true);
                 robot.launcher.runForTeleOp(gamepad2,true);
+                robot.addTelemetry("min", 0);
                 if(autoLaunchButton.getButtonHeld()) mode = 1;
                 robot.sendTelemetry();
             }
