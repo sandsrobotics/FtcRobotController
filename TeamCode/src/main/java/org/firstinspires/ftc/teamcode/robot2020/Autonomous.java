@@ -18,7 +18,7 @@ public class Autonomous extends LinearOpMode {
     double[] basePos = {-16, -80, 0};
 
     double[][] APositions = {
-        {-18,-64,-90},
+        {-20,-66,-90},
         {-24,-70,-90}
     };
     double[][] BPositions = {
@@ -30,10 +30,7 @@ public class Autonomous extends LinearOpMode {
         {-16,-4,-90}
     };
 
-    double[][] secondGoalPositions = {
-        {10, -80, 0},
-        {0, -110, 0}
-    };
+    double[] secondGoalPositions = {-2, -110, 0};
     double[] parkPos = {0,-53,0};
 
     //settings
@@ -120,20 +117,20 @@ public class Autonomous extends LinearOpMode {
 
         //drop goal one
         goToDropZone(finalNumOfRings, 1);
-        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
 
         //get ready and go to second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
         robot.movement.moveToPosition(basePos, losePosSettings);
-        robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
+        robot.movement.moveToPosition(secondGoalPositions, finalPosSettings);
 
         //grab second goal
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 40, true);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
 
         //drop off second goal
         goToDropZone(finalNumOfRings, 2);
-        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+        robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
 
         //park
         robot.movement.moveToPosition(parkPos,finalPosSettings);
