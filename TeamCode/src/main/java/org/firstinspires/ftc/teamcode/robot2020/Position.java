@@ -32,6 +32,7 @@ public class Position extends Thread
    // private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
+    private int lastInMeasuringRange = -2;
 
 
     //other class
@@ -199,6 +200,11 @@ public class Position extends Thread
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
+                if(lastInMeasuringRange != inMeasuringRange) {
+                    robot.robotHardware.clearDistanceSensorFilters(robot.robotHardware.distSensors);
+                    lastInMeasuringRange = inMeasuringRange;
+                }
+
                 updateDistanceSensor(1);
             }
 
