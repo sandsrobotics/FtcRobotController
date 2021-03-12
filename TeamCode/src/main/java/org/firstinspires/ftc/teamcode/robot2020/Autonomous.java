@@ -131,6 +131,7 @@ public class Autonomous extends LinearOpMode {
         //drop off second goal
         goToDropZone(finalNumOfRings, 2);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, true);
 
         //park
         robot.movement.moveToPosition(parkPos,finalPosSettings);
