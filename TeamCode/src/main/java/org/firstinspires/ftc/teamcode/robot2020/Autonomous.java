@@ -15,14 +15,11 @@ public class Autonomous extends LinearOpMode {
     GamepadButtonManager closeButton = new GamepadButtonManager(GamepadButtons.A);
 
     //positions
-    double[][] basePos = {
-        {-16, -70, 0},
-        {-16, -70, 0}
-    };
+    double[] basePos = {-16, -80, 0};
 
     double[][] APositions = {
-        {-16,-58,-90},
-        {-16,-58,-90}
+        {-18,-64,-90},
+        {-24,-70,-90}
     };
     double[][] BPositions = {
         {-1.1,-33.86,-90},
@@ -112,7 +109,7 @@ public class Autonomous extends LinearOpMode {
         ////////////////
 
         //move to base pos
-        robot.movement.moveToPosition(basePos[0], losePosSettings);
+        robot.movement.moveToPosition(basePos, losePosSettings);
 
         //get ready to launch
         robot.grabber.setGrabberToPos((robot.grabber.grabberSettings.capturePos - 75), false);
@@ -127,7 +124,7 @@ public class Autonomous extends LinearOpMode {
 
         //get ready and go to second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
-        robot.movement.moveToPosition(basePos[0], losePosSettings);
+        robot.movement.moveToPosition(basePos, losePosSettings);
         robot.movement.moveToPosition(secondGoalPositions[1], finalPosSettings);
 
         //grab second goal
