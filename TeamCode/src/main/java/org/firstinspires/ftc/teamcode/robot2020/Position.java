@@ -32,7 +32,6 @@ public class Position extends Thread
    // private float[] temp = new float[2];
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
-    private int lastInMeasuringRange = -2;
 
 
     //other class
@@ -200,11 +199,6 @@ public class Position extends Thread
             inMeasuringRange = isRobotInRotationRange();
 
             if(inMeasuringRange > -2) {
-                if(lastInMeasuringRange != inMeasuringRange) {
-                    robot.robotHardware.clearDistanceSensorFilters(robot.robotHardware.distSensors);
-                    lastInMeasuringRange = inMeasuringRange;
-                }
-
                 updateDistanceSensor(1);
             }
 
@@ -221,7 +215,7 @@ public class Position extends Thread
 
                 if(inMeasuringRange > -2)
                 {
-                    updatePosWithDistanceSensor(false);
+                    updatePosWithDistanceSensor(true);
                 }
             }
         }
@@ -276,7 +270,7 @@ class PositionSettings
         new MathSign[]{MathSign.ADD, MathSign.ADD}  // for -90/270 degrees
     };
     double angleTolerance = 7.5; // how far from each 90 degree increment can the robot be for the ultra sonic to still be valid
-    float[] maxPositionChange = {15,15}; //max distance travalable in one second(in inches)
+    float[] maxPositionChange = {20,20}; //max distance travalable in one second(in inches)
     int minDelayBetweenSensorReadings = 50; //how long it should wait to get the distance from last distance reading
 
     PositionSettings(){}

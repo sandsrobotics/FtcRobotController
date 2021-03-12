@@ -23,9 +23,7 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     ////////////////////////////////////////////////////////////////////////////////////////////////
     public short getDistanceCm()
     {
-        updateDistances(readShort(Register.DIST_H_INDEX));
-        return getMax(distances);
-        //return readShort(Register.DIST_H_INDEX);
+        return readShort(Register.DIST_H_INDEX);
     }
 
     public short getTemperatureC() { return (short)(readShort(Register.TEMP_H_INDEX)/10); }
@@ -140,30 +138,6 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
     private static final int numOfLastValues = 3; //how many distances should it keep to get highest value from (a higher value will be more accurate but cause more lag, default = 3)
     private short[] distances = new short[numOfLastValues];
 
-    public void initDistances()
-    {
-        for(int i = 0; i < distances.length; i++) distances[i] = 0;
-    }
-
-    private void updateDistances(short distance) {
-        for(int i = distances.length - 1; i > 0; i--) {
-            distances[i] = distances[i - 1];
-        }
-        distances[0] = distance;
-    }
-
-
-
-    private short getMax(short[] inputArray){
-        short maxValue = inputArray[0];
-        for(short i = 1; i < inputArray.length; i++){
-            if(inputArray[i] > maxValue){
-                maxValue = inputArray[i];
-            }
-        }
-        return maxValue;
-    }
-
     public DFR304Range(I2cDeviceSynch deviceClient)
     {
         super(deviceClient, true, new Parameters());
@@ -172,7 +146,6 @@ public class DFR304Range extends I2cDeviceSynchDeviceWithParameters<I2cDeviceSyn
         super.registerArmingStateCallback(false); // Deals with USB cables getting unplugged
         // Sensor starts off disengaged so we can change things like I2C address. Need to engage
         this.deviceClient.engage();
-        initDistances();
     }
 
     protected void setOptimalReadWindow()
