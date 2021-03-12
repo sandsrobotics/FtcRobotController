@@ -236,7 +236,7 @@ class PositionSettings
         new float[]{-29.133f, 1.968f}, // for 0 degrees
         new float[]{52.755f, 1.968f}, // for 90 degrees
         new float[]{50.3932f, -127.165f}, // for 180 degrees
-        new float[]{-126.771f, -30.314f}  // for -90/270 degrees
+        new float[]{-30.314f, -126.771f}  // for -90/270 degrees
     };
     SensorNum[] sensorPosition = new SensorNum[] // which ultra sonic sensor is in the X direction for each 90 degree increment
     {
