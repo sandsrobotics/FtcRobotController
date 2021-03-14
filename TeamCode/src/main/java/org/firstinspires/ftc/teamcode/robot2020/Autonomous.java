@@ -32,7 +32,7 @@ public class Autonomous extends LinearOpMode {
 
     double[][][] secondGoalPositions = {
         {{-10, - 106, 0}, {-2, -112, 0}},
-        {{15, -100, 180},{23, -107.5, 180}}
+        {{30, -100, 180},{22, -107.5, 180}}
     };
 
     double[] parkPos = {0,-53,-90};
@@ -117,7 +117,6 @@ public class Autonomous extends LinearOpMode {
 
         //drop goal one
         robot.robotUsage.useDistanceSensors = false;
-
         goToDropZone(finalNumOfRings, 1);
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
@@ -126,6 +125,9 @@ public class Autonomous extends LinearOpMode {
         //get ready and go to second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);
         robot.robotUsage.useDistanceSensors = true;
+        if(finalNumOfRings == 4){
+            robot.movement.moveToPosition(basePos, robot.movement.movementSettings.losePosSettings);
+        }
         if(finalNumOfRings != 1){
             robot.movement.moveToPosition(secondGoalPositions[0][0], robot.movement.movementSettings.losePosSettings);
             robot.movement.moveToPosition(secondGoalPositions[0][1], robot.movement.movementSettings.finalPosSettings);
@@ -138,9 +140,13 @@ public class Autonomous extends LinearOpMode {
         //grab second goal
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos, true);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoGrabPositions, true);
-        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 50, false);
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 70, false);
 
         //drop off second goal
+        if(finalNumOfRings == 4){
+            robot.movement.moveToPosition(basePos, robot.movement.movementSettings.losePosSettings);
+        }
+        robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.capturePos - 70, false);
         goToDropZone(finalNumOfRings, 2);
         robot.grabber.setServosToPos(robot.grabber.grabberSettings.servoRestPositions, true);
         robot.grabber.setGrabberToPos(robot.grabber.grabberSettings.restPos, false);

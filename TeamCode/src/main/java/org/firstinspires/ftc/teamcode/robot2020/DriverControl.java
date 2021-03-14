@@ -30,7 +30,7 @@ public class DriverControl extends LinearOpMode
         ru.useTensorFlow = false;
 
         RobotSettingsMain rm = new RobotSettingsMain();
-        rm.positionSettings.startRotation = -90;
+        if(!Position.updateRotFromFile(rm.positionSettings))rm.positionSettings.startRotation = -90;
 
 
         robot = new Robot(this, ru, rm);

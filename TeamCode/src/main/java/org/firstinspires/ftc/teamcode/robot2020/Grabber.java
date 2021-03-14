@@ -166,15 +166,15 @@ class GrabberSettings
     protected double motorPower = .75;
 
     //preset lifter functions
-    protected int capturePos = 1440; //position of grabber arm when grabbing a wobble goal
+    protected int capturePos = 1450; //position of grabber arm when grabbing a wobble goal
     protected int horizontalPos = 0; //position of grabber arm when in storage
     protected int putOverPos = 1000; //position of grabber arm to put the wobble goal over the wall
-    protected int restPos = 1550; //position of grabber arm when at rest on the side of robot
+    protected int restPos = 1575; //position of grabber arm when at rest on the side of robot
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
     protected double[] servoGrabPositions = {.9, .1};
-    protected int servoCloseTime = 120; // time for the servos to close/open(in ms)
+    protected int servoCloseTime = 400; // time for the servos to close/open(in ms)
 
     //controls
     protected GamepadButtonManager moveGrabberStick = new GamepadButtonManager(GamepadButtons.combinedTRIGGERS);//manual adjust of grabber

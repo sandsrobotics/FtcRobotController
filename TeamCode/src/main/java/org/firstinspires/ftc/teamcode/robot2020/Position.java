@@ -7,6 +7,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngularVelocity;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 
 public class Position extends Thread
 {
@@ -32,6 +33,8 @@ public class Position extends Thread
     private long lastSensorReadingTime = System.currentTimeMillis();
     private int inMeasuringRange = -2;
 
+    //other
+    static String fileName = "angleData";
 
     //other class
     Robot robot;
@@ -62,6 +65,15 @@ public class Position extends Thread
             currentRobotPosition = new double[]{0, 0, 0};
             rotationOffset = 0;
         }
+    }
+
+    public static boolean updateRotFromFile(PositionSettings ps){
+        String val = Utils.FileManager.readFromFile(fileName, AppUtil.getDefContext());
+        try {
+            ps.startRotation = Double.parseDouble(val);
+            return true;
+        }
+        catch(Exception e){return false;}
     }
 
     //////////
@@ -218,6 +230,9 @@ public class Position extends Thread
                 }
             }
         }
+
+        Double val = currentRotation;
+        Utils.FileManager.writeToFile(fileName, val.toString(), AppUtil.getDefContext());
     }
 
     double[] getPositionWithOffset(double X, double Y, double R)

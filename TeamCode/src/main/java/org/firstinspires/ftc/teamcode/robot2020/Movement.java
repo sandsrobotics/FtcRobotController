@@ -276,7 +276,7 @@ class MovementSettings
     GamepadButtonManager RotMoveStick = new GamepadButtonManager(GamepadButtons.rightJoyStickX);
 
     //presets
-    MoveToPositionSettings finalPosSettings = new MoveToPositionSettings(new double[]{.75, .75, .5}, 10, 10000, 1);
+    MoveToPositionSettings finalPosSettings = new MoveToPositionSettings(new double[]{.5, .5, .4}, 10, 10000, 1);
     MoveToPositionSettings losePosSettings = new MoveToPositionSettings(new double[]{4, 4, 7.5}, 1, 10000, 1);
 
     MovementSettings(){}

@@ -14,8 +14,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
 public class Utils {
-    static class fileManager {
-        static String readFromFile(Context context, String fileName) {
+    static class FileManager {
+        static String readFromFile(String fileName, Context context) {
 
             String ret = null;
 
@@ -43,7 +43,7 @@ public class Utils {
 
             return ret;
         }
-        void writeToFile(String fileName, String data, Context context) {
+        static void writeToFile(String fileName, String data, Context context) {
             try {
                 OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
                 outputStreamWriter.write(data);

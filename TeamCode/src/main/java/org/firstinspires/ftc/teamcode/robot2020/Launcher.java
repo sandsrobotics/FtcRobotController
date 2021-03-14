@@ -397,7 +397,7 @@ class LauncherSettings
 
     //power shot v2
     double[] powerShotBasePos = {24, minLaunchDistance};
-    double[] powerShotRotations = {-7,0,6.5};
+    double[] powerShotRotations = {-7, .5, 5.5};
 
     LauncherSettings(){}
 }
@@ -419,7 +419,7 @@ class AllCalibrationDataPoints
     public static AllCalibrationDataPoints setCalibrationDataPoints(Context context, String fileName)
     {
         Gson gson = new Gson();
-        return gson.fromJson(Utils.fileManager.readFromFile(context, fileName), AllCalibrationDataPoints.class);
+        return gson.fromJson(Utils.FileManager.readFromFile(fileName, context), AllCalibrationDataPoints.class);
     }
 
     public int getTargetRPMAtDistance(double distance, int goalNum)
