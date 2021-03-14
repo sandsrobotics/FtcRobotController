@@ -16,7 +16,7 @@ public class Grabber {
     protected int setEncoderPos;
     protected double[] setServoPositions = new double[2];
     protected boolean clawClosed = true;
-    protected boolean motorStopped = false;
+    protected boolean motorReset = false;
 
     Grabber(Robot robot)
     {
@@ -84,7 +84,7 @@ public class Grabber {
 
     void teleOpTelemetry()
     {
-
+        robot.addTelemetry("grabber pos", robot.robotHardware.grabberLifterMotor.getCurrentPosition());
     }
 
     void moveMotors()
@@ -92,6 +92,7 @@ public class Grabber {
         robot.robotHardware.grabberLifterMotor.setTargetPosition(setEncoderPos);
         stopMotor();
     }
+
     void moveServos()
     {
         for(int i = 0; i < 2; i++)
@@ -114,16 +115,20 @@ public class Grabber {
 
     boolean stopMotor()
     {
-        if(!robot.robotHardware.grabberLimitSwitch.getState() && setEncoderPos <= 5 && !motorStopped)
+        if(!robot.robotHardware.grabberLimitSwitch.getState() && setEncoderPos <= 5)
         {
-            robot.robotHardware.grabberLifterMotor.setPower(0);
-            motorStopped = true;
+            if(!motorReset)
+            {
+                robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.robotHardware.grabberLifterMotor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                motorReset = true;
+            }
+            if(robot.robotHardware.grabberLifterMotor.getPower() != 0) robot.robotHardware.grabberLifterMotor.setPower(0);
             return true;
         }
-        else if(motorStopped)
-        {
-            robot.robotHardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
-            motorStopped = false;
+        else {
+            if (robot.robotHardware.grabberLifterMotor.getPower() != grabberSettings.motorPower) robot.robotHardware.grabberLifterMotor.setPower(grabberSettings.motorPower);
+            motorReset = false;
         }
         return false;
     }
@@ -134,6 +139,20 @@ public class Grabber {
         setServoPositions[1] = servoPos[1];
         moveServos();
         if(waitForServos) robot.delay(grabberSettings.servoCloseTime);
+    }
+
+    ////////
+    //auto//
+    ////////
+    void autoDrop()
+    {
+        if(robot.robotUsage.useDrive && robot.robotUsage.usePositionThread && robot.robotUsage.usePositionTracking) {
+            setGrabberToPos(grabberSettings.putOverPos, false);
+            robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], -123, 90}, robot.movement.movementSettings.finalPosSettings);
+            setServosToPos(robot.grabber.grabberSettings.servoRestPositions, false);
+            robot.movement.moveToPosition(robot.position.getPositionWithOffset(0, 10, 0), robot.movement.movementSettings.losePosSettings);
+            setGrabberToPos(grabberSettings.capturePos, false);
+        }
     }
 }
 
@@ -150,12 +169,12 @@ class GrabberSettings
     protected int capturePos = 1440; //position of grabber arm when grabbing a wobble goal
     protected int horizontalPos = 0; //position of grabber arm when in storage
     protected int putOverPos = 1000; //position of grabber arm to put the wobble goal over the wall
-    protected int restPos = 1500; //position of grabber arm when at rest on the side of robot
+    protected int restPos = 1550; //position of grabber arm when at rest on the side of robot
 
     //servo pos
     protected double[] servoRestPositions = {.2, .6};
     protected double[] servoGrabPositions = {.9, .1};
-    protected int servoCloseTime = 100; // time for the servos to close/open(in ms)
+    protected int servoCloseTime = 120; // time for the servos to close/open(in ms)
 
     //controls
     protected GamepadButtonManager moveGrabberStick = new GamepadButtonManager(GamepadButtons.combinedTRIGGERS);//manual adjust of grabber

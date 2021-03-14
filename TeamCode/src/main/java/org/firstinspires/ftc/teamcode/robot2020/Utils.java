@@ -86,11 +86,11 @@ class PID
         if(calculatedI > maxClamp) calculatedI = maxClamp;
         else if(calculatedI < minClamp) calculatedI = minClamp;
 
-        double calculatedD = (((currentError - lastError) * PIDs.d) / (System.currentTimeMillis() - lastTime));
+        double calculatedD = (((currentError - lastError) * PIDs.d) / ((double)(System.nanoTime() - lastTime) / (double) 1000000000));
 
-        value = (error * PIDs.p);// + calculatedI - calculatedD;
+        value = (error * PIDs.p) + calculatedI - calculatedD;
 
-        lastTime = System.currentTimeMillis();
+        lastTime = System.nanoTime();
     }
 
     void resetErrors()

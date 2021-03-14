@@ -50,11 +50,6 @@ public class Launcher {
     }
 
 
-    ///////////////
-    //Calibration//
-    ///////////////
-
-
     ///////////////////////////
     //launcher opmode control//
     ///////////////////////////
@@ -94,7 +89,10 @@ public class Launcher {
             if(targetWheelRpm > launcherSettings.maxRPM) targetWheelRpm = launcherSettings.maxRPM;
         }
 
-        if(launcherSettings.revModeButton.getButtonPressed(gamepad)) { runWheelOnTrigger =! runWheelOnTrigger; }
+        if(launcherSettings.revModeButton.getButtonPressed(gamepad)) {
+            runWheelOnTrigger =! runWheelOnTrigger;
+            if(runWheelOnTrigger == true) closeGateServo();
+        }
 
         //setting motor
         if (runWheelOnTrigger) robot.robotHardware.launcherWheelMotor.setPower(0);//launcherSettings.revPowerSlide.getSliderValue(gamepad));
@@ -144,49 +142,60 @@ public class Launcher {
                 autoLaunch();
             }
         }
-        setRPM(0);
+        runWheelOnTrigger = true;
     }
 
-    void autoLaunchDiskFromLine(double maxPower)
+    void autoLaunchDiskFromLine()
     {
         if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
         else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
         else
         {
+            moveIntakeMotorForward = false;
+            robot.robotHardware.launcherIntakeMotor.setPower(0);
             openGateServo();
             setRPM(launcherSettings.autoLaunchRPM);
-            goToLine(maxPower);
+            goToLine();
+
             for(int i = 0; i < 4; i++) {
                 waitForRPMInTolerance(1000);
                 autoLaunch();
             }
+            moveIntakeMotorForward = true;
+            runWheelOnTrigger = true;
+            closeGateServo();
         }
-        setRPM(0);
+
     }
-    void autoLaunchDiskFromLine(){autoLaunchDiskFromLine(1);}
 
     void goToShootingPos()
     {
         if(robot.robotUsage.usePositionTracking && robot.movement != null)
         {
-            if (robot.position.currentRobotPosition[1] > launcherSettings.minLaunchDistance) { robot.movement.moveToPosition(new double[]{robot.position.currentRobotPosition[0], launcherSettings.minLaunchDistance, getAngleToPointToPosition()}, new double[]{.5, .5, .5}, 10, 20000, .75); }
-            else { robot.movement.turnToAngle(getAngleToPointToPosition(), .5, 10, 1000, .75); }
+            if (robot.position.currentRobotPosition[1] > launcherSettings.minLaunchDistance) robot.movement.moveToPosition(robot.position.getPositionWithOffset(0,  launcherSettings.minLaunchDistance, getAngleToPointToPosition()), robot.movement.movementSettings.finalPosSettings);
+            else robot.movement.moveToPosition(robot.position.getPositionWithOffset(0, 0, getAngleToPointToPosition()), robot.movement.movementSettings.finalPosSettings);
         }
     }
 
-    void goToLine(double maxPower) { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, launcherSettings.autoLaunchPosTol, 10, 7500, maxPower); }
-    void goToLine(){goToLine(1);}
+    void goToLine() { robot.movement.moveToPosition(launcherSettings.autoLaunchPos, robot.movement.movementSettings.finalPosSettings); }
 
     //////////////////////////////////////
     //auto launcher control - power shot//
     //////////////////////////////////////
-    void goToPowerShot(int powerShot, double maxPower)
+    void goToPowerShot(int powerShot)
     {
-        robot.movement.moveToPosition(new double[]{launcherSettings.powerShotXPos[powerShot - 1], launcherSettings.minLaunchDistance, 0}, launcherSettings.powerShotPosTol, 10, 7500, maxPower);
+        robot.movement.moveToPosition(new double[]{launcherSettings.powerShotXPos[powerShot - 1], launcherSettings.minLaunchDistance, 0}, robot.movement.movementSettings.finalPosSettings);
     }
-    void goToPowerShot(int powerShot){goToPowerShot(powerShot, 1);}
 
-    void autoLaunchPowerShots(double maxPower)
+    void goToPowerShotV2(int powerShot)
+    {
+        if(powerShot == 1){
+            robot.movement.moveToPosition(new double[]{launcherSettings.powerShotBasePos[0], launcherSettings.powerShotBasePos[1], launcherSettings.powerShotRotations[0]}, robot.movement.movementSettings.finalPosSettings);
+        }
+        else robot.movement.turnToAngle(launcherSettings.powerShotRotations[powerShot - 1], robot.movement.movementSettings.finalPosSettings.toRotAngleSettings());
+    }
+
+    void autoLaunchPowerShots()
     {
         if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
         else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
@@ -200,10 +209,25 @@ public class Launcher {
                 autoLaunch();
             }
         }
-        setRPM(0);
+        runWheelOnTrigger = true;
     }
-    void autoLaunchPowerShots(){autoLaunchPowerShots(1);}
 
+    void autoLaunchPowerShotsV2()
+    {
+        if(robot.movement == null) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to move");
+        else if(!robot.robotUsage.usePositionTracking || !robot.robotUsage.usePositionThread) robot.addTelemetry("error in Launcher.autonomousLaunchDisk: ", "robot is unable to track position");
+        else
+        {
+            setRPM(launcherSettings.powerShotRPM);
+            openGateServoNoDelay();
+            for(int i = 0; i < 3; i++) {
+                goToPowerShotV2(i + 1);
+                waitForRPMInTolerance(1000);
+                autoLaunch();
+            }
+        }
+        runWheelOnTrigger = true;
+    }
 
     ////////////////
     //calculations//
@@ -294,6 +318,7 @@ public class Launcher {
     }
 
     void openGateServo(){openGateServo(launcherSettings.gateServoMoveTime);}
+    void openGateServoNoDelay(){openGateServo(0);}
 
     void closeGateServo()
     {
@@ -346,7 +371,7 @@ class LauncherSettings
     //launcher servo
     double launcherServoRestAngle = 0;
     double launcherServoLaunchAngle = 1;
-    int launcherServoMoveTime = 200;
+    int launcherServoMoveTime = 250;
 
     //gate servo
     double gateServoRestAngle = 0;
@@ -357,20 +382,22 @@ class LauncherSettings
     protected String calibrationFileName =  "LauncherConfig.json";
 
     //other
-    double startRPM = 3400;
+    double startRPM = 3500;
     double RPMIncrements = 50;
     double RPMTolerance = 250;
-    double minLaunchDistance = -62; //this is how far the robot has to be from goal to launch - IN INCHES!!!
+    double minLaunchDistance = -64; //this is how far the robot has to be from goal to launch - IN INCHES!!!
 
     //auto launch
     double[] autoLaunchPos = {3, minLaunchDistance, 0}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
     double autoLaunchRPM = 3500; //RPM to launch from line
-    double[] autoLaunchPosTol = {.5,.5,.5}; // the tolerance of position and angle required
 
     //power shots
-    double powerShotRPM = 3100; //RPM to launch from power shots
+    double powerShotRPM = 3175; //RPM to launch from power shots
     double[] powerShotXPos = {18, 25.5, 33}; //this is how far the robot has to be from goal to launch - IN INCHES!!!
-    double[] powerShotPosTol = {.5,.5,.5}; //the tolerance of position and angle required
+
+    //power shot v2
+    double[] powerShotBasePos = {24, minLaunchDistance};
+    double[] powerShotRotations = {-7,0,6.5};
 
     LauncherSettings(){}
 }

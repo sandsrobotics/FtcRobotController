@@ -29,18 +29,19 @@ public class Movement
         this.robot = robot;
     }
 
+
     ////////////////
     //turn methods//
     ////////////////
 
-    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime, double maxSpeed)
+    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime, double maxSpeed, PIDCoefficients turnPID)
     {
         double error = robot.findAngleError(robot.position.currentRotation, targetAngle);
 
         if(Math.abs(error) > tolerance) {
 
             int numberOfTimesInTolerance = 0;
-            PID pid = new PID(movementSettings.turnPID, -maxSpeed, maxSpeed);
+            PID pid = new PID(turnPID, -maxSpeed, maxSpeed);
 
             while (numberOfTimesInTolerance < numberOfTimesToStayInTolerance && maxRuntime > 0 && !robot.stop())
             {
@@ -53,35 +54,25 @@ public class Movement
                 else numberOfTimesInTolerance = 0;
 
                 maxRuntime--;
+
             }
             robot.robotHardware.setMotorsToPowerList(robot.robotHardware.driveMotors, 0);
         }
     }
 
-    //////////////////
-    //strafe methods//
-    //////////////////
-    void strafeSidewaysTicks(int ticks, double power)
-    {
-        int[] arr = {ticks, -ticks, -ticks, ticks};
-        robot.robotHardware.moveMotorForwardSeparateAmountList(robot.robotHardware.driveMotors, arr, power);
-        robot.robotHardware.waitForMotorsToFinishList(robot.robotHardware.driveMotors);
+    void turnToAngle(double targetAngle, double tolerance, int numberOfTimesToStayInTolerance, int maxRuntime, double maxSpeed) {
+        turnToAngle(targetAngle, tolerance, numberOfTimesToStayInTolerance, maxRuntime, maxSpeed, movementSettings.turnPID);
     }
 
-    void strafeSidewaysInches(double inches, double power)
+    void turnToAngle(double targetAngle, RotToAngleSettings rtas)
     {
-        strafeSidewaysTicks((int)(movementSettings.ticksPerInchSideways * inches), power);
+        if(!rtas.isPIDValid()){rtas.turnPID = movementSettings.turnPID;}
+        turnToAngle(targetAngle, rtas.tol, rtas.timesInTol, rtas.maxRuntime, rtas.maxPower, rtas.turnPID);
     }
 
     ////////////////
     //move methods//
     ////////////////
-    void moveForwardInches(double inches, double power)
-    {
-        robot.robotHardware.moveMotorsForwardList(robot.robotHardware.driveMotors, (int)(movementSettings.ticksPerInchForward * inches), power);
-        robot.robotHardware.waitForMotorsToFinishList(robot.robotHardware.driveMotors);
-    }
-
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, PIDCoefficients moveXPID, PIDCoefficients moveYPID, PIDCoefficients turnPID, double maxSpeed)
     {
         if(robot.robotUsage.usePositionTracking)
@@ -140,10 +131,10 @@ public class Movement
 
     void moveToPosition(double[] targetPos, double[] tol, int timesToStayInTolerance, int maxLoops, double maxSpeed) { moveToPosition(targetPos, tol, timesToStayInTolerance, maxLoops, movementSettings.moveXPID, movementSettings.moveYPID, movementSettings.turnPID, maxSpeed); }
 
-    void moveToPosition(double[] targetPos, MoveToPosSettings mtps)
+    void moveToPosition(double[] targetPos, MoveToPositionSettings mtps)
     {
-        if(mtps.isPIDValid()) moveToPosition(targetPos, mtps.getTol(), mtps.getTimesInTol(), mtps.getMaxRuntime(), mtps.getxPID(), mtps.getyPID(), mtps.getTurnPID(), mtps.getMaxPower());
-        else moveToPosition(targetPos, mtps.getTol(), mtps.getTimesInTol(), mtps.getMaxRuntime(), mtps.getMaxPower());
+        if(mtps.isPIDValid()) moveToPosition(targetPos, mtps.tol, mtps.timesInTol, mtps.maxRuntime, mtps.xPID, mtps.yPID, mtps.turnPID, mtps.maxPower);
+        else moveToPosition(targetPos, mtps.tol, mtps.timesInTol, mtps.maxRuntime, mtps.maxPower);
     }
 
     //////////
@@ -178,12 +169,18 @@ public class Movement
         else robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
         if(useTelemetry) teleOpTelemetry();
     }
+    void moveForTeleOp(Gamepad gamepad, boolean useTelemetry)
+    {
+        robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(movementSettings.XMoveStick.getSliderValue(gamepad), -movementSettings.YMoveStick.getSliderValue(gamepad), movementSettings.RotMoveStick.getSliderValue(gamepad), true,true));
+        if(useTelemetry) teleOpTelemetry();
+    }
 
     void teleOpTelemetry()
     {
-
+        robot.addTelemetry("rot", robot.position.currentRotation);
     }
 
+    /*
     void headlessMoveForTeleOp(Gamepad gamepad1, double offset)
     {
         double curAngle = -robot.position.currentRotation + offset;
@@ -196,6 +193,8 @@ public class Movement
         XY[1] *= power;
         robot.robotHardware.setMotorsToSeparatePowersArrayList(robot.robotHardware.driveMotors, moveRobotPowers(XY[0],XY[1],gamepad1.right_stick_x, true, true));
     }
+
+     */
 
     /////////
     //other//
@@ -261,8 +260,8 @@ class MovementSettings
     public static double ticksPerInchForward = 44;
     public static double ticksPerInchSideways = 51.3;
     public static PIDCoefficients turnPID = new PIDCoefficients(.025,0,0);
-    public static PIDCoefficients moveXPID = new PIDCoefficients(.04,0,0);
-    public static PIDCoefficients moveYPID = new PIDCoefficients(.04,0,0);
+    public static PIDCoefficients moveXPID = new PIDCoefficients(.06,0,0);
+    public static PIDCoefficients moveYPID = new PIDCoefficients(.06,0,0);
     public static double moveXSmoothingSteps = 1;
     public static double moveYSmoothingSteps = 1;
     public static double rotationSmoothingSteps = 1;
@@ -276,21 +275,25 @@ class MovementSettings
     GamepadButtonManager YMoveStick = new GamepadButtonManager(GamepadButtons.leftJoyStickY);
     GamepadButtonManager RotMoveStick = new GamepadButtonManager(GamepadButtons.rightJoyStickX);
 
+    //presets
+    MoveToPositionSettings finalPosSettings = new MoveToPositionSettings(new double[]{.75, .75, .5}, 10, 10000, 1);
+    MoveToPositionSettings losePosSettings = new MoveToPositionSettings(new double[]{4, 4, 7.5}, 1, 10000, 1);
+
     MovementSettings(){}
 }
 
-class MoveToPosSettings
+class MoveToPositionSettings
 {
-    private double[] tol;
-    private int timesInTol;
-    private int maxRuntime;
-    private double maxPower;
-    private PIDCoefficients turnPID;
-    private PIDCoefficients xPID;
-    private PIDCoefficients yPID;
+    double[] tol;
+    int timesInTol;
+    int maxRuntime;
+    double maxPower;
+    PIDCoefficients turnPID = null;
+    PIDCoefficients xPID = null;
+    PIDCoefficients yPID = null;
 
-    MoveToPosSettings(){}
-    MoveToPosSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower)
+    MoveToPositionSettings(){}
+    MoveToPositionSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower)
     {
         this.tol = tol;
         this.timesInTol = timesInTol;
@@ -298,7 +301,7 @@ class MoveToPosSettings
         this.maxPower = maxPower;
     }
 
-    MoveToPosSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower, PIDCoefficients xPID, PIDCoefficients yPID, PIDCoefficients turnPID)
+    MoveToPositionSettings(double[] tol, int timesInTol, int maxRuntime, double maxPower, PIDCoefficients xPID, PIDCoefficients yPID, PIDCoefficients turnPID)
     {
         this.tol = tol;
         this.timesInTol = timesInTol;
@@ -307,66 +310,51 @@ class MoveToPosSettings
         this.xPID = xPID;
         this.yPID = yPID;
         this.turnPID = turnPID;
-    }
-
-    public double[] getTol() {
-        return tol;
-    }
-
-    public void setTol(double[] tol) {
-        this.tol = tol;
-    }
-
-    public int getTimesInTol() {
-        return timesInTol;
-    }
-
-    public void setTimesInTol(int timesInTol) {
-        this.timesInTol = timesInTol;
-    }
-
-    public int getMaxRuntime() {
-        return maxRuntime;
-    }
-
-    public void setMaxRuntime(int maxRuntime) {
-        this.maxRuntime = maxRuntime;
-    }
-
-    public double getMaxPower() {
-        return maxPower;
-    }
-
-    public void setMaxPower(double maxPower) {
-        this.maxPower = maxPower;
-    }
-
-    public PIDCoefficients getTurnPID() {
-        return turnPID;
-    }
-
-    public void setTurnPID(PIDCoefficients turnPID) {
-        this.turnPID = turnPID;
-    }
-
-    public PIDCoefficients getxPID() {
-        return xPID;
-    }
-
-    public void setxPID(PIDCoefficients xPID) {
-        this.xPID = xPID;
-    }
-
-    public PIDCoefficients getyPID() {
-        return yPID;
-    }
-
-    public void setyPID(PIDCoefficients yPID) {
-        this.yPID = yPID;
     }
 
     public boolean isPIDValid()
     {
-        return this.getTurnPID() != null && this.getxPID() != null && this.getyPID() != null;
+        return turnPID != null && xPID != null && yPID != null;
+    }
+
+
+    RotToAngleSettings toRotAngleSettings()
+    {
+        if(turnPID != null) return new RotToAngleSettings(tol[2], timesInTol, maxRuntime, maxPower, turnPID);
+        return new RotToAngleSettings(tol[2], timesInTol, maxRuntime, maxPower);
+    }
+
+
+}
+
+class RotToAngleSettings
+{
+    double tol;
+    int timesInTol;
+    int maxRuntime;
+    double maxPower;
+    PIDCoefficients turnPID;
+
+    RotToAngleSettings(){}
+    RotToAngleSettings(double tol, int timesInTol, int maxRuntime, double maxPower)
+    {
+        this.tol = tol;
+        this.timesInTol = timesInTol;
+        this.maxRuntime = maxRuntime;
+        this.maxPower = maxPower;
+    }
+
+    RotToAngleSettings(double tol, int timesInTol, int maxRuntime, double maxPower, PIDCoefficients turnPID)
+    {
+        this.tol = tol;
+        this.timesInTol = timesInTol;
+        this.maxRuntime = maxRuntime;
+        this.maxPower = maxPower;
+        this.turnPID = turnPID;
+    }
+
+    boolean isPIDValid()
+    {
+        return turnPID != null;
     }
 }
