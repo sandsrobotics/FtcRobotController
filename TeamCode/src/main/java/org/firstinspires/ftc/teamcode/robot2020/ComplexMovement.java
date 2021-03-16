@@ -98,25 +98,25 @@ public class ComplexMovement {
     {
         if (moveName == null || moveName.equals("")) moveName = "not named";
         MovementEntity entity = new MovementEntity(moveName, 0, (int) curRecordingLength);
-        //robot.db.movementEntityDAO().insertAll(entity);
+        robot.db.movementEntityDAO().insertAll(entity);
         entity = new MovementEntity(moveName, 0, (float)(curRecordingLength/positions.size()));
-        //robot.db.movementEntityDAO().insertAll(entity);
+        robot.db.movementEntityDAO().insertAll(entity);
         for (int i = 0; i < positions.size(); i++)
         {
             for (int m = 0; m < robot.robotHardware.driveMotors.size(); m++) {
                 MovementEntity entity1 = new MovementEntity(moveName, m + 1, positions.get(i)[m]);
-                //robot.db.movementEntityDAO().insertAll(entity1);
+                robot.db.movementEntityDAO().insertAll(entity1);
             }
         }
     }
 
     void loadMoveDB(String moveName)
     {
-        //List<MovementEntity> data = robot.db.movementEntityDAO().loadMovementByName(moveName);
+        List<MovementEntity> data = robot.db.movementEntityDAO().loadMovementByName(moveName);
         int[] currentLoadTick = new int[4];
         loaded_Positions.clear();
         int i = 0;
-/*
+
         for(MovementEntity m:data)
         {
             if(m.motor_id == 0){
@@ -142,8 +142,6 @@ public class ComplexMovement {
                 }
             }
         }
-
- */
     }
 /*
     void loadMoveCSV(String fileName)
@@ -264,6 +262,6 @@ public class ComplexMovement {
 
     void clearDatabase()
     {
-        //robot.db.movementEntityDAO().deleteAll();
+        robot.db.movementEntityDAO().deleteAll();
     }
 }

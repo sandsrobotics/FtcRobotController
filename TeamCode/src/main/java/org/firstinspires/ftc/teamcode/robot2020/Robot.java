@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.robot2020;
 
+import androidx.room.Room;
+
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
@@ -9,6 +11,8 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+import org.firstinspires.ftc.teamcode.robot2020.persistence.AppDatabase;
 
 import static java.lang.Thread.currentThread;
 
@@ -34,7 +38,7 @@ public class Robot
     protected FtcDashboard dashboard;
     protected BNO055IMU imu;
     protected LinearOpMode opMode;
-    //protected AppDatabase db;
+    protected AppDatabase db;
     protected RobotUsage robotUsage;
     protected RobotSettings robotSettings;
 
@@ -108,7 +112,7 @@ public class Robot
         /////////////
         //data base//
         /////////////
-        //db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
+        db = Room.databaseBuilder(AppUtil.getDefContext(), AppDatabase.class, robotSettings.dataBaseName).build();
     }
 
     //------------------My Methods------------------//
@@ -219,18 +223,17 @@ public class Robot
 
 class RobotUsage
 {
-    boolean useDrive, usePositionTracking, useDistanceSensors, logLastPosition, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
+    boolean useDrive, usePositionTracking, useDistanceSensors, usePositionThread, useComplexMovement, useLauncher, useGrabber, useVuforia, useVuforiaInThread, useOpenCV, useTensorFlow, useTensorFlowInTread = true;
 
     RobotUsage()
     {
         setAllToValue(true);
     }
-    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean useDistanceSensors, boolean logLastPosition, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
+    RobotUsage(boolean useDrive, boolean usePositionTracking, boolean useDistanceSensors, boolean usePositionThread, boolean useComplexMovement, boolean useLauncher, boolean useGrabber, boolean useVuforia, boolean useVuforiaInThread, boolean useOpenCV, boolean useTensorFlow, boolean useTensorFlowInTread)
     {
         this.useDrive = useDrive;
         this.usePositionTracking = usePositionTracking;
         this.useDistanceSensors = useDistanceSensors;
-        this.logLastPosition = logLastPosition;
         this.usePositionThread = usePositionThread;
         this.useComplexMovement = useComplexMovement;
         this.useLauncher = useLauncher;
@@ -247,7 +250,6 @@ class RobotUsage
         this.useDrive = value;
         this.usePositionTracking = value;
         this.useDistanceSensors = value;
-        this.logLastPosition = value;
         this.usePositionThread = value;
         this.useComplexMovement = value;
         this.useLauncher = value;
