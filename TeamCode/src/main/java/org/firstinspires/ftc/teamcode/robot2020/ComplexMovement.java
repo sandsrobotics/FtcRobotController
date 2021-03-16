@@ -222,12 +222,11 @@ public class ComplexMovement {
         loaded_TotalTime = 0;
     }
 
-    void runLoadedMoveV2(double speedMultiplier, boolean stopIfTimeIsMoreThanMoveTime, double motorPowerProportional)
+    void runLoadedMoveV2(boolean stopIfTimeIsMoreThanMoveTime)
     {
         if(loaded_Positions.size() != 0)
         {
             int curInstruction = 0;
-            double[] curLoadedVelocities = new double[4];
             int[] motorStartPos = robot.robotHardware.getMotorPositionsList(robot.robotHardware.driveMotors);
             boolean start = true;
             robot.robotHardware.setMotorsZeroPowerBehaviorList(robot.robotHardware.driveMotors, DcMotor.ZeroPowerBehavior.BRAKE);

@@ -12,7 +12,6 @@ public class Test4 extends LinearOpMode
 {
 
     Robot robot;
-    public static double proportional = .08;
 
     @Override
     public void runOpMode()
@@ -51,7 +50,7 @@ public class Test4 extends LinearOpMode
             {
                 robot.startTelemetry();
                 robot.complexMovement.loadMoveDB("test");
-                robot.complexMovement.runLoadedMoveV2(1,false, proportional);
+                robot.complexMovement.runLoadedMoveV2(false);
                 robot.addTelemetry("Robot: ", "done with move");
                 robot.sendTelemetry();
             }
