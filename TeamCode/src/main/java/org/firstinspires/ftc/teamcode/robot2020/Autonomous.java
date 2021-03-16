@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode.robot2020;
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
+
+import java.lang.reflect.Method;
+
 // test
 @Config
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "test auto v1")

@@ -308,10 +308,3 @@ class RobotSettingsMain
         this.visionSettings = visionSettings;
     }
 }
-
-
-class Constants
-{
-    public static final float mmPerInch = 25.4f;
-    public static final float cmPerInch = 2.54f;
-}

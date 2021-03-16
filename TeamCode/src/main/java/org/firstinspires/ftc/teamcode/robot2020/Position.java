@@ -68,7 +68,7 @@ public class Position extends Thread
     }
 
     public static boolean updateRotFromFile(PositionSettings ps){
-        String val = Utils.FileManager.readFromFile(fileName, AppUtil.getDefContext());
+        String val = FileManager.readFromFile(fileName, AppUtil.getDefContext());
         try {
             ps.startRotation = Double.parseDouble(val);
             return true;
@@ -232,7 +232,7 @@ public class Position extends Thread
         }
 
         Double val = currentRotation;
-        Utils.FileManager.writeToFile(fileName, val.toString(), AppUtil.getDefContext());
+        FileManager.writeToFile(fileName, val.toString(), AppUtil.getDefContext());
     }
 
     double[] getPositionWithOffset(double X, double Y, double R)

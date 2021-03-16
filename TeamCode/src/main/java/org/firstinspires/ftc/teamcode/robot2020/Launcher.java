@@ -419,7 +419,7 @@ class AllCalibrationDataPoints
     public static AllCalibrationDataPoints setCalibrationDataPoints(Context context, String fileName)
     {
         Gson gson = new Gson();
-        return gson.fromJson(Utils.FileManager.readFromFile(fileName, context), AllCalibrationDataPoints.class);
+        return gson.fromJson(FileManager.readFromFile(fileName, context), AllCalibrationDataPoints.class);
     }
 
     public int getTargetRPMAtDistance(double distance, int goalNum)

@@ -13,47 +13,53 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-public class Utils {
-    static class FileManager {
-        static String readFromFile(String fileName, Context context) {
 
-            String ret = null;
+class FileManager {
+    static String readFromFile(String fileName, Context context) {
 
-            try {
-                InputStream inputStream = context.openFileInput(fileName);
+        String ret = null;
 
-                if (inputStream != null) {
-                    InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                    BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                    String receiveString;
-                    StringBuilder stringBuilder = new StringBuilder();
+        try {
+            InputStream inputStream = context.openFileInput(fileName);
 
-                    while ((receiveString = bufferedReader.readLine()) != null) {
-                        stringBuilder.append("\n").append(receiveString);
-                    }
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString;
+                StringBuilder stringBuilder = new StringBuilder();
 
-                    inputStream.close();
-                    ret = stringBuilder.toString();
+                while ((receiveString = bufferedReader.readLine()) != null) {
+                    stringBuilder.append("\n").append(receiveString);
                 }
-            } catch (FileNotFoundException e) {
-                Log.e("login activity", "File not found: " + e.toString());
-            } catch (IOException e) {
-                Log.e("login activity", "Can not read file: " + e.toString());
-            }
 
-            return ret;
+                inputStream.close();
+                ret = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
         }
-        static void writeToFile(String fileName, String data, Context context) {
-            try {
-                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
-                outputStreamWriter.write(data);
-                outputStreamWriter.close();
-            }
-            catch (IOException e) {
-                Log.e("Exception", "File write failed: " + e.toString());
-            }
+
+        return ret;
+    }
+    static void writeToFile(String fileName, String data, Context context) {
+        try {
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput(fileName, Context.MODE_PRIVATE));
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
         }
     }
+}
+
+
+class Constants
+{
+    public static final float mmPerInch = 25.4f;
+    public static final float cmPerInch = 2.54f;
 }
 
 class PID
