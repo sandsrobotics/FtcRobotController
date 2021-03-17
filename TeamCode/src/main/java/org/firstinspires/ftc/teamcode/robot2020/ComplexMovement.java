@@ -112,35 +112,33 @@ public class ComplexMovement {
 
     void loadMoveDB(String moveName)
     {
-        List<MovementEntity> data = robot.db.movementEntityDAO().loadMovementByName(moveName);
-        int[] currentLoadTick = new int[4];
-        loaded_Positions.clear();
-        int i = 0;
+        try {
+            List<MovementEntity> data = robot.db.movementEntityDAO().loadMovementByName(moveName);
+            int[] currentLoadTick = new int[4];
+            loaded_Positions.clear();
+            int i = 0;
 
-        for(MovementEntity m:data)
+            for (MovementEntity m : data) {
+                if (m.motor_id == 0) {
+                    if (i == 0) {
+                        loaded_TotalTime = m.motor_tick;
+                        i++;
+                    } else if (i == 1) {
+                        loaded_MeasureDelay = m.motor_tick;
+                        i++;
+                    } else break;
+                } else {
+                    currentLoadTick[m.motor_id - 1] = (int) (m.motor_tick);
+                    if (m.motor_id == 4) {
+                        loaded_Positions.add(currentLoadTick);
+                        currentLoadTick = new int[4];
+                    }
+                }
+            }
+        }
+        catch (Exception e)
         {
-            if(m.motor_id == 0){
-                if(i == 0)
-                {
-                    loaded_TotalTime = m.motor_tick;
-                    i++;
-                }
-                else if(i == 1)
-                {
-                    loaded_MeasureDelay = m.motor_tick;
-                    i++;
-                }
-                else break;
-            }
-            else
-            {
-                currentLoadTick[m.motor_id - 1] = (int)(m.motor_tick);
-                if(m.motor_id == 4)
-                {
-                    loaded_Positions.add(currentLoadTick);
-                    currentLoadTick = new int[4];
-                }
-            }
+            robot.addTelemetry("error in loadMoveDB", "there was no move with the specified tile in the database");
         }
     }
 /*

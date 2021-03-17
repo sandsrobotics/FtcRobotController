@@ -397,7 +397,7 @@ class LauncherSettings
 
     //power shot v2
     double[] powerShotBasePos = {24, minLaunchDistance};
-    double[] powerShotRotations = {-7, .5, 5.5};
+    double[] powerShotRotations = {-7, .5, 7};
 
     LauncherSettings(){}
 }
